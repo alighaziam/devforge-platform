@@ -58,7 +58,7 @@ In a second terminal:
 
 \`\`\`bash
 cd studio
-npm install
+npm ci
 npm start
 \`\`\`
 

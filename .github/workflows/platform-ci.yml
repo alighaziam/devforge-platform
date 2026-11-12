@@ -44,8 +44,6 @@ jobs:
   studio:
     name: Angular Studio build
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -53,24 +51,11 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: '22'
+          cache: npm
+          cache-dependency-path: studio/package-lock.json
       - name: Install dependencies
         working-directory: studio
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
       - name: Build Studio
         working-directory: studio
         run: npm run build
-      - name: Commit generated npm lockfile
-        if: github.event_name == 'push' && github.ref == 'refs/heads/feature/project-specification-validation'
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add studio/package-lock.json
-          if git diff --cached --quiet; then exit 0; fi
-          git commit -m 'build(studio): commit resolved npm dependency lockfile'
-          git push origin "HEAD:${GITHUB_REF_NAME}"
-      - name: Upload generated dependency lock
-        uses: actions/upload-artifact@v4
-        with:
-          name: studio-package-lock
-          path: studio/package-lock.json
-          if-no-files-found: error
