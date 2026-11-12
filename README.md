@@ -45,6 +45,7 @@ tests/                Contract, integration, and end-to-end tests
 The initial backend vertical slice now includes:
 
 - Java 25 / Spring Boot 4 platform core with authenticated-by-default API security.
+- Angular 20 Studio workspace for projects, specifications, catalog browsing, and compatibility evaluation.
 - Draft 2020-12 Project Specification validation.
 - PostgreSQL-backed project lifecycle and immutable, versioned specification snapshots.
 - Versioned technology catalog read APIs and deterministic compatibility evaluation.

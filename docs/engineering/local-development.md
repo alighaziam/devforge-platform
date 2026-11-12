@@ -45,12 +45,27 @@ $env:SERVER_PORT = "8080"
 
 ```bash
 mvn --batch-mode --no-transfer-progress verify
-mvn -pl platform/core spring-boot:run
+mvn -pl platform/core spring-boot:run -Dspring-boot.run.profiles=local
 ```
 
 Flyway applies database migrations. Hibernate uses `ddl-auto=validate`; it does
 not create or modify the schema. The test profile uses an isolated in-memory H2
 database and runs the same Flyway migrations.
+
+## Start Angular Studio
+
+In a second terminal:
+
+\`\`\`bash
+cd studio
+npm install
+npm start
+\`\`\`
+
+The Angular dev server proxies \`/api\` and \`/actuator\` to the local backend.
+The \`local\` Spring profile permits unauthenticated local API access solely
+for workstation development. It disables CSRF for this local-only browser
+workflow; never expose this profile to a network or production environment.
 
 ## Initial API surface
 
