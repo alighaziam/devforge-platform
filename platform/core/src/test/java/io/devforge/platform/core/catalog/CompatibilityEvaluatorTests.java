@@ -45,6 +45,18 @@ class CompatibilityEvaluatorTests {
     }
 
     @Test
+    void blocksVersionsOutsideTheCatalogSupportedRange() {
+        CompatibilityEvaluationResult result = evaluator.evaluate(Map.of(
+                "framework.spring-boot", "4.1.0",
+                "language.java", "25"));
+
+        assertThat(result.compatible()).isFalse();
+        assertThat(result.findings())
+                .extracting(CompatibilityFinding::ruleId)
+                .contains("unsupported-selected-version-framework.spring-boot");
+    }
+
+    @Test
     void marksUnknownTechnologyAsIndeterminateRatherThanCompatible() {
         CompatibilityEvaluationResult result = evaluator.evaluate(Map.of(
                 "unknown.runtime", "1.0"));

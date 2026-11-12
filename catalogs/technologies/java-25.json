@@ -7,10 +7,25 @@
   "version": "25",
   "versionScheme": "major-minor",
   "status": "supported",
-  "capabilities": ["jvm", "static-typing", "virtual-threads", "structured-concurrency"],
+  "capabilities": [
+    "jvm",
+    "static-typing",
+    "virtual-threads",
+    "structured-concurrency"
+  ],
   "requires": [],
   "conflicts": [],
-  "platforms": ["linux", "windows", "macos", "container"],
-  "operatingModes": ["jvm"],
-  "documentation": ["https://docs.oracle.com/en/java/"]
+  "platforms": [
+    "linux",
+    "windows",
+    "macos",
+    "container"
+  ],
+  "operatingModes": [
+    "jvm"
+  ],
+  "documentation": [
+    "https://docs.oracle.com/en/java/"
+  ],
+  "supportedRange": ">=25 <26"
 }

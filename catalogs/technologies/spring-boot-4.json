@@ -7,12 +7,34 @@
   "version": "4.0.0",
   "versionScheme": "semver",
   "status": "supported",
-  "capabilities": ["web", "dependency-injection", "actuator", "security-integration", "observability"],
+  "capabilities": [
+    "web",
+    "dependency-injection",
+    "actuator",
+    "security-integration",
+    "observability"
+  ],
   "requires": [
-    { "technologyId": "language.java", "versionRange": ">=17", "reason": "Spring Boot 4 requires a supported Java baseline." }
+    {
+      "technologyId": "language.java",
+      "versionRange": ">=17",
+      "reason": "Spring Boot 4 requires a supported Java baseline."
+    }
   ],
   "conflicts": [],
-  "platforms": ["linux", "windows", "macos", "container"],
-  "operatingModes": ["jvm", "servlet", "reactive"],
-  "documentation": ["https://docs.spring.io/spring-boot/reference/"]
+  "platforms": [
+    "linux",
+    "windows",
+    "macos",
+    "container"
+  ],
+  "operatingModes": [
+    "jvm",
+    "servlet",
+    "reactive"
+  ],
+  "documentation": [
+    "https://docs.spring.io/spring-boot/reference/"
+  ],
+  "supportedRange": ">=4.0.0 <4.1.0"
 }

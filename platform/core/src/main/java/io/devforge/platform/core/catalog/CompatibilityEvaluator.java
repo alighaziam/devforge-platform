@@ -25,6 +25,7 @@ public class CompatibilityEvaluator {
         List<CompatibilityFinding> findings = new ArrayList<>();
 
         evaluateUnknownSelections(safeSelections, findings);
+        evaluateCatalogSupport(safeSelections, findings);
         evaluateDependencies(safeSelections, findings);
         evaluateConflicts(safeSelections, findings);
         evaluateRules(safeSelections, findings);
@@ -52,6 +53,49 @@ public class CompatibilityEvaluator {
                         List.of("Add a reviewed catalog record or select a known technology."),
                         List.of(),
                         "never"));
+            }
+        });
+    }
+
+    private void evaluateCatalogSupport(
+            Map<String, String> selections,
+            List<CompatibilityFinding> findings) {
+        selections.forEach((technologyId, selectedVersion) -> {
+            Map<String, Object> technology = catalog.findTechnology(technologyId);
+            if (technology == null) return;
+
+            String lifecycle = stringValue(technology.get("status"));
+            if ("end-of-life".equals(lifecycle) || "blocked".equals(lifecycle)) {
+                findings.add(finding("technology-lifecycle-" + technologyId, "BLOCKED", "error",
+                        technologyId + " is not permitted for new project selections (status: " + lifecycle + ").",
+                        "The catalog lifecycle policy blocks this technology version.",
+                        List.of(technologyId), List.of("Select a currently supported technology version."),
+                        List.of(), "never"));
+            } else if ("deprecated".equals(lifecycle) || "experimental".equals(lifecycle)) {
+                findings.add(finding("technology-lifecycle-" + technologyId, "WARNING", "warning",
+                        technologyId + " has lifecycle status " + lifecycle + ".",
+                        "Review lifecycle and operational support before proceeding.",
+                        List.of(technologyId), List.of("Prefer a supported version for new projects."),
+                        List.of(), "architect-approval"));
+            }
+
+            String supportedRange = stringValue(technology.get("supportedRange"));
+            Optional<Boolean> matches = VersionRangeMatcher.matches(selectedVersion, supportedRange);
+            if (matches.isEmpty()) {
+                findings.add(finding("unknown-supported-range-" + technologyId, "INDETERMINATE", "error",
+                        "Cannot evaluate selected version " + selectedVersion + " against " + supportedRange + ".",
+                        "The selected version or catalog range uses an unsupported version format.",
+                        List.of(technologyId),
+                        List.of("Use a numeric dot-separated version or add a dedicated matcher for this version scheme."),
+                        List.of(), "never"));
+            } else if (!matches.get()) {
+                findings.add(finding("unsupported-selected-version-" + technologyId, "BLOCKED", "error",
+                        technologyId + " selected version " + selectedVersion
+                                + " is outside the catalog-supported range " + supportedRange + ".",
+                        "The catalog does not declare this version as supported.",
+                        List.of(technologyId),
+                        List.of("Choose a version within " + supportedRange + " or add a reviewed catalog record."),
+                        List.of(), "never"));
             }
         });
     }

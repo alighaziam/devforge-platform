@@ -7,10 +7,25 @@
   "version": "22",
   "versionScheme": "major-minor",
   "status": "supported",
-  "capabilities": ["javascript-runtime", "typescript-tooling", "npm"],
+  "capabilities": [
+    "javascript-runtime",
+    "typescript-tooling",
+    "npm"
+  ],
   "requires": [],
   "conflicts": [],
-  "platforms": ["linux", "windows", "macos", "container"],
-  "operatingModes": ["cli", "server"],
-  "documentation": ["https://nodejs.org/docs/latest-v22.x/api/"]
+  "platforms": [
+    "linux",
+    "windows",
+    "macos",
+    "container"
+  ],
+  "operatingModes": [
+    "cli",
+    "server"
+  ],
+  "documentation": [
+    "https://nodejs.org/docs/latest-v22.x/api/"
+  ],
+  "supportedRange": ">=22 <23"
 }

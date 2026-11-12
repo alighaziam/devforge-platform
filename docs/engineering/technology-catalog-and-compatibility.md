@@ -27,6 +27,8 @@ that do not conform block the verification build.
 
 ## Catalog semantics
 
+Every record declares a supported version range and version scheme. A selected version outside that range is blocked; a range the evaluator cannot parse is indeterminate, never compatible. Lifecycle states are also enforced: end-of-life and blocked entries cannot be selected, while deprecated and experimental entries require review.
+
 A technology ID is globally stable and independent of its display name or
 version. Each record describes one explicit version line. Lifecycle status is
 not inferred from a version number. A catalog entry is metadata, not an

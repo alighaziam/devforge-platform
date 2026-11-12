@@ -7,10 +7,27 @@
   "version": "17",
   "versionScheme": "major-minor",
   "status": "supported",
-  "capabilities": ["relational", "acid-transactions", "json", "full-text-search", "row-level-security"],
+  "capabilities": [
+    "relational",
+    "acid-transactions",
+    "json",
+    "full-text-search",
+    "row-level-security"
+  ],
   "requires": [],
   "conflicts": [],
-  "platforms": ["linux", "windows", "macos", "container"],
-  "operatingModes": ["standalone", "replicated"],
-  "documentation": ["https://www.postgresql.org/docs/17/"]
+  "platforms": [
+    "linux",
+    "windows",
+    "macos",
+    "container"
+  ],
+  "operatingModes": [
+    "standalone",
+    "replicated"
+  ],
+  "documentation": [
+    "https://www.postgresql.org/docs/17/"
+  ],
+  "supportedRange": ">=17 <18"
 }
