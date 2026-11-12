@@ -215,6 +215,14 @@ public class JavaSpringPostgresGenerator {
                   <groupId>io.devforge.generated</groupId><artifactId>%s</artifactId><version>0.1.0-SNAPSHOT</version>
                   <parent><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-parent</artifactId><version>4.0.0</version><relativePath/></parent>
                   <properties><java.version>25</java.version></properties>
+                  <build>
+                    <resources>
+                      <resource><directory>src/main/resources</directory><filtering>false</filtering></resource>
+                    </resources>
+                    <plugins>
+                      <plugin><groupId>org.springframework.boot</groupId><artifactId>spring-boot-maven-plugin</artifactId></plugin>
+                    </plugins>
+                  </build>
                   <dependencies>
                     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-webmvc</artifactId></dependency>
                     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-actuator</artifactId></dependency>
@@ -224,7 +232,6 @@ public class JavaSpringPostgresGenerator {
                     <dependency><groupId>org.postgresql</groupId><artifactId>postgresql</artifactId><scope>runtime</scope></dependency>
                     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>
                   </dependencies>
-                  <build><plugins><plugin><groupId>org.springframework.boot</groupId><artifactId>spring-boot-maven-plugin</artifactId></plugin></plugins></build>
                 </project>
                 """.formatted(slug);
     }
