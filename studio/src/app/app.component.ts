@@ -29,6 +29,12 @@ interface Technology {
   status: string;
   capabilities: string[];
 }
+interface ArchitectureDecision {
+  id: string; projectId: string; snapshotId: string; snapshotVersion: number;
+  title: string; context: string; decision: string; alternatives: string[]; consequences: string[];
+  status: string; version: number; createdAt: string; updatedAt: string;
+  history: { id: string; fromStatus: string | null; toStatus: string; comment: string; actor: string; createdAt: string }[];
+}
 interface ArchitectureFinding {
   id: string; status: string; severity: string; message: string; rationale: string;
   affectedPaths: string[]; remediation: string[];
@@ -104,6 +110,8 @@ export class AppComponent implements OnInit {
   };
   compatibility: CompatibilityResult | null = null;
   architectureAssessment: ArchitectureAssessment | null = null;
+  architectureDecisions: ArchitectureDecision[] = [];
+  adrTransitionComment = '';
   validation: { valid: boolean; errors: string[] } | null = null;
   busy = false;
   notice = 'Connect to your local DevForge API to begin.';
@@ -175,7 +183,7 @@ export class AppComponent implements OnInit {
     projectNode['name'] = project.name;
     projectNode['description'] = project.description || '';
     this.specificationJson = JSON.stringify(spec, null, 2);
-    await Promise.all([this.loadSnapshots(), this.loadGenerationRuns()]);
+    await Promise.all([this.loadSnapshots(), this.loadGenerationRuns(), this.loadArchitectureDecisions()]);
   }
 
   async loadSnapshots(): Promise<void> {
@@ -305,6 +313,53 @@ export class AppComponent implements OnInit {
       } else {
         this.handleError(error, 'Generation failed.');
       }
+    } finally {
+      this.busy = false;
+    }
+  }
+
+  async loadArchitectureDecisions(): Promise<void> {
+    if (!this.selectedProject) return;
+    try {
+      this.architectureDecisions = await firstValueFrom(this.http.get<ArchitectureDecision[]>(
+        '/api/v1/projects/' + this.selectedProject.id + '/architecture/decisions'
+      ));
+    } catch (error) {
+      this.handleError(error, 'Could not load architecture decision records.');
+    }
+  }
+
+  async createAdrDraft(): Promise<void> {
+    if (!this.selectedProject || this.snapshots.length === 0) return;
+    this.busy = true;
+    try {
+      const latest = this.snapshots[this.snapshots.length - 1];
+      await firstValueFrom(this.http.post<ArchitectureDecision>(
+        '/api/v1/projects/' + this.selectedProject.id + '/architecture/decisions',
+        { snapshotVersion: latest.snapshotVersion }
+      ));
+      await this.loadArchitectureDecisions();
+      this.setNotice('ADR draft saved. It is not approved until explicitly accepted.', 'success');
+    } catch (error) {
+      this.handleError(error, 'Could not save ADR draft.');
+    } finally {
+      this.busy = false;
+    }
+  }
+
+  async transitionAdr(decision: ArchitectureDecision, targetStatus: string): Promise<void> {
+    if (!this.selectedProject) return;
+    this.busy = true;
+    try {
+      await firstValueFrom(this.http.post<ArchitectureDecision>(
+        '/api/v1/projects/' + this.selectedProject.id + '/architecture/decisions/' + decision.id + '/transition',
+        { targetStatus, comment: this.adrTransitionComment }
+      ));
+      this.adrTransitionComment = '';
+      await this.loadArchitectureDecisions();
+      this.setNotice('ADR status updated and recorded in its audit history.', 'success');
+    } catch (error) {
+      this.handleError(error, 'ADR transition failed.');
     } finally {
       this.busy = false;
     }
