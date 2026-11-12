@@ -18,9 +18,18 @@ It does not inspect generated source code and does not execute tests.
 - Project constraints produce explicit compliance checks.
 - Selected authentication and MFA requirements produce security cases.
 
-Every case carries a stable ID, priority, source specification path, steps, and
-expected result. The plan is sorted deterministically and includes category
-counts. These are test intentions, not evidence that the tests have run.
+Every case carries a snapshot-scoped unique ID, priority, source specification
+path, steps, and expected result. Source paths use JSON array indexes so they
+can be resolved against the exact immutable snapshot. The plan is sorted
+deterministically, includes category counts, and exposes a SHA-256 fingerprint
+over the ordered test cases. The fingerprint is stable across repeated
+generation for the same snapshot content. These are test intentions, not
+evidence that the tests have run.
+
+Coverage includes functional acceptance criteria, entity creation and
+attribute constraints, relationship cardinality, declared indexes,
+quality-attribute objectives, project constraints, authentication, MFA,
+authorization models, and audit requirements.
 
 ## Current limitations
 
