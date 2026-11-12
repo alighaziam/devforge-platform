@@ -45,6 +45,19 @@ class JavaSpringPostgresGeneratorTests {
     }
 
     @Test
+    void reportsOnlyItsDeclaredTechnologyAndSpecificationVersionsAsSupported() throws Exception {
+        ObjectNode spec = (ObjectNode) mapper.readTree(specification());
+        org.assertj.core.api.Assertions.assertThat(generator.supports(spec)).isTrue();
+
+        ((ObjectNode) spec.path("technologySelections").path("database")).put("version", "18");
+        org.assertj.core.api.Assertions.assertThat(generator.supports(spec)).isFalse();
+
+        ((ObjectNode) spec.path("technologySelections").path("database")).put("version", "17");
+        spec.put("specVersion", "2.0.0");
+        org.assertj.core.api.Assertions.assertThat(generator.supports(spec)).isFalse();
+    }
+
+    @Test
     void rejectsUnsafeOrUnsupportedModelAttributes() throws Exception {
         String invalid = specification().replace("\"type\": \"string\"", "\"type\": \"object\"");
         var spec = mapper.readTree(invalid);
