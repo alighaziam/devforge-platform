@@ -26,7 +26,7 @@ class SqlDdlModelImporterTests {
 
         List<?> entities = (List<?>) model.get("entities");
         assertThat(entities).hasSize(1);
-        assertThat(model.get("relationships")).isEmpty();
+        assertThat((List<?>) model.get("relationships")).isEmpty();
         assertThat((List<?>) model.get("indexes")).hasSize(1);
         assertThat(entities.get(0).toString()).contains("customer", "email", "datetime");
     }
