@@ -1,0 +1,31 @@
+{
+  "catalogVersion": "1.0.0",
+  "id": "runtime.node",
+  "category": "runtime",
+  "name": "Node.js",
+  "vendor": "OpenJS Foundation",
+  "version": "22",
+  "versionScheme": "major-minor",
+  "status": "supported",
+  "capabilities": [
+    "javascript-runtime",
+    "typescript-tooling",
+    "npm"
+  ],
+  "requires": [],
+  "conflicts": [],
+  "platforms": [
+    "linux",
+    "windows",
+    "macos",
+    "container"
+  ],
+  "operatingModes": [
+    "cli",
+    "server"
+  ],
+  "documentation": [
+    "https://nodejs.org/docs/latest-v22.x/api/"
+  ],
+  "supportedRange": ">=22 <23"
+}

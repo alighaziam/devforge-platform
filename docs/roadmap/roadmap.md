@@ -1,44 +1,47 @@
 # Roadmap
 
-## Phase 0 — Foundation (current)
+## Phase 0 — Foundation
 
 - [x] Confirm product direction and repository.
 - [x] Establish repository documentation baseline.
-- [ ] Define Project Specification schema and validation rules.
-- [ ] Define plugin manifest and capability model.
-- [ ] Define technology catalog structure and compatibility rule format.
-- [ ] Define module boundaries and dependency rules.
-- [ ] Add CI quality gates and repository contribution standards.
+- [x] Define Project Specification schema and runtime validation.
+- [x] Define technology catalog and compatibility rule contracts.
+- [x] Add CI quality gates and repository contribution standards.
+- [x] Define plugin manifest trust, signing, and capability policy.
+- [x] Define module boundaries and dependency rules.
+- [x] Add architecture tests preventing module cycles.
 
 **Exit criteria:** core contracts are reviewable, versioned, and internally consistent.
 
 ## Phase 1 — Platform skeleton
 
-- Create Java 25 / Spring Boot multi-module Maven build.
-- Create Angular Studio workspace.
-- Add health/readiness endpoints and structured logging.
-- Add local developer environment and CI pipeline.
-- Add architecture tests preventing module cycles.
-- Add API contract and schema validation tests.
+- [x] Create Java 25 / Spring Boot multi-module Maven build.
+- [x] Create Angular 20 Studio workspace for project lifecycle, specification validation, catalog browsing, and compatibility analysis.
+- [x] Add health/readiness endpoints and graceful shutdown configuration.
+- [x] Add CI pipeline.
+- [x] Add architecture tests preventing module cycles.
+- [x] Add API contract and schema validation tests.
 
 **Exit criteria:** reproducible build and CI for platform skeleton.
 
 ## Phase 2 — Project and specification core
 
-- Project/workspace lifecycle.
-- Specification versioning, validation, immutable snapshots.
-- Requirements and artifact metadata.
-- Technology catalog read API.
-- ADR records and decision status.
+- [x] Project create/read/list lifecycle and PostgreSQL persistence.
+- [x] Specification schema validation API.
+- [x] Immutable, versioned specification snapshots with SHA-256 provenance.
+- [ ] Requirements and source-artifact metadata lifecycle.
+- [x] Technology catalog read API.
+- [ ] ADR records and decision status.
+- [x] Deterministic technology dependency and compatibility evaluation API.
 
-**Exit criteria:** user can create a project and save a validated specification snapshot.
+**Exit criteria:** user can create a project, save a validated immutable specification snapshot, and inspect deterministic technology compatibility findings.
 
 ## Phase 3 — Model and architecture engines
 
-- Import JSON, SQL DDL, OpenAPI, XML, and document formats incrementally.
-- Domain model representation and model diff.
-- Architecture decision/risk engine.
-- Compatibility constraint evaluator.
+- [ ] Import JSON, SQL DDL, OpenAPI, XML, and document formats.
+- [ ] Domain model representation and model diff.
+- [ ] Architecture decision/risk engine.
+- [ ] Architecture Decision Records and approval lifecycle.
 
 **Exit criteria:** model and technology choices produce explainable validation findings.
 
@@ -46,28 +49,28 @@
 
 Start with one narrow, end-to-end supported stack rather than claiming broad support prematurely. Proposed first slice: Java/Spring Boot + PostgreSQL + Angular, with optional security profile.
 
-- Deterministic generator contract.
-- Generated project manifest and provenance.
-- Golden-file tests and regeneration safety.
+- [x] Deterministic generator contract for the first supported stack.
+- [x] Generated project manifest and provenance, with persistent generation-run audit records.
+- [ ] Golden-file tests and regeneration safety.
 
-**Exit criteria:** same specification and generator versions produce reproducible output.
+- [x] Exit criteria: identical snapshots and generator versions produce reproducible output, verified by repeat-generation SHA-256 integration tests and a separate generated-project Maven CI build.
 
 ## Phase 5 — Quality and sandbox
 
-- Independent test-plan generation from requirements/contracts.
-- Isolated build workers.
-- Build, unit, integration, smoke, and API validation.
-- Evidence bundle and honest skipped/failed status.
+- [ ] Independent test-plan generation from requirements/contracts.
+- [ ] Isolated build workers.
+- [ ] Build, unit, integration, smoke, and API validation.
+- [ ] Evidence bundle and honest skipped/failed status.
 
 **Exit criteria:** generated artifact has traceable validation evidence.
 
 ## Phase 6 — Plugin ecosystem and delivery
 
-- Plugin registry and signing/verification.
-- Additional Java/Python/.NET and frontend generators.
-- Git branch/PR delivery.
-- CI/CD and deployment profiles.
-- SBOM and supply-chain controls.
+- [ ] Plugin registry, signing, and verification.
+- [ ] Additional Java/Python/.NET and frontend generators.
+- [ ] Git branch/PR delivery.
+- [ ] CI/CD and deployment profiles.
+- [ ] SBOM and supply-chain controls.
 
 **Exit criteria:** plugins can be installed, validated, and executed under declared permissions.
 

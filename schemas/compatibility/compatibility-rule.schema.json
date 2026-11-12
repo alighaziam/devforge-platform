@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devforge.example/schemas/compatibility/rule/1.0.0",
+  "title": "DevForge Technology Compatibility Rule",
+  "description": "Declarative, non-executable rule used to evaluate a technology selection.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["ruleVersion", "id", "severity", "appliesTo", "condition", "effect", "message", "rationale", "overridePolicy"],
+  "properties": {
+    "ruleVersion": { "const": "1.0.0" },
+    "id": { "type": "string", "pattern": "^[a-z0-9]+([.-][a-z0-9]+)*$" },
+    "severity": { "type": "string", "enum": ["error", "warning", "info"] },
+    "appliesTo": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["technologyId", "versionRange"],
+        "properties": {
+          "technologyId": { "type": "string" },
+          "versionRange": { "type": "string" }
+        }
+      }
+    },
+    "condition": { "$ref": "#/$defs/expression" },
+    "effect": { "type": "string", "enum": ["block", "warn", "recommend"] },
+    "message": { "type": "string", "minLength": 1 },
+    "rationale": { "type": "string", "minLength": 1 },
+    "remediation": { "type": "array", "items": { "type": "string" } },
+    "evidence": { "type": "array", "items": { "type": "string", "format": "uri" } },
+    "overridePolicy": { "type": "string", "enum": ["never", "architect-approval", "expert-approval"] },
+    "ruleStatus": { "type": "string", "enum": ["draft", "active", "retired"], "default": "active" }
+  },
+  "$defs": {
+    "expression": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["allOf"],
+          "properties": { "allOf": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/expression" } } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["anyOf"],
+          "properties": { "anyOf": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/expression" } } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["not"],
+          "properties": { "not": { "$ref": "#/$defs/expression" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operator", "technologyId"],
+          "properties": {
+            "operator": { "const": "selected" },
+            "technologyId": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operator", "technologyId", "versionRange"],
+          "properties": {
+            "operator": { "const": "version-in-range" },
+            "technologyId": { "type": "string" },
+            "versionRange": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operator", "technologyId", "capability"],
+          "properties": {
+            "operator": { "const": "provides-capability" },
+            "technologyId": { "type": "string" },
+            "capability": { "type": "string" }
+          }
+        }
+      ]
+    }
+  }
+}

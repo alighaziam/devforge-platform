@@ -1,11 +1,25 @@
 spring:
   application:
     name: devforge-platform-core
-
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/devforge}
+    username: ${DATABASE_USERNAME:devforge}
+    password: ${DATABASE_PASSWORD:devforge-local}
+    hikari:
+      maximum-pool-size: ${DATABASE_POOL_MAX_SIZE:10}
+      minimum-idle: ${DATABASE_POOL_MIN_IDLE:2}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.jdbc.time_zone: UTC
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
 server:
   port: ${SERVER_PORT:8080}
   shutdown: graceful
-
 management:
   endpoints:
     web:
@@ -16,19 +30,16 @@ management:
       probes:
         enabled: true
       show-details: never
-
 info:
   app:
     name: DevForge Platform Core
     description: Enterprise Application Engineering Platform
     version: 0.1.0-SNAPSHOT
-
 ---
 spring:
   config:
     activate:
       on-profile: local
-
 logging:
   level:
     io.devforge: DEBUG

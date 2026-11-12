@@ -29,22 +29,29 @@ DevForge is a data-model-first, specification-driven platform for designing, gen
 ## Repository layout
 
 ```text
-docs/                 Product, architecture, security, roadmap, ADRs
-schemas/              Project Specification and plugin contracts
-catalogs/             Technology and compatibility metadata
-platform/             Java 25 / Spring Boot platform modules
+docs/                 Product, architecture, security, engineering, roadmap, ADRs
+schemas/              Project Specification, plugin, catalog contracts
+catalogs/             Versioned technology and compatibility metadata
+platform/core/        Java 25 / Spring Boot modular platform core
 studio/               Angular engineering studio
-generators/           Stack-specific project generators
-plugins/              Optional integrations
-infrastructure/       Local development and deployment assets
-tests/                Contract, integration, and end-to-end tests
+.github/workflows/    Java, generated-project, and Angular CI
+docker-compose.yml    Local PostgreSQL development service
 ```
 
-## Status
+## Current implementation
 
-This repository is in the foundation phase. The first milestone establishes product boundaries, architecture, specification contracts, and engineering standards before implementation expands.
+The initial backend vertical slice now includes:
 
-See [Product Requirements](docs/product/requirements.md), [System Architecture](docs/architecture/system-architecture.md), and [Roadmap](docs/roadmap/roadmap.md).
+- Java 25 / Spring Boot 4 platform core with authenticated-by-default API security.
+- Angular 20 Studio workspace for projects, specifications, catalog browsing, compatibility evaluation, and generation.
+- A deterministic Java 25 / Spring Boot 4 / PostgreSQL 17 generator with provenance manifests and auditable generation runs.
+- CI compiles the generated sample project as a separate Maven build.
+- Draft 2020-12 Project Specification validation.
+- PostgreSQL-backed project lifecycle and immutable, versioned specification snapshots.
+- Versioned technology catalog read APIs and deterministic compatibility evaluation.
+- Flyway migrations, Docker Compose development database, and Java 25 CI verification.
+
+This is an actively developed foundation, not a production-ready application factory yet. Tenant-aware identity, model import, architecture analysis, broader generator coverage, sandboxed runtime validation, plugin execution, and delivery automation remain on the roadmap. See [Local Development](docs/engineering/local-development.md), [Product Requirements](docs/product/requirements.md), [System Architecture](docs/architecture/system-architecture.md), and [Roadmap](docs/roadmap/roadmap.md).
 
 ## Development policy
 

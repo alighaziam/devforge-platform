@@ -1,0 +1,157 @@
+<div class="shell">
+  <aside class="sidebar">
+    <a class="brand" href="#" (click)="$event.preventDefault(); activeView = 'overview'">
+      <span class="brand-mark">D</span>
+      <span><strong>DevForge</strong><small>ENGINEERING STUDIO</small></span>
+    </a>
+    <div class="workspace-label">WORKSPACE</div>
+    <button class="nav-item" [class.active]="activeView === 'overview'" (click)="activeView = 'overview'"><span class="nav-icon">◫</span> Overview</button>
+    <button class="nav-item" [class.active]="activeView === 'project'" (click)="activeView = 'project'"><span class="nav-icon">▤</span> Project specification</button>
+    <button class="nav-item" [class.active]="activeView === 'catalog'" (click)="activeView = 'catalog'"><span class="nav-icon">◈</span> Technology catalog</button>
+    <button class="nav-item" [class.active]="activeView === 'compatibility'" (click)="activeView = 'compatibility'"><span class="nav-icon">⌁</span> Compatibility</button>
+    <button class="nav-item" [class.active]="activeView === 'generate'" (click)="activeView = 'generate'"><span class="nav-icon">⇩</span> Generate project</button>
+    <div class="sidebar-bottom">
+      <div class="environment"><span class="pulse"></span> LOCAL ENVIRONMENT</div>
+      <div class="sidebar-version">Platform API · v1</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="breadcrumbs">DevForge <span>/</span> {{ activeView === 'overview' ? 'Overview' : activeView === 'project' ? 'Project workspace' : activeView === 'catalog' ? 'Technology catalog' : activeView === 'generate' ? 'Generate project' : 'Compatibility analysis' }}</div>
+      <div class="top-actions">
+        <span class="api-status" [class.connected]="noticeType === 'success'"><i></i> {{ noticeType === 'success' ? 'API connected' : 'Local API' }}</span>
+        <button class="icon-button" title="Refresh workspace" (click)="loadWorkspace()">↻</button>
+      </div>
+    </header>
+
+    <section class="content">
+      <div class="notice" *ngIf="notice" [class.success]="noticeType === 'success'" [class.error]="noticeType === 'error'">
+        <span>{{ notice }}</span><button (click)="notice = ''" aria-label="Dismiss">×</button>
+      </div>
+
+      <ng-container *ngIf="activeView === 'overview'">
+        <div class="page-heading">
+          <div><div class="eyebrow">ENGINEERING WORKSPACE</div><h1>Build with decisions, not guesswork.</h1><p>Start with a project specification. Validate your model and technology choices before generation.</p></div>
+          <div class="heading-chip"><span class="pulse"></span> Foundation build</div>
+        </div>
+        <div class="stats-grid">
+          <article class="stat-card"><span>PROJECTS</span><strong>{{ projects.length }}</strong><small>In this workspace</small></article>
+          <article class="stat-card"><span>CATALOG ENTRIES</span><strong>{{ catalog.length }}</strong><small>Versioned technologies</small></article>
+          <article class="stat-card"><span>SNAPSHOTS</span><strong>{{ snapshots.length }}</strong><small>For selected project</small></article>
+          <article class="stat-card"><span>PLATFORM</span><strong class="status-word">ACTIVE</strong><small>API v1 · Local profile</small></article>
+        </div>
+        <div class="section-grid">
+          <section class="panel create-panel">
+            <div class="panel-heading"><div><div class="eyebrow">GET STARTED</div><h2>Create a project</h2></div><span class="step-number">01</span></div>
+            <label>Project name</label><input [(ngModel)]="projectName" placeholder="e.g. Customer Platform">
+            <label>Description</label><textarea [(ngModel)]="projectDescription" rows="3" placeholder="What are you engineering?"></textarea>
+            <button class="primary-button" [disabled]="busy" (click)="createProject()">Create project <span>→</span></button>
+          </section>
+          <section class="panel">
+            <div class="panel-heading"><div><div class="eyebrow">YOUR WORKSPACE</div><h2>Recent projects</h2></div><span class="count">{{ projects.length }} total</span></div>
+            <div *ngIf="projects.length === 0" class="empty-state"><div class="empty-icon">◇</div><strong>No projects yet</strong><p>Create your first project to begin defining its specification.</p></div>
+            <button class="project-row" *ngFor="let project of projects" (click)="selectProject(project)">
+              <span class="project-avatar">{{ project.name.slice(0, 1).toUpperCase() }}</span>
+              <span class="project-info"><strong>{{ project.name }}</strong><small>{{ project.description || 'No description' }}</small></span>
+              <span class="project-status">{{ project.status }}</span><span class="arrow">→</span>
+            </button>
+          </section>
+        </div>
+        <section class="journey-panel">
+          <div class="eyebrow">THE DEVFORGE FLOW</div>
+          <div class="journey">
+            <div><b>01</b><strong>Specify</strong><small>Requirements & domain model</small></div><span>→</span>
+            <div><b>02</b><strong>Evaluate</strong><small>Architecture & compatibility</small></div><span>→</span>
+            <div><b>03</b><strong>Generate</strong><small>Deterministic project output</small></div><span>→</span>
+            <div><b>04</b><strong>Verify</strong><small>Build, tests & runtime</small></div>
+          </div>
+        </section>
+      </ng-container>
+
+      <ng-container *ngIf="activeView === 'project'">
+        <div class="page-heading">
+          <div><div class="eyebrow">PROJECT WORKSPACE</div><h1>{{ selectedProject?.name || 'Project specification' }}</h1><p>{{ selectedProject?.description || 'Select a project or create one from the overview.' }}</p></div>
+          <span class="heading-chip" *ngIf="selectedProject">ID · {{ selectedProject.id.slice(0, 8) }}</span>
+        </div>
+        <div class="editor-layout">
+          <section class="panel editor-panel">
+            <div class="panel-heading"><div><div class="eyebrow">SOURCE OF TRUTH</div><h2>Project Specification</h2></div><span class="schema-tag">JSON · v1.0.0</span></div>
+            <textarea class="code-editor" spellcheck="false" [(ngModel)]="specificationJson"></textarea>
+            <div class="editor-actions">
+              <button class="secondary-button" [disabled]="busy" (click)="validateSpecification()">Validate specification</button>
+              <button class="primary-button" [disabled]="busy || !selectedProject" (click)="saveSnapshot()">Save immutable snapshot</button>
+            </div>
+            <div class="validation-result" *ngIf="validation" [class.valid]="validation.valid" [class.invalid]="!validation.valid">
+              <strong>{{ validation.valid ? 'Specification valid' : 'Validation findings' }}</strong>
+              <ul *ngIf="validation.errors.length"><li *ngFor="let error of validation.errors">{{ error }}</li></ul>
+              <small *ngIf="validation.valid">The payload conforms to the canonical Project Specification schema.</small>
+            </div>
+          </section>
+          <section class="panel snapshots-panel">
+            <div class="panel-heading"><div><div class="eyebrow">VERSION HISTORY</div><h2>Snapshots</h2></div><span class="count">{{ snapshots.length }}</span></div>
+            <div class="empty-state compact" *ngIf="snapshots.length === 0"><strong>No snapshots saved</strong><p>Validate and save the first version.</p></div>
+            <button class="snapshot-row" *ngFor="let snapshot of snapshots" (click)="openSnapshot(snapshot)">
+              <span class="snapshot-icon">◷</span><span><strong>Version {{ snapshot.snapshotVersion }}</strong><small>{{ snapshot.createdAt | date:'medium' }}</small></span><span class="arrow">→</span>
+            </button>
+            <div class="hash-note">Every snapshot is immutable and includes a SHA-256 content digest.</div>
+          </section>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="activeView === 'catalog'">
+        <div class="page-heading"><div><div class="eyebrow">VERSIONED METADATA</div><h1>Technology catalog</h1><p>Only explicitly selected technologies are included in a generated application.</p></div></div>
+        <div class="filter-row"><button [class.selected]="selectedCategory === 'all'" (click)="selectedCategory = 'all'">All</button><button *ngFor="let category of categories" [class.selected]="selectedCategory === category" (click)="selectedCategory = category">{{ category }}</button></div>
+        <div class="catalog-grid">
+          <article class="catalog-card" *ngFor="let item of filteredCatalog">
+            <div class="catalog-card-top"><span class="category-label">{{ item.category }}</span><span class="supported" [class.deprecated]="item.status !== 'supported'">{{ item.status }}</span></div>
+            <h3>{{ item.name }}</h3><div class="catalog-id">{{ item.id }}</div>
+            <div class="version-row"><span>Catalog version</span><strong>{{ item.version }}</strong></div>
+            <div class="range-row"><span>Supported range</span><code>{{ item.supportedRange }}</code></div>
+            <div class="capabilities"><span *ngFor="let capability of item.capabilities.slice(0, 4)">{{ capability }}</span></div>
+          </article>
+        </div>
+      </ng-container>
+
+      <ng-container *ngIf="activeView === 'generate'">
+        <div class="page-heading"><div><div class="eyebrow">DETERMINISTIC GENERATION</div><h1>Generate project</h1><p>Generate a reproducible project archive from an immutable, validated specification snapshot.</p></div></div>
+        <section class="panel">
+          <div class="panel-heading"><div><div class="eyebrow">SUPPORTED VERTICAL SLICE</div><h2>Java 25 · Spring Boot 4 · PostgreSQL 17</h2></div><span class="schema-tag">Generator 0.1.0</span></div>
+          <p class="generation-copy">The initial generator creates a Maven application, JPA entities and repositories, PostgreSQL migration, Dockerfile, Docker Compose, and a provenance manifest. Unsupported relationships, identity profiles, and technology selections are rejected rather than silently skipped.</p>
+          <div class="generation-context" *ngIf="selectedProject"><strong>{{ selectedProject.name }}</strong><span>{{ snapshots.length }} immutable snapshots</span></div>
+          <div class="empty-state compact" *ngIf="!selectedProject"><strong>No project selected</strong><p>Select a project from the overview before generating.</p></div>
+          <div class="empty-state compact" *ngIf="selectedProject && snapshots.length === 0"><strong>No valid snapshot available</strong><p>Open the project specification, validate it, and save a snapshot.</p></div>
+          <button class="primary-button" [disabled]="busy || !selectedProject || snapshots.length === 0" (click)="generateProject()">Generate latest snapshot <span>↓</span></button>
+          <div class="run-history" *ngIf="generationRuns.length">
+            <div class="eyebrow">GENERATION HISTORY</div>
+            <div class="run-row" *ngFor="let run of generationRuns">
+              <span><strong>Snapshot v{{ run.snapshotVersion }}</strong><small>{{ run.generatorId }} · {{ run.generatorVersion }}</small></span>
+              <span class="run-status">{{ run.status }}</span>
+              <code>{{ run.outputSha256.slice(0, 12) }}…</code>
+            </div>
+          </div>
+        </section>
+      </ng-container>
+
+      <ng-container *ngIf="activeView === 'compatibility'">
+        <div class="page-heading"><div><div class="eyebrow">DETERMINISTIC ANALYSIS</div><h1>Compatibility analysis</h1><p>Evaluate selected versions against catalog dependencies, lifecycle policies and compatibility rules.</p></div></div>
+        <section class="panel selection-panel">
+          <div class="panel-heading"><div><div class="eyebrow">SELECTED STACK</div><h2>Technology versions</h2></div><span class="schema-tag">Up to 100 selections</span></div>
+          <div class="selection-grid">
+            <label *ngFor="let item of catalog"><span>{{ item.name }} <small>{{ item.id }}</small></span><input [(ngModel)]="selections[item.id]" [placeholder]="item.version"></label>
+          </div>
+          <button class="primary-button" [disabled]="busy" (click)="evaluateCompatibility()">Evaluate compatibility <span>→</span></button>
+        </section>
+        <section class="panel findings-panel" *ngIf="compatibility">
+          <div class="panel-heading"><div><div class="eyebrow">ANALYSIS RESULT</div><h2>Findings</h2></div><span class="result-pill" [class.good]="compatibility.compatible">{{ compatibility.compatible ? 'Compatible' : 'Action required' }}</span></div>
+          <div class="empty-state compact" *ngIf="compatibility.findings.length === 0"><strong>No compatibility findings</strong><p>The selected technologies satisfy all currently loaded catalog rules.</p></div>
+          <article class="finding" *ngFor="let finding of compatibility.findings" [class.blocked]="finding.status === 'BLOCKED'" [class.warning]="finding.status === 'WARNING' || finding.status === 'INDETERMINATE'">
+            <div class="finding-top"><strong>{{ finding.ruleId }}</strong><span>{{ finding.status }}</span></div>
+            <p>{{ finding.message }}</p><small>{{ finding.rationale }}</small>
+            <ul *ngIf="finding.remediation.length"><li *ngFor="let action of finding.remediation">{{ action }}</li></ul>
+          </article>
+        </section>
+      </ng-container>
+    </section>
+  </main>
+</div>

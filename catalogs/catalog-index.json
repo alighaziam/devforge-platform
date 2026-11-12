@@ -1,0 +1,13 @@
+{
+  "catalogVersion": "1.0.0",
+  "technologies": [
+    "technologies/java-25.json",
+    "technologies/spring-boot-4.json",
+    "technologies/postgresql-17.json",
+    "technologies/angular-20.json",
+    "technologies/node-22.json"
+  ],
+  "compatibilityRules": [
+    "compatibility/spring-boot-requires-java.json"
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "catalogVersion": "1.0.0",
+  "id": "frontend.angular",
+  "category": "frontend",
+  "name": "Angular",
+  "vendor": "Google",
+  "version": "20",
+  "versionScheme": "major-minor",
+  "status": "supported",
+  "capabilities": [
+    "spa",
+    "ssr",
+    "typescript",
+    "routing",
+    "forms"
+  ],
+  "requires": [
+    {
+      "technologyId": "runtime.node",
+      "versionRange": ">=20.19",
+      "reason": "Use an Angular-supported Node.js runtime."
+    }
+  ],
+  "conflicts": [],
+  "platforms": [
+    "linux",
+    "windows",
+    "macos"
+  ],
+  "operatingModes": [
+    "spa",
+    "ssr"
+  ],
+  "documentation": [
+    "https://angular.dev/"
+  ],
+  "supportedRange": ">=20 <21"
+}

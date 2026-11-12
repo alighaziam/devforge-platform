@@ -2,15 +2,23 @@ name: Platform CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'feature/**', 'fix/**', 'docs/**']
     paths:
       - 'pom.xml'
       - 'platform/**'
+      - 'studio/**'
+      - 'schemas/**'
+      - 'catalogs/**'
+      - 'docs/**'
       - '.github/workflows/platform-ci.yml'
   pull_request:
     paths:
       - 'pom.xml'
       - 'platform/**'
+      - 'studio/**'
+      - 'schemas/**'
+      - 'catalogs/**'
+      - 'docs/**'
       - '.github/workflows/platform-ci.yml'
   workflow_dispatch:
 
@@ -23,12 +31,36 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Set up Java 25
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '25'
           cache: maven
       - name: Verify platform
         run: mvn --batch-mode --no-transfer-progress verify
+      - name: Build generated sample project
+        run: |
+          mkdir -p target/generated-sample
+          unzip -q platform/core/target/devforge-generated-sample.zip -d target/generated-sample
+          mvn --batch-mode --no-transfer-progress -f target/generated-sample/pom.xml verify
+
+  studio:
+    name: Angular Studio build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: studio/package-lock.json
+      - name: Install dependencies
+        working-directory: studio
+        run: npm ci --no-audit --no-fund
+      - name: Build Studio
+        working-directory: studio
+        run: npm run build

@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: devforge-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: devforge
+      POSTGRES_USER: devforge
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-devforge-local}
+    ports:
+      - "5432:5432"
+    volumes:
+      - devforge-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U devforge -d devforge"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+volumes:
+  devforge-postgres-data:
