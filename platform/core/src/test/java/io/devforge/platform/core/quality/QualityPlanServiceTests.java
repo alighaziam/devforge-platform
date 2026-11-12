@@ -33,7 +33,7 @@ class QualityPlanServiceTests {
                         "TEST-DATA-ENTITY-1-CUSTOMER-CREATE",
                         "TEST-DATA-ENTITY-1-CUSTOMER-2-EMAIL-REQUIRED",
                         "TEST-DATA-ENTITY-1-CUSTOMER-2-EMAIL-UNIQUE",
-                        "TEST-REL-1-CUSTOMER-PARENT", "TEST-INDEX-1-CUSTOMER-EMAIL",
+                        "TEST-REL-1-CUSTOMERPARENT", "TEST-INDEX-1-CUSTOMEREMAIL",
                         "TEST-SEC-AUTHN", "TEST-SEC-MFA", "TEST-SEC-AUTHZ-1-RBAC", "TEST-SEC-AUDIT");
         assertThat(plan.testCases()).extracting(QualityTestCase::id).doesNotHaveDuplicates();
         assertThat(plan.planSha256()).hasSize(64).isEqualTo(repeated.planSha256());
