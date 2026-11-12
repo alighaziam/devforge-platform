@@ -112,7 +112,7 @@
         </section>
       </ng-container>
 
-      <ng-container *ngIf="activeView === 'project'>
+      <ng-container *ngIf="activeView === 'project'">
         <div class="page-heading">
           <div><div class="eyebrow">PROJECT WORKSPACE</div><h1>{{ selectedProject?.name || 'Project specification' }}</h1><p>{{ selectedProject?.description || 'Select a project or create one from the overview.' }}</p></div>
           <span class="heading-chip" *ngIf="selectedProject">ID · {{ selectedProject.id.slice(0, 8) }}</span>
@@ -124,6 +124,10 @@
             <div class="editor-actions">
               <button class="secondary-button" [disabled]="busy" (click)="validateSpecification()">Validate specification</button>
               <button class="primary-button" [disabled]="busy || !selectedProject" (click)="saveSnapshot()">Save immutable snapshot</button>
+            </div>
+            <div class="validation-result" *ngIf="modelImportWarnings.length">
+              <strong>Model import notes</strong>
+              <ul><li *ngFor="let warning of modelImportWarnings">{{ warning }}</li></ul>
             </div>
             <div class="validation-result" *ngIf="modelImportWarnings.length">
               <strong>Model import notes</strong>

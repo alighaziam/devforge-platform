@@ -168,6 +168,7 @@ export class AppComponent implements OnInit {
     this.activeView = 'project';
     this.validation = null;
     this.compatibility = null;
+    this.architectureAssessment = null;
     const spec = JSON.parse(this.specificationJson) as Record<string, unknown>;
     const projectNode = spec['project'] as Record<string, unknown>;
     projectNode['id'] = project.id;
