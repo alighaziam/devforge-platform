@@ -37,6 +37,20 @@ class GeneratedFileValidatorTests {
     }
 
     @Test
+    void rejectsGitMetadataAndCaseInsensitivePathCollisions() {
+        assertThatThrownBy(() -> validator.validate(Map.of(".git/config", "unsafe")))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("Git metadata");
+        assertThatThrownBy(() -> validator.validate(Map.of(
+                "Readme.md", "one",
+                "README.md", "two")))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("case-insensitive");
+        assertThatThrownBy(() -> validator.validate(Map.of("folder/README.", "unsafe")))
+                .isInstanceOf(ResponseStatusException.class);
+    }
+
+    @Test
     void rejectsReservedManifestAndNullContent() {
         assertThatThrownBy(() -> validator.validate(Map.of(".devforge/manifest.json", "{}")))
                 .isInstanceOf(ResponseStatusException.class)
