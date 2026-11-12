@@ -1,7 +1,9 @@
 package io.devforge.platform.core.quality;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
+import java.util.TreeMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -15,7 +17,7 @@ public record QualityPlanResult(
         String planSha256) {
 
     public QualityPlanResult {
-        summary = Map.copyOf(summary);
+        summary = Collections.unmodifiableMap(new TreeMap<>(summary));
         testCases = List.copyOf(testCases);
     }
 }
