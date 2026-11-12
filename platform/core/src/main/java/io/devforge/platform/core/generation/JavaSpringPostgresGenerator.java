@@ -184,7 +184,7 @@ public class JavaSpringPostgresGenerator {
     }
 
     private String javaMigration(JsonNode model) {
-        String sql = migration(model).replaceFirst("(?m)^--[^\\r\\n]*\\r?\\n", "");
+        String sql = migration(model).replaceFirst("(?m)^--[^\r\n]*\r?\n", "");
         List<String> statements = Arrays.stream(sql.split(";"))
                 .map(String::trim)
                 .filter(statement -> !statement.isEmpty())
