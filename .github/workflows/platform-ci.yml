@@ -46,7 +46,7 @@ jobs:
           unzip -l platform/core/target/devforge-generated-sample.zip
           unzip -q platform/core/target/devforge-generated-sample.zip -d target/generated-sample
           test -s target/generated-sample/src/main/java/db/migration/V1__CreateDomainSchema.java
-          grep -Fq 'CREATE TABLE \"customer\"' target/generated-sample/src/main/java/db/migration/V1__CreateDomainSchema.java
+          grep -Fq 'CREATE TABLE \\"customer\\"' target/generated-sample/src/main/java/db/migration/V1__CreateDomainSchema.java
           mvn --batch-mode --no-transfer-progress -f target/generated-sample/pom.xml verify
           find target/generated-sample/target/classes -type f -print
           test -s target/generated-sample/target/classes/db/migration/V1__CreateDomainSchema.class
@@ -58,6 +58,7 @@ jobs:
           cd target/generated-sample
           cleanup() { docker compose down --volumes --remove-orphans; }
           trap cleanup EXIT
+          export DATABASE_PASSWORD='ci-only-devforge-password'
           docker compose up --build --detach
           for attempt in $(seq 1 36); do
             if curl --fail --silent http://localhost:8080/actuator/health; then

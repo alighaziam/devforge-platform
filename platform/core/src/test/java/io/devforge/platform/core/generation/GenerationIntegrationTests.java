@@ -48,7 +48,9 @@ class GenerationIntegrationTests {
                 "src/main/java/io/devforge/generated/orders/model/Customer.java",
                 "src/main/java/io/devforge/generated/orders/repository/CustomerRepository.java",
                 "src/main/java/db/migration/V1__CreateDomainSchema.java",
-                ".devforge/manifest.json");
+                ".devforge/manifest.json",
+                ".env.example",
+                ".gitignore");
         assertThat(entries.get("src/main/java/db/migration/V1__CreateDomainSchema.java"))
                 .contains("CREATE TABLE \\\"customer\\\"")
                 .contains("\\\"email\\\" VARCHAR(255) NOT NULL UNIQUE")

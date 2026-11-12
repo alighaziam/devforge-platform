@@ -24,11 +24,17 @@ class JavaSpringPostgresGeneratorTests {
                 "src/main/java/io/devforge/generated/orders/repository/CustomerRepository.java",
                 "src/main/java/db/migration/V1__CreateDomainSchema.java",
                 "Dockerfile",
-                "docker-compose.yml");
+                "docker-compose.yml",
+                ".env.example",
+                ".gitignore");
         assertThat(files.get("pom.xml")).contains("spring-boot-starter-actuator");
         assertThat(files.get("docker-compose.yml")).contains("pg_isready", "service_healthy",
                 "SPRING_DATASOURCE_URL", "SPRING_DATASOURCE_USERNAME",
-                "SPRING_JPA_HIBERNATE_DDL_AUTO: validate", "SPRING_FLYWAY_ENABLED");
+                "SPRING_JPA_HIBERNATE_DDL_AUTO: validate", "SPRING_FLYWAY_ENABLED",
+                "DATABASE_PASSWORD:?Set DATABASE_PASSWORD in .env", "127.0.0.1:8080:8080")
+                .doesNotContain("local-only", "5432:5432");
+        assertThat(files.get(".env.example"))
+                .contains("DATABASE_PASSWORD=replace-with-a-long-random-password");
         assertThat(files.get("src/main/java/db/migration/V1__CreateDomainSchema.java"))
                 .contains("extends BaseJavaMigration")
                 .contains("CREATE TABLE \\\"customer\\\"")
