@@ -48,7 +48,6 @@
 
 ## Phase 4 — First generator vertical slice
 
-Start with one narrow, end-to-end supported stack rather than claiming broad support prematurely. Current supported slice: Java 25 + Spring Boot 4 + PostgreSQL 17 backend; frontend generation and security integrations are not yet supported.
 
 - [x] Deterministic generator plugin contract and registry for the first supported stack.
 - [x] Generator discovery API, explicit versioned selection, and duplicate-coordinate rejection.
@@ -56,7 +55,7 @@ Start with one narrow, end-to-end supported stack rather than claiming broad sup
 - [x] Generated project manifest and provenance, with persistent generation-run audit records.
 - [ ] Golden-file tests and regeneration safety.
 
-- [x] Exit criteria: identical snapshots and generator versions produce reproducible output, verified by repeat-generation SHA-256 integration tests and a separate generated-project Maven CI build.
+**Exit criteria:** identical snapshots and generator versions produce reproducible output, verified by repeat-generation SHA-256 integration tests and a separate generated-project Maven CI build.
 
 ## Phase 5 — Quality and sandbox
 

@@ -14,7 +14,7 @@ DevForge is a data-model-first, specification-driven platform for designing, gen
 - **Deterministic generation:** LLMs may assist analysis and recommendations; generators consume validated specifications and produce reproducible outputs.
 - **Validate before delivery:** build, tests, migrations, runtime health, and integration checks must be reported honestly.
 - **Extensible by design:** generators and integrations are versioned plugins.
-- **Safe by default:** generated code and user-provided artifacts are untrusted; execution occurs in isolated sandboxes.
+- **Safe by default:** generated code and user-provided artifacts are untrusted. Arbitrary project execution is not enabled until isolated workers and resource/network controls are in place.
 
 ## Initial scope
 
@@ -48,9 +48,7 @@ The initial backend vertical slice now includes:
 - A deterministic architecture advisor that reports security, availability, scalability, and distributed-systems risks with trade-offs and ADR drafts.
 - Persistent ADR lifecycle with explicit proposal, acceptance, rejection, supersession, optimistic locking, and transition audit history.
 - Requirements-driven quality-plan previews with independent functional, data-integrity, security, and non-functional test intentions.
-- A deterministic generator plugin registry with explicit selection, declared stack compatibility, and a Java 25 / Spring Boot 4 / PostgreSQL 17 built-in generator.
-- Generated artifact safety validation for path traversal, secret files, reserved manifest ownership, portable path collisions, and output-size limits.
-- Provenance manifests and auditable generation runs; CI builds and smoke-runs a generated sample with PostgreSQL.
+
 - CI compiles the generated sample project as a separate Maven build.
 - Draft 2020-12 Project Specification validation.
 - PostgreSQL-backed project lifecycle and immutable, versioned specification snapshots.
