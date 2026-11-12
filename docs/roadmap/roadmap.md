@@ -51,7 +51,7 @@
 Start with one narrow, end-to-end supported stack rather than claiming broad support prematurely. Current supported slice: Java 25 + Spring Boot 4 + PostgreSQL 17 backend; frontend generation and security integrations are not yet supported.
 
 - [x] Deterministic generator plugin contract and registry for the first supported stack.
-- [x] Generator discovery API, explicit plugin selection, and duplicate-ID rejection.
+- [x] Generator discovery API, explicit versioned selection, and duplicate-coordinate rejection.
 - [x] Generated artifact path, secret-file, reserved-manifest, and size validation.
 - [x] Generated project manifest and provenance, with persistent generation-run audit records.
 - [ ] Golden-file tests and regeneration safety.
