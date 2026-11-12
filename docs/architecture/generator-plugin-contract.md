@@ -14,17 +14,17 @@ A trusted in-process generator implements `GeneratorPlugin`:
 
 The `GeneratorRegistry` discovers Spring-managed built-in implementations, rejects duplicate IDs at startup, and exposes the approved descriptors through `GET /api/v1/generators`.
 
-Generation requests may include `generatorId`. If omitted, the registry selects the only compatible generator. If more than one generator supports the specification, the request must name one explicitly. Unknown IDs return a client error; unsupported combinations are rejected before generation.
+Generation requests may include `generatorId`. If omitted, the registry selects the only compatible generator. Multiple versions of the same plugin ID may be registered. A request can select an exact coordinate using `generatorId: "plugin.id@1.2.3"`. If an ID or automatic selection matches multiple compatible versions, the request must name an exact coordinate. Unknown IDs/coordinates return a client error; unsupported combinations are rejected before generation.
 
 ## Output safety boundary
 
 The platform treats plugin output as untrusted data even when the implementation is a built-in plugin. Before adding the platform-owned manifest or creating an archive, `GeneratedFileValidator` enforces:
 
-- Relative, portable paths only; no absolute paths, drive paths, backslashes, traversal segments, control characters, or `.git` writes.
+- Relative, portable paths only; no absolute paths, drive paths, backslashes, traversal segments, control characters, `.git` writes, trailing-dot/space segments, or case-insensitive path collisions.
 - No case-insensitive path collisions.
 - No `.env` or environment-specific secret files. The documented `.env.example` template is allowed.
 - The generator cannot overwrite `.devforge/manifest.json`.
-- Maximum 5,000 files, 10 MiB per file, and 100 MiB total UTF-8 content.
+- Maximum 5,000 files, 10 MiB per file, and 50 MiB total UTF-8 content.
 
 The manifest and ZIP digest are produced by the platform after validation. Generated projects are still built and run only in the controlled CI/runtime workflow; generation itself never executes generated code.
 
@@ -37,7 +37,7 @@ External plugins must not be dynamically class-loaded into the platform JVM. The
 ## Versioning
 
 - Plugin IDs are immutable and globally unique within the platform registry.
-- Plugin versions are independently versioned from the platform and project specification.
+- Plugin versions use semantic versioning and are independently versioned from the platform and project specification.
 - A plugin must declare the specification versions and exact technology versions it supports.
 - Changes to output semantics require a plugin version change.
 - Generation manifests and audit records preserve the selected plugin ID and version for reproducibility.
