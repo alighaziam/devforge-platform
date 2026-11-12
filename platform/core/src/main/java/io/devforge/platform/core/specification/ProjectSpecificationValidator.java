@@ -18,13 +18,8 @@ import java.util.Set;
 @Service
 public class ProjectSpecificationValidator {
 
-    private final ObjectMapper objectMapper;
-    private final JsonSchema schema;
-
-    public ProjectSpecificationValidator(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-        this.schema = loadSchema();
-    }
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final JsonSchema schema = loadSchema();
 
     public SpecificationValidationResult validate(String json) throws JsonProcessingException {
         JsonNode instance = objectMapper.readTree(json);
