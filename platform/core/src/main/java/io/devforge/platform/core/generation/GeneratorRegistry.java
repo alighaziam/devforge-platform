@@ -26,7 +26,7 @@ public class GeneratorRegistry {
         if (registered.isEmpty()) {
             throw new IllegalStateException("At least one trusted generator plugin must be registered");
         }
-        this.plugins = Map.copyOf(registered);
+        this.plugins = java.util.Collections.unmodifiableMap(registered);
     }
 
     public List<GeneratorDescriptor> descriptors() {
