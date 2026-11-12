@@ -52,7 +52,7 @@ class JavaSpringPostgresGeneratorTests {
         ObjectNode spec = (ObjectNode) mapper.readTree(specification());
         ObjectNode index = mapper.createObjectNode().put("entity", "Customer").put("name", "idx_customer_missing");
         index.putArray("columns").add("missing");
-        spec.withObject("/model").putArray("indexes").add(index);
+        ((ObjectNode) spec.get("model")).putArray("indexes").add(index);
 
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> generator.generate(spec))
                 .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
