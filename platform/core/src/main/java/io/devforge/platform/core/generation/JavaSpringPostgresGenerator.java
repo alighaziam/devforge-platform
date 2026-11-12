@@ -123,6 +123,15 @@ public class JavaSpringPostgresGenerator {
         }
         if (!id) out.append("@Id @GeneratedValue(strategy = GenerationType.UUID) private UUID id;\n");
         out.append("protected ").append(cls).append("() { }\n");
+        for (JsonNode attribute : entity.path("attributes")) {
+            String field = fieldName(attribute.path("name").asText());
+            String type = javaType(attribute.path("type").asText().toLowerCase(Locale.ROOT));
+            String capitalized = Character.toUpperCase(field.charAt(0)) + field.substring(1);
+            out.append("public ").append(type).append(" get").append(capitalized)
+                    .append("() { return ").append(field).append("; }\n")
+                    .append("public void set").append(capitalized).append("(").append(type)
+                    .append(" value) { this.").append(field).append(" = value; }\n");
+        }
         if (!id) out.append("public UUID getId() { return id; }\n");
         return out.append("}\n").toString();
     }
