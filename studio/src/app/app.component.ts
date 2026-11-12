@@ -29,6 +29,18 @@ interface Technology {
   status: string;
   capabilities: string[];
 }
+interface GenerationRun {
+  id: string;
+  projectId: string;
+  snapshotId: string;
+  snapshotVersion: number;
+  generatorId: string;
+  generatorVersion: string;
+  status: string;
+  outputSha256: string;
+  generatedFileCount: number;
+  createdAt: string;
+}
 interface CompatibilityFinding {
   ruleId: string;
   status: string;
@@ -61,6 +73,7 @@ export class AppComponent implements OnInit {
 
   projects: Project[] = [];
   snapshots: Snapshot[] = [];
+  generationRuns: GenerationRun[] = [];
   catalog: Technology[] = [];
   selectedProject: Project | null = null;
   selectedCategory = 'all';
@@ -144,7 +157,7 @@ export class AppComponent implements OnInit {
     projectNode['name'] = project.name;
     projectNode['description'] = project.description || '';
     this.specificationJson = JSON.stringify(spec, null, 2);
-    await this.loadSnapshots();
+    await Promise.all([this.loadSnapshots(), this.loadGenerationRuns()]);
   }
 
   async loadSnapshots(): Promise<void> {
@@ -155,6 +168,17 @@ export class AppComponent implements OnInit {
       );
     } catch (error) {
       this.handleError(error, 'Could not load specification snapshots.');
+    }
+  }
+
+  async loadGenerationRuns(): Promise<void> {
+    if (!this.selectedProject) return;
+    try {
+      this.generationRuns = await firstValueFrom(this.http.get<GenerationRun[]>(
+        '/api/v1/projects/' + this.selectedProject.id + '/generations'
+      ));
+    } catch (error) {
+      this.handleError(error, 'Could not load generation history.');
     }
   }
 
@@ -225,6 +249,7 @@ export class AppComponent implements OnInit {
       anchor.download = this.selectedProject.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.zip';
       anchor.click();
       window.URL.revokeObjectURL(url);
+      await this.loadGenerationRuns();
       this.setNotice('Generated project archive downloaded.', 'success');
     } catch (error) {
       if (error instanceof HttpErrorResponse && error.error instanceof Blob) {

@@ -2,7 +2,7 @@
 
 ## API
 
-`POST /api/v1/projects/{projectId}/generations`
+`POST /api/v1/projects/{projectId}/generations` — generate a ZIP archive.\n\n`GET /api/v1/projects/{projectId}/generations` — list generation-run audit records.
 
 Request:
 

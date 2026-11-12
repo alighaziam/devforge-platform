@@ -122,6 +122,14 @@
           <div class="empty-state compact" *ngIf="!selectedProject"><strong>No project selected</strong><p>Select a project from the overview before generating.</p></div>
           <div class="empty-state compact" *ngIf="selectedProject && snapshots.length === 0"><strong>No valid snapshot available</strong><p>Open the project specification, validate it, and save a snapshot.</p></div>
           <button class="primary-button" [disabled]="busy || !selectedProject || snapshots.length === 0" (click)="generateProject()">Generate latest snapshot <span>↓</span></button>
+          <div class="run-history" *ngIf="generationRuns.length">
+            <div class="eyebrow">GENERATION HISTORY</div>
+            <div class="run-row" *ngFor="let run of generationRuns">
+              <span><strong>Snapshot v{{ run.snapshotVersion }}</strong><small>{{ run.generatorId }} · {{ run.generatorVersion }}</small></span>
+              <span class="run-status">{{ run.status }}</span>
+              <code>{{ run.outputSha256.slice(0, 12) }}…</code>
+            </div>
+          </div>
         </section>
       </ng-container>
 

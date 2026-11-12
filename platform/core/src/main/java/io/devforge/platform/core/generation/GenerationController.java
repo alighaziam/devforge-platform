@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/projects/{projectId}/generations")
@@ -18,6 +19,11 @@ public class GenerationController {
 
     public GenerationController(GenerationService generationService) {
         this.generationService = generationService;
+    }
+
+    @GetMapping
+    public List<GenerationRunView> listRuns(@PathVariable UUID projectId) {
+        return generationService.listRuns(projectId);
     }
 
     @PostMapping

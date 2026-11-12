@@ -7,6 +7,7 @@ import io.devforge.platform.core.catalog.CompatibilityEvaluationResult;
 import io.devforge.platform.core.catalog.CompatibilityEvaluator;
 import io.devforge.platform.core.project.SpecificationSnapshotEntity;
 import io.devforge.platform.core.project.SpecificationSnapshotRepository;
+import io.devforge.platform.core.project.ProjectRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,21 +23,24 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 @Service
 public class GenerationService {
     private final SpecificationSnapshotRepository snapshots;
+    private final ProjectRepository projects;
     private final CompatibilityEvaluator compatibilityEvaluator;
     private final JavaSpringPostgresGenerator generator;
     private final GenerationRunRepository generationRuns;
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public GenerationService(SpecificationSnapshotRepository snapshots,
+    public GenerationService(SpecificationSnapshotRepository snapshots, ProjectRepository projects,
             CompatibilityEvaluator compatibilityEvaluator, JavaSpringPostgresGenerator generator,
             GenerationRunRepository generationRuns) {
         this.snapshots = snapshots;
+        this.projects = projects;
         this.compatibilityEvaluator = compatibilityEvaluator;
         this.generator = generator;
         this.generationRuns = generationRuns;
@@ -92,6 +96,15 @@ public class GenerationService {
                 .replaceAll("^-+|-+$", "");
         if (slug.isBlank()) slug = "devforge-project";
         return new GenerationArtifact(runId, slug + ".zip", archive, digest, files.size());
+    }
+
+    @Transactional(readOnly = true)
+    public List<GenerationRunView> listRuns(UUID projectId) {
+        if (!projects.existsById(projectId)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found");
+        }
+        return generationRuns.findAllByProject_IdOrderByCreatedAtDesc(projectId)
+                .stream().map(GenerationRunView::from).toList();
     }
 
     private byte[] zip(Map<String, String> files) {

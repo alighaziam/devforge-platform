@@ -35,6 +35,7 @@ class GenerationIntegrationTests {
 
         assertThat(first.fileName()).isEqualTo("orders.zip");
         assertThat(first.runId()).isNotNull();
+        assertThat(generationService.listRuns(project.id())).hasSize(2);
         assertThat(generationRuns.findAllByProject_IdOrderByCreatedAtAsc(project.id()))
                 .hasSize(2)
                 .allSatisfy(run -> assertThat(run.getStatus()).isEqualTo("GENERATED"));
