@@ -21,13 +21,14 @@ class JavaSpringPostgresGeneratorTests {
                 "pom.xml",
                 "src/main/java/io/devforge/generated/orders/model/Customer.java",
                 "src/main/java/io/devforge/generated/orders/repository/CustomerRepository.java",
-                "src/main/resources/db/migration/V1__create_domain_schema.sql",
+                "src/main/java/db/migration/V1__CreateDomainSchema.java",
                 "Dockerfile",
                 "docker-compose.yml");
         assertThat(files.get("pom.xml")).contains("spring-boot-starter-actuator");
         assertThat(files.get("docker-compose.yml")).contains("pg_isready", "service_healthy");
         assertThat(files.get("src/main/resources/application.yml")).contains("management:", "include: health");
-        assertThat(files.get("src/main/resources/db/migration/V1__create_domain_schema.sql"))
+        assertThat(files.get("src/main/java/db/migration/V1__CreateDomainSchema.java"))
+                .contains("extends BaseJavaMigration")
                 .contains("CREATE TABLE customer")
                 .contains("email VARCHAR(255) NOT NULL UNIQUE");
         assertThat(files.get("src/main/java/io/devforge/generated/orders/model/Customer.java"))
