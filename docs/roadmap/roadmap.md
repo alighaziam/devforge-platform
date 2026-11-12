@@ -16,7 +16,7 @@
 ## Phase 1 — Platform skeleton
 
 - [x] Create Java 25 / Spring Boot multi-module Maven build.
-- [ ] Create Angular Studio workspace.
+- [x] Create Angular 20 Studio workspace for project lifecycle, specification validation, catalog browsing, and compatibility analysis.
 - [x] Add health/readiness endpoints and graceful shutdown configuration.
 - [x] Add CI pipeline.
 - [x] Add architecture tests preventing module cycles.
