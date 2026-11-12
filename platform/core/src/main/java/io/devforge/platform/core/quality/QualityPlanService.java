@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.*;
 
@@ -24,8 +26,9 @@ public class QualityPlanService {
 
     @Transactional(readOnly = true)
     public QualityPlanResult createPlan(UUID projectId, int snapshotVersion) throws JsonProcessingException {
-        if (snapshotVersion < 1) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                "snapshotVersion must be positive");
+        if (snapshotVersion < 1) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "snapshotVersion must be positive");
+        }
         SpecificationSnapshotEntity snapshot = snapshots
                 .findByProject_IdAndSnapshotVersion(projectId, snapshotVersion)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
@@ -41,30 +44,37 @@ public class QualityPlanService {
                 .thenComparing(QualityTestCase::id));
 
         Map<String, Integer> summary = new TreeMap<>();
-        for (QualityTestCase testCase : cases) summary.merge(testCase.category(), 1, Integer::sum);
+        for (QualityTestCase testCase : cases) {
+            summary.merge(testCase.category(), 1, Integer::sum);
+        }
         return new QualityPlanResult(projectId, snapshot.getId(), snapshotVersion,
-                Instant.now(), summary, cases);
+                Instant.now(), summary, cases, sha256(mapper.writeValueAsBytes(cases)));
     }
 
     private void functionalCases(JsonNode requirements, List<QualityTestCase> cases) {
-        for (JsonNode requirement : requirements) {
+        for (int requirementIndex = 0; requirementIndex < requirements.size(); requirementIndex++) {
+            JsonNode requirement = requirements.get(requirementIndex);
             String id = safeId(requirement.path("id").asText("REQ"));
             String statement = requirement.path("statement").asText();
             String priority = requirement.path("priority").asText("should");
+            String requirementPath = "$.requirements.functional[" + requirementIndex + "]";
             JsonNode criteria = requirement.path("acceptanceCriteria");
             if (!criteria.isArray() || criteria.isEmpty()) {
-                add(cases, "FUNCTIONAL", "TEST-FR-" + id, "Verify " + id,
-                        statement, priority, "$.requirements.functional",
-                        List.of("Prepare the required business preconditions.", "Execute the stated requirement.",
+                add(cases, "FUNCTIONAL", "TEST-FR-" + (requirementIndex + 1) + "-" + id,
+                        "Verify " + id, statement, priority, requirementPath,
+                        List.of("Prepare the required business preconditions.",
+                                "Execute the stated requirement.",
                                 "Observe the resulting business state."),
                         "The application satisfies the requirement statement without violating its constraints.");
             } else {
-                for (int i = 0; i < criteria.size(); i++) {
-                    String criterion = criteria.get(i).asText();
-                    add(cases, "FUNCTIONAL", "TEST-FR-" + id + "-AC-" + (i + 1),
-                            "Verify acceptance criterion " + (i + 1) + " for " + id,
-                            criterion, priority, "$.requirements.functional[" + id + "].acceptanceCriteria[" + i + "]",
-                            List.of("Arrange the criterion's preconditions.", "Execute the required user or system action.",
+                for (int criterionIndex = 0; criterionIndex < criteria.size(); criterionIndex++) {
+                    String criterion = criteria.get(criterionIndex).asText();
+                    add(cases, "FUNCTIONAL",
+                            "TEST-FR-" + (requirementIndex + 1) + "-" + id + "-AC-" + (criterionIndex + 1),
+                            "Verify acceptance criterion " + (criterionIndex + 1) + " for " + id,
+                            criterion, priority, requirementPath + ".acceptanceCriteria[" + criterionIndex + "]",
+                            List.of("Arrange the criterion's preconditions.",
+                                    "Execute the required user or system action.",
                                     "Assert the observable outcome."),
                             "Acceptance criterion is met: " + criterion);
                 }
@@ -73,47 +83,75 @@ public class QualityPlanService {
     }
 
     private void modelCases(JsonNode model, List<QualityTestCase> cases) {
-        for (JsonNode entity : model.path("entities")) {
+        JsonNode entities = model.path("entities");
+        for (int entityIndex = 0; entityIndex < entities.size(); entityIndex++) {
+            JsonNode entity = entities.get(entityIndex);
             String entityName = entity.path("name").asText("Entity");
             String entityId = safeId(entityName);
-            add(cases, "DATA_MODEL", "TEST-DATA-" + entityId + "-CREATE",
-                    "Create a valid " + entityName,
+            String entityPath = "$.model.entities[" + entityIndex + "]";
+            String entityCaseId = "TEST-DATA-ENTITY-" + (entityIndex + 1) + "-" + entityId;
+            add(cases, "DATA_MODEL", entityCaseId + "-CREATE", "Create a valid " + entityName,
                     "Verify the entity can be created using valid values for its modeled attributes.",
-                    "must", "$.model.entities[" + entityName + "]",
+                    "must", entityPath,
                     List.of("Construct a record with valid values for all attributes.",
                             "Persist the record through the application boundary.",
                             "Read it back and compare persisted values."),
                     "The entity is persisted and can be read back without data loss.");
-            for (JsonNode attribute : entity.path("attributes")) {
+            JsonNode attributes = entity.path("attributes");
+            for (int attributeIndex = 0; attributeIndex < attributes.size(); attributeIndex++) {
+                JsonNode attribute = attributes.get(attributeIndex);
                 String attributeName = attribute.path("name").asText("attribute");
                 String attributeId = safeId(attributeName);
-                String path = "$.model.entities[" + entityName + "].attributes[" + attributeName + "]";
+                String attributePath = entityPath + ".attributes[" + attributeIndex + "]";
                 if (attribute.path("required").asBoolean(false)) {
-                    add(cases, "DATA_VALIDATION", "TEST-DATA-" + entityId + "-" + attributeId + "-REQUIRED",
+                    add(cases, "DATA_VALIDATION",
+                            entityCaseId + "-" + (attributeIndex + 1) + "-" + attributeId + "-REQUIRED",
                             "Reject missing " + attributeName,
-                            "Verify the required attribute is enforced.",
-                            "must", path,
+                            "Verify the required attribute is enforced.", "must", attributePath,
                             List.of("Create an otherwise valid " + entityName + " without " + attributeName + ".",
                                     "Submit the record through the application boundary."),
                             "The operation is rejected with a clear validation error.");
                 }
                 if (attribute.path("unique").asBoolean(false)) {
-                    add(cases, "DATA_INTEGRITY", "TEST-DATA-" + entityId + "-" + attributeId + "-UNIQUE",
+                    add(cases, "DATA_INTEGRITY",
+                            entityCaseId + "-" + (attributeIndex + 1) + "-" + attributeId + "-UNIQUE",
                             "Enforce uniqueness of " + attributeName,
                             "Verify duplicate values cannot violate the uniqueness constraint.",
-                            "must", path,
+                            "must", attributePath,
                             List.of("Persist one " + entityName + " with a known " + attributeName + ".",
                                     "Attempt to persist a second record with the same value."),
                             "The duplicate is rejected and the original record remains unchanged.");
                 }
             }
         }
-        for (JsonNode index : model.path("indexes")) {
+
+        JsonNode relationships = model.path("relationships");
+        for (int relationshipIndex = 0; relationshipIndex < relationships.size(); relationshipIndex++) {
+            JsonNode relationship = relationships.get(relationshipIndex);
+            String name = relationship.path("name").asText("relationship");
+            String from = relationship.path("from").asText("source");
+            String to = relationship.path("to").asText("target");
+            String cardinality = relationship.path("cardinality").asText("unspecified");
+            add(cases, "DATA_RELATIONSHIP",
+                    "TEST-REL-" + (relationshipIndex + 1) + "-" + safeId(name),
+                    "Verify relationship " + name,
+                    "Verify " + from + " to " + to + " follows " + cardinality + " cardinality.",
+                    "must", "$.model.relationships[" + relationshipIndex + "]",
+                    List.of("Create valid source and target records.",
+                            "Create the relationship through the application boundary.",
+                            "Attempt an invalid association that violates the declared cardinality.",
+                            "Verify the persisted association and referential integrity."),
+                    "The relationship enforces " + cardinality + " cardinality and valid references.");
+        }
+
+        JsonNode indexes = model.path("indexes");
+        for (int indexNumber = 0; indexNumber < indexes.size(); indexNumber++) {
+            JsonNode index = indexes.get(indexNumber);
             String name = index.path("name").asText("declared-index");
-            add(cases, "DATA_PERFORMANCE", "TEST-INDEX-" + safeId(name),
+            add(cases, "DATA_PERFORMANCE", "TEST-INDEX-" + (indexNumber + 1) + "-" + safeId(name),
                     "Verify declared index " + name,
                     "Verify the database migration creates the declared index and representative queries can use it.",
-                    "should", "$.model.indexes[" + name + "]",
+                    "should", "$.model.indexes[" + indexNumber + "]",
                     List.of("Apply database migrations to a clean database.",
                             "Inspect the database catalog for the index.",
                             "Run a representative query and inspect its query plan."),
@@ -122,7 +160,8 @@ public class QualityPlanService {
     }
 
     private void qualityAttributeCases(JsonNode attributes, List<QualityTestCase> cases) {
-        for (JsonNode attribute : attributes) {
+        for (int attributeIndex = 0; attributeIndex < attributes.size(); attributeIndex++) {
+            JsonNode attribute = attributes.get(attributeIndex);
             String key = attribute.path("attribute").asText("quality");
             String target = attribute.path("target").asText("a measurable target");
             String measure = attribute.path("measure").asText("the agreed project measurement");
@@ -135,27 +174,32 @@ public class QualityPlanService {
                 case "performance" -> {
                     title = "Measure performance against target";
                     objective = "Measure response time and throughput against " + target + " using " + measure + ".";
-                    steps = List.of("Prepare representative workload and test data.", "Execute a repeatable load profile.",
+                    steps = List.of("Prepare representative workload and test data.",
+                            "Execute a repeatable load profile.",
                             "Capture latency percentiles, throughput, and resource saturation.");
                     expected = "Measured performance meets the agreed target.";
                 }
                 case "availability" -> {
                     title = "Verify availability and recovery";
                     objective = "Verify health signals and recovery behavior against " + target + ".";
-                    steps = List.of("Start the application and verify readiness.", "Inject a controlled dependency failure.",
+                    steps = List.of("Start the application and verify readiness.",
+                            "Inject a controlled dependency failure.",
                             "Observe detection, recovery, and alert behavior.");
                     expected = "The service recovers within the agreed objective and emits actionable signals.";
                 }
                 case "scalability" -> {
                     title = "Verify horizontal scalability";
                     objective = "Measure behavior as workload and instance count change against " + target + ".";
-                    steps = List.of("Run a baseline load.", "Increase concurrency and instance count.", "Compare throughput, latency, and resource use.");
+                    steps = List.of("Run a baseline load.",
+                            "Increase concurrency and instance count.",
+                            "Compare throughput, latency, and resource use.");
                     expected = "The system scales within the agreed capacity and latency envelope.";
                 }
                 case "security" -> {
                     title = "Verify application security controls";
                     objective = "Verify authentication, authorization, input handling, and audit controls.";
-                    steps = List.of("Test unauthenticated and unauthorized access.", "Exercise input validation and common injection vectors.",
+                    steps = List.of("Test unauthenticated and unauthorized access.",
+                            "Exercise input validation and common injection vectors.",
                             "Verify security-relevant actions produce audit evidence.");
                     expected = "Access is denied when unauthorized and security controls behave as specified.";
                 }
@@ -170,30 +214,35 @@ public class QualityPlanService {
                 case "observability" -> {
                     title = "Verify telemetry coverage";
                     objective = "Verify metrics, logs, traces, and alerts support diagnosis.";
-                    steps = List.of("Trigger a representative successful request.", "Trigger a controlled failure.",
+                    steps = List.of("Trigger a representative successful request.",
+                            "Trigger a controlled failure.",
                             "Correlate logs, traces, metrics, and alert events.");
                     expected = "Signals are emitted with correlation context and support root-cause analysis.";
                 }
                 default -> {
                     title = "Verify " + key;
                     objective = "Verify the quality attribute " + key + " against " + target + " using " + measure + ".";
-                    steps = List.of("Define representative acceptance scenarios.", "Execute scenarios in a controlled environment.",
+                    steps = List.of("Define representative acceptance scenarios.",
+                            "Execute scenarios in a controlled environment.",
                             "Record evidence and compare results with the target.");
                     expected = "The measured result satisfies the approved quality target.";
                 }
             }
-            add(cases, "QUALITY_" + key.toUpperCase(Locale.ROOT), "TEST-QA-" + safeId(key),
-                    title, objective, priority, "$.requirements.qualityAttributes[" + key + "]", steps, expected);
+            add(cases, "QUALITY_" + key.toUpperCase(Locale.ROOT),
+                    "TEST-QA-" + (attributeIndex + 1) + "-" + safeId(key),
+                    title, objective, priority,
+                    "$.requirements.qualityAttributes[" + attributeIndex + "]", steps, expected);
         }
     }
 
     private void constraintCases(JsonNode constraints, List<QualityTestCase> cases) {
-        for (int i = 0; i < constraints.size(); i++) {
-            String constraint = constraints.get(i).asText();
-            add(cases, "CONSTRAINT", "TEST-CONSTRAINT-" + (i + 1),
-                    "Verify project constraint " + (i + 1), constraint, "must",
-                    "$.requirements.constraints[" + i + "]",
-                    List.of("Prepare a scenario that exercises the constraint.", "Execute the relevant workflow.",
+        for (int index = 0; index < constraints.size(); index++) {
+            String constraint = constraints.get(index).asText();
+            add(cases, "CONSTRAINT", "TEST-CONSTRAINT-" + (index + 1),
+                    "Verify project constraint " + (index + 1), constraint, "must",
+                    "$.requirements.constraints[" + index + "]",
+                    List.of("Prepare a scenario that exercises the constraint.",
+                            "Execute the relevant workflow.",
                             "Inspect the resulting behavior and configuration."),
                     "The implementation complies with the stated constraint: " + constraint);
         }
@@ -205,7 +254,8 @@ public class QualityPlanService {
             add(cases, "SECURITY", "TEST-SEC-AUTHN", "Verify authentication policy",
                     "Verify the configured authentication strategy rejects invalid credentials and accepts valid identities.",
                     "must", "$.security.authentication",
-                    List.of("Attempt access without credentials.", "Attempt access with invalid credentials.",
+                    List.of("Attempt access without credentials.",
+                            "Attempt access with invalid credentials.",
                             "Authenticate with a valid identity and verify the principal."),
                     "Only valid authenticated identities receive access.");
         }
@@ -218,6 +268,27 @@ public class QualityPlanService {
                             "Complete the flow with a valid second factor."),
                     "Authentication cannot complete without the required second factor.");
         }
+        JsonNode authorizationModels = security.path("authorizationModels");
+        for (int index = 0; index < authorizationModels.size(); index++) {
+            String model = authorizationModels.get(index).asText();
+            add(cases, "SECURITY", "TEST-SEC-AUTHZ-" + (index + 1) + "-" + safeId(model),
+                    "Verify " + model.toUpperCase(Locale.ROOT) + " authorization",
+                    "Verify access decisions enforce the configured " + model + " authorization model.",
+                    "must", "$.security.authorizationModels[" + index + "]",
+                    List.of("Create identities with different authorization attributes.",
+                            "Exercise allowed and denied resource operations.",
+                            "Verify policy changes take effect according to the configured policy."),
+                    "Only operations permitted by the configured authorization model are allowed.");
+        }
+        if (security.path("auditRequired").asBoolean(false)) {
+            add(cases, "SECURITY", "TEST-SEC-AUDIT", "Verify security audit trail",
+                    "Verify security-relevant and business-critical operations produce protected audit events.",
+                    "must", "$.security.auditRequired",
+                    List.of("Execute successful and denied security-sensitive operations.",
+                            "Inspect audit events for actor, action, target, timestamp, and outcome.",
+                            "Verify audit records cannot be modified by ordinary application users."),
+                    "Required audit events are complete, attributable, and protected against unauthorized changes.");
+        }
     }
 
     private void add(List<QualityTestCase> cases, String category, String id, String title,
@@ -229,5 +300,13 @@ public class QualityPlanService {
         String result = value.toUpperCase(Locale.ROOT).replaceAll("[^A-Z0-9]+", "-")
                 .replaceAll("^-+|-+$", "");
         return result.isBlank() ? "ITEM" : result;
+    }
+
+    private String sha256(byte[] content) {
+        try {
+            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(content));
+        } catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("SHA-256 is not available", exception);
+        }
     }
 }
