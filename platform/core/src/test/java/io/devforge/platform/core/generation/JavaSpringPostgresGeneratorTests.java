@@ -26,8 +26,9 @@ class JavaSpringPostgresGeneratorTests {
                 "Dockerfile",
                 "docker-compose.yml");
         assertThat(files.get("pom.xml")).contains("spring-boot-starter-actuator");
-        assertThat(files.get("docker-compose.yml")).contains("pg_isready", "service_healthy");
-        assertThat(files.get("src/main/resources/application.yml")).contains("management:", "include: health");
+        assertThat(files.get("docker-compose.yml")).contains("pg_isready", "service_healthy",
+                "SPRING_DATASOURCE_URL", "SPRING_DATASOURCE_USERNAME",
+                "SPRING_JPA_HIBERNATE_DDL_AUTO: validate", "SPRING_FLYWAY_ENABLED");
         assertThat(files.get("src/main/java/db/migration/V1__CreateDomainSchema.java"))
                 .contains("extends BaseJavaMigration")
                 .contains("CREATE TABLE \\"customer\\"")
