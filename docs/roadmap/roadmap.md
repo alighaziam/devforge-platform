@@ -7,8 +7,9 @@
 - [x] Define Project Specification schema and runtime validation.
 - [x] Define technology catalog and compatibility rule contracts.
 - [x] Add CI quality gates and repository contribution standards.
-- [ ] Define plugin manifest trust, signing, and capability policy.
-- [ ] Add architecture tests preventing module cycles.
+- [x] Define plugin manifest trust, signing, and capability policy.
+- [x] Define module boundaries and dependency rules.
+- [x] Add architecture tests preventing module cycles.
 
 **Exit criteria:** core contracts are reviewable, versioned, and internally consistent.
 
@@ -18,7 +19,7 @@
 - [ ] Create Angular Studio workspace.
 - [x] Add health/readiness endpoints and graceful shutdown configuration.
 - [x] Add CI pipeline.
-- [ ] Add architecture tests preventing module cycles.
+- [x] Add architecture tests preventing module cycles.
 - [x] Add API contract and schema validation tests.
 
 **Exit criteria:** reproducible build and CI for platform skeleton.
