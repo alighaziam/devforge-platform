@@ -16,7 +16,7 @@ class ProjectLifecycleIntegrationTests {
     @Autowired private ProjectLifecycleService projects;
 
     @Test
-    void createsProjectAndPersistsImmutableVersionedSpecificationSnapshots() {
+    void createsProjectAndPersistsImmutableVersionedSpecificationSnapshots() throws Exception {
         var project = projects.create("Orders", "Order management");
         var first = projects.createSnapshot(project.id(), validSpecification("First"));
         var second = projects.createSnapshot(project.id(), validSpecification("Second"));
