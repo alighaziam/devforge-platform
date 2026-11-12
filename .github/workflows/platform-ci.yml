@@ -40,6 +40,11 @@ jobs:
           cache: maven
       - name: Verify platform
         run: mvn --batch-mode --no-transfer-progress verify
+      - name: Build generated sample project
+        run: |
+          mkdir -p target/generated-sample
+          unzip -q platform/core/target/devforge-generated-sample.zip -d target/generated-sample
+          mvn --batch-mode --no-transfer-progress -f target/generated-sample/pom.xml verify
 
   studio:
     name: Angular Studio build

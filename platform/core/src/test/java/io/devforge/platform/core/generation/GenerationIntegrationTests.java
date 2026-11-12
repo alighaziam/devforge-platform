@@ -30,6 +30,7 @@ class GenerationIntegrationTests {
 
         GenerationArtifact first = generationService.generate(project.id(), 1);
         GenerationArtifact second = generationService.generate(project.id(), 1);
+        java.nio.file.Files.write(java.nio.file.Path.of("target/devforge-generated-sample.zip"), first.content());
 
         assertThat(first.fileName()).isEqualTo("orders.zip");
         assertThat(first.sha256()).isEqualTo(second.sha256());
