@@ -29,6 +29,10 @@ interface Technology {
   status: string;
   capabilities: string[];
 }
+interface ModelImportResult {
+  model: { entities: unknown[]; relationships: unknown[]; indexes: unknown[] };
+  warnings: string[];
+}
 interface GenerationRun {
   id: string;
   projectId: string;
@@ -74,6 +78,9 @@ export class AppComponent implements OnInit {
   projects: Project[] = [];
   snapshots: Snapshot[] = [];
   generationRuns: GenerationRun[] = [];
+  modelImportFormat = 'sql-ddl';
+  modelImportContent = 'CREATE TABLE customer (\\n  id UUID PRIMARY KEY,\\n  email VARCHAR(255) NOT NULL UNIQUE\\n);';
+  modelImportWarnings: string[] = [];
   catalog: Technology[] = [];
   selectedProject: Project | null = null;
   selectedCategory = 'all';
@@ -168,6 +175,30 @@ export class AppComponent implements OnInit {
       );
     } catch (error) {
       this.handleError(error, 'Could not load specification snapshots.');
+    }
+  }
+
+  async importModel(): Promise<void> {
+    if (!this.selectedProject) {
+      this.setNotice('Select a project before importing a model.', 'error');
+      return;
+    }
+    this.busy = true;
+    try {
+      const result = await firstValueFrom(this.http.post<ModelImportResult>(
+        '/api/v1/projects/' + this.selectedProject.id + '/model/import',
+        { format: this.modelImportFormat, content: this.modelImportContent }
+      ));
+      const spec = JSON.parse(this.specificationJson) as Record<string, unknown>;
+      spec['model'] = result.model;
+      this.specificationJson = JSON.stringify(spec, null, 2);
+      this.modelImportWarnings = result.warnings;
+      this.activeView = 'project';
+      this.setNotice('Model preview imported. Review it, validate the full specification, and save a new snapshot.', 'success');
+    } catch (error) {
+      this.handleError(error, 'Model import failed. Review the supported SQL DDL subset.');
+    } finally {
+      this.busy = false;
     }
   }
 
