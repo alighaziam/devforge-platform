@@ -92,7 +92,9 @@ All external inputs are untrusted. Parsing, generation, and execution must enfor
 
 ## 7. Generation architecture
 
-The generator engine first resolves a generation plan from the immutable specification and selected plugin versions. Each generator declares input/output contracts, capabilities, dependencies, and supported specification versions. The engine validates outputs, records provenance, and produces a manifest. Generators must not access secrets unless a declared capability explicitly requires it and the user has authorized that scope.
+The generator engine resolves a compatible generator plugin from the immutable specification and selected plugin versions. Built-in generators implement the versioned Java `GeneratorPlugin` contract and are discovered through a deterministic registry; callers can list available generators or request a specific generator ID. The registry rejects duplicate IDs and refuses ambiguous automatic selection. Each generator declares supported specification versions and exact technology versions. The engine validates all returned paths and file contents, reserves the platform manifest, enforces artifact-size limits, records provenance, and only then creates the archive. See [Generator Plugin Contract](generator-plugin-contract.md).
+
+External plugins are not dynamically loaded into the platform JVM. They remain disabled until an isolated OCI/WASM/gRPC/HTTP runtime, signature verification, and least-privilege execution policy are implemented.
 
 ## 8. Validation architecture
 
