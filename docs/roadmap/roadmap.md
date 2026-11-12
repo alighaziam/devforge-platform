@@ -31,7 +31,7 @@
 - [x] Immutable, versioned specification snapshots with SHA-256 provenance.
 - [ ] Requirements and source-artifact metadata lifecycle.
 - [x] Technology catalog read API.
-- [ ] ADR records and decision status.
+- [x] ADR drafts, explicit decision status transitions, optimistic locking, and transition audit history.
 - [x] Deterministic technology dependency and compatibility evaluation API.
 
 **Exit criteria:** user can create a project, save a validated immutable specification snapshot, and inspect deterministic technology compatibility findings.

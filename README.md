@@ -46,6 +46,7 @@ The initial backend vertical slice now includes:
 - Angular 20 Studio workspace for projects, specifications, catalog browsing, compatibility evaluation, and generation.
 - JSON and bounded PostgreSQL DDL model-import previews.
 - A deterministic architecture advisor that reports security, availability, scalability, and distributed-systems risks with trade-offs and ADR drafts.
+- Persistent ADR lifecycle with explicit proposal, acceptance, rejection, supersession, optimistic locking, and transition audit history.
 - A deterministic Java 25 / Spring Boot 4 / PostgreSQL 17 generator with provenance manifests and auditable generation runs.
 - CI compiles the generated sample project as a separate Maven build.
 - Draft 2020-12 Project Specification validation.

@@ -81,6 +81,8 @@ workflow; never expose this profile to a network or production environment.
 - `POST /api/v1/projects/{id}/generations` — generate a ZIP from a stored immutable snapshot; returns SHA-256 and generation-run ID.
 - `POST /api/v1/projects/{id}/model/import` — preview a JSON domain model or supported PostgreSQL DDL; does not persist until reviewed and saved.
 - `POST /api/v1/projects/{id}/architecture/evaluate` — assess a stored specification snapshot and return findings, trade-offs, and an ADR draft.
+- `GET|POST /api/v1/projects/{id}/architecture/decisions` — list ADRs or create a draft from a snapshot.
+- `POST /api/v1/projects/{id}/architecture/decisions/{decisionId}/transition` — transition an ADR through its audited state machine.
 
 All API routes other than the health probe require authentication. The current
 HTTP Basic setup is a development security baseline; production OIDC, tenant
