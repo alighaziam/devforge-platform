@@ -9,9 +9,13 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 @Component
-public class JavaSpringPostgresGenerator {
+public class JavaSpringPostgresGenerator implements GeneratorPlugin {
     public static final String ID = "devforge.generator.java-spring-postgres";
     public static final String VERSION = "0.1.0";
+    private static final GeneratorDescriptor DESCRIPTOR = new GeneratorDescriptor(
+            ID, VERSION, "Java 25 + Spring Boot 4.0 + PostgreSQL 17 backend generator",
+            Set.of("1.0.0"),
+            Map.of("language.java", "25", "framework.spring-boot", "4.0.0", "database.postgresql", "17"));
     private static final Pattern IDENTIFIER = Pattern.compile("[A-Za-z][A-Za-z0-9]*");
     private static final Set<String> KEYWORDS = Set.of(
             "abstract", "assert", "boolean", "break", "byte", "case", "catch", "char",
@@ -21,6 +25,22 @@ public class JavaSpringPostgresGenerator {
             "private", "protected", "public", "return", "short", "static", "super", "switch",
             "synchronized", "this", "throw", "throws", "transient", "try", "void", "volatile",
             "while", "record", "sealed", "permits", "var", "yield", "true", "false", "null");
+
+    @Override
+    public GeneratorDescriptor descriptor() {
+        return DESCRIPTOR;
+    }
+
+    @Override
+    public boolean supports(JsonNode spec) {
+        try {
+            validateStack(spec);
+            validateIndexes(spec.path("model"));
+            return true;
+        } catch (ResponseStatusException exception) {
+            return false;
+        }
+    }
 
     public Map<String, String> generate(JsonNode spec) {
         validateStack(spec);
