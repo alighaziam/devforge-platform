@@ -1,0 +1,30 @@
+# IDEs
+.idea/
+.vscode/
+*.iml
+
+# Java / Maven
+**/target/
+*.class
+*.jar
+*.war
+
+# Node / Angular
+**/node_modules/
+**/dist/
+**/.angular/
+npm-debug.log*
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
