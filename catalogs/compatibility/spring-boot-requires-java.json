@@ -1,0 +1,22 @@
+{
+  "ruleVersion": "1.0.0",
+  "id": "spring-boot-java-baseline",
+  "severity": "error",
+  "appliesTo": [
+    { "technologyId": "framework.spring-boot", "versionRange": ">=4.0.0 <5.0.0" }
+  ],
+  "condition": {
+    "not": {
+      "operator": "version-in-range",
+      "technologyId": "language.java",
+      "versionRange": ">=17"
+    }
+  },
+  "effect": "block",
+  "message": "The selected Java version does not satisfy the Spring Boot runtime baseline.",
+  "rationale": "A framework must not be generated against an unsupported Java runtime.",
+  "remediation": ["Select a Java version supported by the selected Spring Boot release."],
+  "evidence": ["https://docs.spring.io/spring-boot/system-requirements.html"],
+  "overridePolicy": "never",
+  "ruleStatus": "active"
+}

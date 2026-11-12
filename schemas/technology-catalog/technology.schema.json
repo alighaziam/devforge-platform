@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devforge.example/schemas/technology-catalog/technology/1.0.0",
+  "title": "DevForge Technology Catalog Entry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["catalogVersion", "id", "category", "name", "version", "status", "capabilities", "requires", "conflicts", "platforms", "documentation"],
+  "properties": {
+    "catalogVersion": { "const": "1.0.0" },
+    "id": { "type": "string", "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9-]*)+$" },
+    "category": { "type": "string", "enum": ["language", "framework", "frontend", "database", "cache", "messaging", "identity", "workflow", "reporting", "observability", "build", "runtime", "container", "orchestration", "cloud", "testing", "integration"] },
+    "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "vendor": { "type": "string" },
+    "version": { "type": "string", "minLength": 1 },
+    "versionScheme": { "type": "string", "enum": ["semver", "calendar", "major-minor", "vendor-defined"] },
+    "status": { "type": "string", "enum": ["experimental", "supported", "deprecated", "end-of-life", "blocked"] },
+    "support": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "introducedAt": { "type": "string", "format": "date" },
+        "supportEndsAt": { "type": "string", "format": "date" },
+        "securityFixesUntil": { "type": "string", "format": "date" },
+        "platformApiRange": { "type": "string" }
+      }
+    },
+    "capabilities": { "type": "array", "uniqueItems": true, "items": { "type": "string", "pattern": "^[a-z][a-z0-9.-]+$" } },
+    "requires": { "type": "array", "items": { "$ref": "#/$defs/dependency" } },
+    "conflicts": { "type": "array", "items": { "$ref": "#/$defs/dependency" } },
+    "platforms": { "type": "array", "uniqueItems": true, "items": { "type": "string", "enum": ["linux", "windows", "macos", "container", "kubernetes", "any"] } },
+    "operatingModes": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+    "license": { "type": "string" },
+    "documentation": { "type": "array", "minItems": 1, "items": { "type": "string", "format": "uri" } },
+    "metadata": { "type": "object", "additionalProperties": { "type": ["string", "number", "boolean", "null"] } }
+  },
+  "$defs": {
+    "dependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["technologyId", "versionRange"],
+      "properties": {
+        "technologyId": { "type": "string" },
+        "versionRange": { "type": "string", "minLength": 1 },
+        "optional": { "type": "boolean", "default": false },
+        "reason": { "type": "string" }
+      }
+    }
+  }
+}
