@@ -42,7 +42,7 @@
 - [ ] Import OpenAPI, XML, PDF, DOCX, and spreadsheet formats.
 - [ ] Domain model representation and model diff.
 - [x] Deterministic architecture decision/risk engine with explainable findings and ADR drafts.
-- [ ] Architecture Decision Records and approval lifecycle.
+- [x] Architecture Decision Records and approval lifecycle.
 
 **Exit criteria:** model and technology choices produce explainable validation findings.
 
@@ -50,7 +50,9 @@
 
 Start with one narrow, end-to-end supported stack rather than claiming broad support prematurely. Proposed first slice: Java/Spring Boot + PostgreSQL + Angular, with optional security profile.
 
-- [x] Deterministic generator contract for the first supported stack.
+- [x] Deterministic generator plugin contract and registry for the first supported stack.
+- [x] Generator discovery API, explicit plugin selection, and duplicate-ID rejection.
+- [x] Generated artifact path, secret-file, reserved-manifest, and size validation.
 - [x] Generated project manifest and provenance, with persistent generation-run audit records.
 - [ ] Golden-file tests and regeneration safety.
 
@@ -67,7 +69,8 @@ Start with one narrow, end-to-end supported stack rather than claiming broad sup
 
 ## Phase 6 — Plugin ecosystem and delivery
 
-- [ ] Plugin registry, signing, and verification.
+- [x] Built-in generator registry and contract.
+- [ ] External plugin signing, verification, and sandboxed execution.
 - [ ] Additional Java/Python/.NET and frontend generators.
 - [ ] Git branch/PR delivery.
 - [ ] CI/CD and deployment profiles.
