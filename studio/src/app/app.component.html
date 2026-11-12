@@ -82,6 +82,7 @@
         </section>
         <section class="panel" *ngIf="qualityPlan">
           <div class="panel-heading"><div><div class="eyebrow">TEST INTENTIONS</div><h2>Snapshot v{{ qualityPlan.snapshotVersion }}</h2></div><span class="schema-tag">{{ qualityPlan.testCases.length }} test cases</span></div>
+          <div class="generation-context"><strong>Plan SHA-256</strong><code>{{ qualityPlan.planSha256 }}</code></div>
           <div class="quality-summary"><div class="quality-stat" *ngFor="let item of qualityPlan.summary | keyvalue"><strong>{{ item.value }}</strong><span>{{ item.key }}</span></div></div>
           <article class="quality-case" *ngFor="let test of qualityPlan.testCases">
             <div class="finding-top"><strong>{{ test.id }} · {{ test.title }}</strong><span>{{ test.priority }}</span></div>

@@ -34,7 +34,7 @@ interface QualityTestCase {
   sourcePath: string; steps: string[]; expectedResult: string;
 }
 interface QualityPlan {
-  projectId: string; snapshotId: string; snapshotVersion: number; generatedAt: string;
+  projectId: string; snapshotId: string; snapshotVersion: number; generatedAt: string; planSha256: string;
   summary: Record<string, number>; testCases: QualityTestCase[];
 }
 interface ArchitectureDecision {
