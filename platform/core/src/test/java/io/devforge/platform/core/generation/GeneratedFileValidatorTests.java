@@ -13,12 +13,11 @@ class GeneratedFileValidatorTests {
     private final GeneratedFileValidator validator = new GeneratedFileValidator();
 
     @Test
-    void acceptsSafeProjectFilesAndTheDocumentedEnvironmentExample() {
-        assertThatCode(() -> validator.validate(Map.of(
-                "pom.xml", "<project/>",
-                ".env.example", "DATABASE_PASSWORD=replace-me",
-                ".gitignore", ".env",
-                ".devforge/manifest.json", "reserved"))).isInstanceOf(ResponseStatusException.class);
+    void rejectsGeneratorSuppliedReservedManifest() {
+        assertThatThrownBy(() -> validator.validate(Map.of(
+                ".devforge/manifest.json", "generator must not overwrite this file")))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("reserved DevForge manifest");
     }
 
     @Test
