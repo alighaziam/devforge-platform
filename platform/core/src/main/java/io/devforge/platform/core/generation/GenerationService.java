@@ -33,16 +33,18 @@ public class GenerationService {
     private final ProjectRepository projects;
     private final CompatibilityEvaluator compatibilityEvaluator;
     private final GeneratorRegistry generators;
+    private final GeneratedFileValidator generatedFileValidator;
     private final GenerationRunRepository generationRuns;
     private final ObjectMapper mapper = new ObjectMapper();
 
     public GenerationService(SpecificationSnapshotRepository snapshots, ProjectRepository projects,
             CompatibilityEvaluator compatibilityEvaluator, GeneratorRegistry generators,
-            GenerationRunRepository generationRuns) {
+            GeneratedFileValidator generatedFileValidator, GenerationRunRepository generationRuns) {
         this.snapshots = snapshots;
         this.projects = projects;
         this.compatibilityEvaluator = compatibilityEvaluator;
         this.generators = generators;
+        this.generatedFileValidator = generatedFileValidator;
         this.generationRuns = generationRuns;
     }
 
@@ -79,6 +81,7 @@ public class GenerationService {
         GeneratorPlugin generator = generators.resolve(spec, requestedGeneratorId);
         GeneratorDescriptor descriptor = generator.descriptor();
         Map<String, String> files = new TreeMap<>(generator.generate(spec));
+        generatedFileValidator.validate(files);
         Map<String, Object> manifest = new java.util.LinkedHashMap<>();
         manifest.put("manifestVersion", "1.0.0");
         manifest.put("generatorId", descriptor.id());
