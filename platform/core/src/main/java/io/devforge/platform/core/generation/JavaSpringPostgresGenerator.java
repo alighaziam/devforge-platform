@@ -61,8 +61,19 @@ public class JavaSpringPostgresGenerator {
                 """);
         files.put("src/main/resources/db/migration/V1__create_domain_schema.sql", migration(spec.path("model")));
         files.put("src/test/java/" + pkg.replace('.', '/') + "/ApplicationTests.java",
-                "package " + pkg + ";\nimport org.junit.jupiter.api.Test;\n"
-                + "import static org.junit.jupiter.api.Assertions.assertTrue;\nclass ApplicationTests { @Test void generatedProjectBuilds() { assertTrue(true); } }\n");
+                "package " + pkg + ";\n"
+                + "import org.junit.jupiter.api.Test;\n"
+                + "import java.nio.charset.StandardCharsets;\n"
+                + "import static org.junit.jupiter.api.Assertions.*;\n"
+                + "class ApplicationTests {\n"
+                + "  @Test void generatedMigrationIsAvailableOnClasspath() throws Exception {\n"
+                + "    try (var stream = getClass().getClassLoader().getResourceAsStream(\"db/migration/V1__create_domain_schema.sql\")) {\n"
+                + "      assertNotNull(stream, \"Flyway migration must be packaged on the application classpath\");\n"
+                + "      String sql = new String(stream.readAllBytes(), StandardCharsets.UTF_8);\n"
+                + "      assertTrue(sql.contains(\"CREATE TABLE customer\"));\n"
+                + "    }\n"
+                + "  }\n"
+                + "}\n");
         files.put("Dockerfile", "FROM eclipse-temurin:25-jre\nWORKDIR /app\nCOPY target/*.jar app.jar\nUSER 10001\nEXPOSE 8080\nENTRYPOINT [\"java\", \"-jar\", \"/app/app.jar\"]\n");
         files.put("docker-compose.yml", compose(slug));
         Set<String> classes = new HashSet<>();
@@ -215,14 +226,6 @@ public class JavaSpringPostgresGenerator {
                   <groupId>io.devforge.generated</groupId><artifactId>%s</artifactId><version>0.1.0-SNAPSHOT</version>
                   <parent><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-parent</artifactId><version>4.0.0</version><relativePath/></parent>
                   <properties><java.version>25</java.version></properties>
-                  <build>
-                    <resources>
-                      <resource><directory>src/main/resources</directory><filtering>false</filtering></resource>
-                    </resources>
-                    <plugins>
-                      <plugin><groupId>org.springframework.boot</groupId><artifactId>spring-boot-maven-plugin</artifactId></plugin>
-                    </plugins>
-                  </build>
                   <dependencies>
                     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-webmvc</artifactId></dependency>
                     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-actuator</artifactId></dependency>
@@ -232,6 +235,14 @@ public class JavaSpringPostgresGenerator {
                     <dependency><groupId>org.postgresql</groupId><artifactId>postgresql</artifactId><scope>runtime</scope></dependency>
                     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>
                   </dependencies>
+                  <build>
+                    <resources>
+                      <resource><directory>src/main/resources</directory><filtering>false</filtering></resource>
+                    </resources>
+                    <plugins>
+                      <plugin><groupId>org.springframework.boot</groupId><artifactId>spring-boot-maven-plugin</artifactId></plugin>
+                    </plugins>
+                  </build>
                 </project>
                 """.formatted(slug);
     }
