@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devforge.example/schemas/project-specification/1.0.0",
+  "title": "DevForge Project Specification",
+  "description": "Versioned, user-approved source of truth for a generated application.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["specVersion", "project", "requirements", "model", "architecture", "technologySelections", "generation"],
+  "properties": {
+    "specVersion": { "type": "string", "const": "1.0.0" },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "description"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "description": { "type": "string" },
+        "businessDomain": { "type": "string" },
+        "owners": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "tags": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+      }
+    },
+    "requirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["functional", "qualityAttributes", "constraints"],
+      "properties": {
+        "functional": { "type": "array", "items": { "$ref": "#/$defs/requirement" } },
+        "qualityAttributes": { "type": "array", "items": { "$ref": "#/$defs/qualityAttribute" } },
+        "constraints": { "type": "array", "items": { "type": "string" } },
+        "sourceArtifacts": { "type": "array", "items": { "$ref": "#/$defs/sourceArtifact" } }
+      }
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entities", "relationships"],
+      "properties": {
+        "boundedContexts": { "type": "array", "items": { "type": "string" } },
+        "entities": { "type": "array", "items": { "$ref": "#/$defs/entity" } },
+        "relationships": { "type": "array", "items": { "$ref": "#/$defs/relationship" } },
+        "indexes": { "type": "array", "items": { "$ref": "#/$defs/index" } }
+      }
+    },
+    "architecture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["style", "decisions"],
+      "properties": {
+        "style": { "type": "string", "enum": ["layered", "clean", "hexagonal", "modular-monolith", "service-based", "microservices", "event-driven", "cqrs", "serverless", "custom"] },
+        "patterns": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "moduleBoundaries": { "type": "array", "items": { "$ref": "#/$defs/moduleBoundary" } },
+        "decisions": { "type": "array", "items": { "$ref": "#/$defs/decision" } },
+        "consistency": { "type": "string", "enum": ["strong", "eventual", "mixed", "unspecified"] },
+        "transactionStrategy": { "type": "string", "enum": ["local-acid", "saga-orchestration", "saga-choreography", "outbox-inbox", "two-phase-commit", "mixed", "unspecified"] }
+      }
+    },
+    "technologySelections": {
+      "type": "object",
+      "description": "Only selected technologies appear here. Omitted categories are not implicitly enabled.",
+      "additionalProperties": { "$ref": "#/$defs/technologySelection" }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "authentication": { "type": "string", "enum": ["session", "jwt", "oauth2", "oidc", "saml", "api-key", "mtls", "custom", "none"] },
+        "identityProvider": { "type": "string" },
+        "authorizationModels": { "type": "array", "items": { "type": "string", "enum": ["rbac", "abac", "rebac"] }, "uniqueItems": true },
+        "mfaRequired": { "type": "boolean" },
+        "auditRequired": { "type": "boolean" },
+        "secretManagement": { "type": "string" }
+      }
+    },
+    "generation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["profile", "outputLayout"],
+      "properties": {
+        "profile": { "type": "string", "enum": ["recommended", "advanced", "expert-override"] },
+        "outputLayout": { "type": "string", "enum": ["monorepo", "polyrepo", "single-project"] },
+        "includeTests": { "type": "boolean", "default": true },
+        "includeContainers": { "type": "boolean", "default": true },
+        "userOverrides": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "delivery": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "targets": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+        "git": { "type": "object", "properties": { "provider": { "type": "string" }, "repository": { "type": "string" }, "strategy": { "type": "string", "enum": ["archive", "branch", "pull-request"] } }, "additionalProperties": false }
+      }
+    }
+  },
+  "$defs": {
+    "requirement": {
+      "type": "object", "additionalProperties": false, "required": ["id", "statement"],
+      "properties": { "id": { "type": "string" }, "statement": { "type": "string" }, "priority": { "type": "string", "enum": ["must", "should", "could", "wont"] }, "acceptanceCriteria": { "type": "array", "items": { "type": "string" } }, "sourceRefs": { "type": "array", "items": { "type": "string" } } }
+    },
+    "qualityAttribute": {
+      "type": "object", "additionalProperties": false, "required": ["attribute"],
+      "properties": { "attribute": { "type": "string", "enum": ["performance", "scalability", "availability", "security", "maintainability", "usability", "portability", "interoperability", "observability", "cost"] }, "target": { "type": "string" }, "measure": { "type": "string" }, "priority": { "type": "string", "enum": ["critical", "high", "medium", "low"] } }
+    },
+    "sourceArtifact": {
+      "type": "object", "additionalProperties": false, "required": ["id", "mediaType", "sha256"],
+      "properties": { "id": { "type": "string" }, "mediaType": { "type": "string" }, "sha256": { "type": "string", "pattern": "^[a-fA-F0-9]{64}$" }, "sourceName": { "type": "string" } }
+    },
+    "entity": {
+      "type": "object", "additionalProperties": false, "required": ["name", "attributes"],
+      "properties": { "name": { "type": "string" }, "boundedContext": { "type": "string" }, "attributes": { "type": "array", "items": { "type": "object", "required": ["name", "type"], "properties": { "name": { "type": "string" }, "type": { "type": "string" }, "required": { "type": "boolean" }, "unique": { "type": "boolean" }, "default": {}, "description": { "type": "string" } }, "additionalProperties": false } } }
+    },
+    "relationship": {
+      "type": "object", "additionalProperties": false, "required": ["name", "from", "to", "cardinality"],
+      "properties": { "name": { "type": "string" }, "from": { "type": "string" }, "to": { "type": "string" }, "cardinality": { "type": "string", "enum": ["one-to-one", "one-to-many", "many-to-one", "many-to-many"] }, "ownership": { "type": "string", "enum": ["aggregate", "reference", "join", "unspecified"] }, "optional": { "type": "boolean" } }
+    },
+    "index": {
+      "type": "object", "additionalProperties": false, "required": ["entity", "columns"],
+      "properties": { "entity": { "type": "string" }, "name": { "type": "string" }, "columns": { "type": "array", "items": { "type": "string" }, "minItems": 1 }, "unique": { "type": "boolean" }, "method": { "type": "string" } }
+    },
+    "moduleBoundary": {
+      "type": "object", "additionalProperties": false, "required": ["name", "responsibilities"],
+      "properties": { "name": { "type": "string" }, "responsibilities": { "type": "array", "items": { "type": "string" } }, "exposes": { "type": "array", "items": { "type": "string" } }, "dependsOn": { "type": "array", "items": { "type": "string" } } }
+    },
+    "decision": {
+      "type": "object", "additionalProperties": false, "required": ["id", "title", "status"],
+      "properties": { "id": { "type": "string" }, "title": { "type": "string" }, "status": { "type": "string", "enum": ["proposed", "accepted", "rejected", "superseded"] }, "rationale": { "type": "string" }, "alternatives": { "type": "array", "items": { "type": "string" } }, "risks": { "type": "array", "items": { "type": "string" } } }
+    },
+    "technologySelection": {
+      "type": "object", "additionalProperties": false, "required": ["id", "version"],
+      "properties": { "id": { "type": "string" }, "version": { "type": "string" }, "configuration": { "type": "object" }, "requiredBy": { "type": "array", "items": { "type": "string" } } }
+    }
+  }
+}
