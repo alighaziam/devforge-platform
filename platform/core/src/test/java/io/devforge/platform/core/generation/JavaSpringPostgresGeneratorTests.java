@@ -31,8 +31,8 @@ class JavaSpringPostgresGeneratorTests {
                 "SPRING_JPA_HIBERNATE_DDL_AUTO: validate", "SPRING_FLYWAY_ENABLED");
         assertThat(files.get("src/main/java/db/migration/V1__CreateDomainSchema.java"))
                 .contains("extends BaseJavaMigration")
-                .contains("CREATE TABLE \"customer\"")
-                .contains("\"email\" VARCHAR(255) NOT NULL UNIQUE");
+                .contains("CREATE TABLE \\\"customer\\\"");
+                .contains("\\\"email\\\" VARCHAR(255) NOT NULL UNIQUE");
         assertThat(files.get("src/main/java/io/devforge/generated/orders/model/Customer.java"))
                 .contains("@Entity")
                 .contains("private String email;");
