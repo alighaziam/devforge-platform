@@ -2,7 +2,7 @@ name: Platform CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'feature/**', 'fix/**', 'docs/**']
     paths:
       - 'pom.xml'
       - 'platform/**'
