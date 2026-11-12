@@ -48,7 +48,7 @@
 
 ## Phase 4 — First generator vertical slice
 
-Start with one narrow, end-to-end supported stack rather than claiming broad support prematurely. Proposed first slice: Java/Spring Boot + PostgreSQL + Angular, with optional security profile.
+Start with one narrow, end-to-end supported stack rather than claiming broad support prematurely. Current supported slice: Java 25 + Spring Boot 4 + PostgreSQL 17 backend; frontend generation and security integrations are not yet supported.
 
 - [x] Deterministic generator plugin contract and registry for the first supported stack.
 - [x] Generator discovery API, explicit plugin selection, and duplicate-ID rejection.
@@ -69,7 +69,6 @@ Start with one narrow, end-to-end supported stack rather than claiming broad sup
 
 ## Phase 6 — Plugin ecosystem and delivery
 
-- [x] Built-in generator registry and contract.
 - [ ] External plugin signing, verification, and sandboxed execution.
 - [ ] Additional Java/Python/.NET and frontend generators.
 - [ ] Git branch/PR delivery.
