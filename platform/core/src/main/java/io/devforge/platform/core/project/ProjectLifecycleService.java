@@ -1,5 +1,6 @@
 package io.devforge.platform.core.project;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.devforge.platform.core.specification.ProjectSpecificationValidator;
 import io.devforge.platform.core.specification.SpecificationValidationResult;
 import org.springframework.data.domain.Page;
@@ -34,9 +35,10 @@ public class ProjectLifecycleService {
     }
 
     public ProjectView create(String name, String description) {
-        if (name == null || name.isBlank() || name.length() > 120) {
+        if (name == null || name.isBlank() || name.length() > 120
+                || (description != null && description.length() > 2000)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Project name must contain 1 to 120 characters");
+                    "Project name must contain 1 to 120 characters and description must not exceed 2000 characters");
         }
         ProjectEntity entity = new ProjectEntity(UUID.randomUUID(), name.trim(),
                 description == null ? null : description.trim());
@@ -56,7 +58,7 @@ public class ProjectLifecycleService {
                 .map(ProjectView::from);
     }
 
-    public SnapshotView createSnapshot(UUID projectId, String json) {
+    public SnapshotView createSnapshot(UUID projectId, String json) throws JsonProcessingException {
         if (json.getBytes(StandardCharsets.UTF_8).length > 1_048_576) {
             throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE,
                     "Specification payload exceeds the 1 MiB limit");
