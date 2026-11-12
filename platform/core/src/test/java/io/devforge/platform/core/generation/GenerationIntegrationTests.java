@@ -52,8 +52,8 @@ class GenerationIntegrationTests {
                 ".env.example",
                 ".gitignore");
         assertThat(entries.get("src/main/java/db/migration/V1__CreateDomainSchema.java"))
-                .contains("CREATE TABLE \"customer\"")
-                .contains("\"email\" VARCHAR(255) NOT NULL UNIQUE")
+                .contains("CREATE TABLE \\\"customer\\\"")
+                .contains("\\\"email\\\" VARCHAR(255) NOT NULL UNIQUE")
                 .contains("extends BaseJavaMigration");
         assertThat(entries.get(".devforge/manifest.json"))
                 .contains("devforge.generator.java-spring-postgres")
