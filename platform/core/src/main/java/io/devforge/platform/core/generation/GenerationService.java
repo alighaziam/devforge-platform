@@ -80,7 +80,7 @@ public class GenerationService {
 
         GeneratorPlugin generator = generators.resolve(spec, requestedGeneratorId);
         GeneratorDescriptor descriptor = generator.descriptor();
-        Map<String, String> files = new TreeMap<>(generator.generate(spec));
+        Map<String, String> files = new TreeMap<>(generatedFileValidator.validate(generator.generate(spec)));
         generatedFileValidator.validate(files);
         Map<String, Object> manifest = new java.util.LinkedHashMap<>();
         manifest.put("manifestVersion", "1.0.0");

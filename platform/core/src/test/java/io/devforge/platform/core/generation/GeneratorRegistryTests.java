@@ -6,7 +6,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -18,97 +17,68 @@ class GeneratorRegistryTests {
     private final ObjectMapper mapper = new ObjectMapper();
 
     @Test
-    void resolvesTheOnlyPluginThatSupportsTheSpecification() throws Exception {
-        StubPlugin unsupported = new StubPlugin("generator.python", false);
-        StubPlugin supported = new StubPlugin("generator.java", true);
-        GeneratorRegistry registry = new GeneratorRegistry(List.of(unsupported, supported));
+    void registersMultipleVersionsAndResolvesExactCoordinates() throws Exception {
+        GeneratorPlugin v1 = plugin("devforge.generator.sample", "1.0.0", true);
+        GeneratorPlugin v2 = plugin("devforge.generator.sample", "2.0.0", true);
+        GeneratorRegistry registry = new GeneratorRegistry(java.util.List.of(v2, v1));
 
-        assertThat(registry.resolve(specification(), null)).isSameAs(supported);
-        assertThat(registry.descriptors()).extracting(GeneratorDescriptor::id)
-                .containsExactly("generator.java", "generator.python");
+        assertThat(registry.descriptors()).extracting(GeneratorDescriptor::version)
+                .containsExactly("1.0.0", "2.0.0");
+        assertThat(registry.resolve(specification(), "devforge.generator.sample@1.0.0")).isSameAs(v1);
+        assertThat(registry.resolve(specification(), "devforge.generator.sample@2.0.0")).isSameAs(v2);
     }
 
     @Test
-    void requiresAnExplicitIdWhenMultiplePluginsMatch() throws Exception {
-        GeneratorRegistry registry = new GeneratorRegistry(List.of(
-                new StubPlugin("generator.python", true),
-                new StubPlugin("generator.java", true)));
+    void requiresAnExactVersionWhenSeveralVersionsMatch() throws Exception {
+        GeneratorRegistry registry = new GeneratorRegistry(java.util.List.of(
+                plugin("devforge.generator.sample", "1.0.0", true),
+                plugin("devforge.generator.sample", "2.0.0", true)));
 
-        assertThatThrownBy(() -> registry.resolve(specification(), null))
+        assertThatThrownBy(() -> registry.resolve(specification(), "devforge.generator.sample"))
                 .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("id@version")
                 .satisfies(error -> assertThat(((ResponseStatusException) error).getStatusCode())
                         .isEqualTo(HttpStatus.CONFLICT));
     }
 
     @Test
-    void validatesAnExplicitGeneratorSelection() throws Exception {
-        StubPlugin supported = new StubPlugin("generator.java", true);
-        GeneratorRegistry registry = new GeneratorRegistry(List.of(supported));
+    void rejectsUnknownCoordinatesAndUnsupportedSpecifications() throws Exception {
+        GeneratorRegistry registry = new GeneratorRegistry(java.util.List.of(
+                plugin("devforge.generator.sample", "1.0.0", false)));
 
-        assertThat(registry.resolve(specification(), "generator.java")).isSameAs(supported);
-        assertThatThrownBy(() -> registry.resolve(specification(), "generator.unknown"))
+        assertThatThrownBy(() -> registry.resolve(specification(), "devforge.generator.missing@1.0.0"))
                 .isInstanceOf(ResponseStatusException.class)
-                .satisfies(error -> assertThat(((ResponseStatusException) error).getStatusCode())
-                        .isEqualTo(HttpStatus.BAD_REQUEST));
-        assertThatThrownBy(() -> registry.resolve(specification(), "generator.python"))
+                .hasMessageContaining("Unknown generator plugin coordinate");
+        assertThatThrownBy(() -> registry.resolve(specification(), "devforge.generator.sample@1.0.0"))
                 .isInstanceOf(ResponseStatusException.class)
-                .satisfies(error -> assertThat(((ResponseStatusException) error).getStatusCode())
-                        .isEqualTo(HttpStatus.BAD_REQUEST));
+                .hasMessageContaining("does not support");
     }
 
     @Test
-    void blocksSpecificationsThatHaveNoCompatibleGenerator() throws Exception {
-        GeneratorRegistry registry = new GeneratorRegistry(List.of(
-                new StubPlugin("generator.java", false)));
-
-        assertThatThrownBy(() -> registry.resolve(specification(), null))
-                .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("No registered generator supports");
-    }
-
-    @Test
-    void rejectsDuplicatePluginIdsAtStartup() {
-        assertThatThrownBy(() -> new GeneratorRegistry(List.of(
-                new StubPlugin("generator.java", true),
-                new StubPlugin("generator.java", false))))
+    void rejectsDuplicateCoordinatesAndInvalidVersions() {
+        GeneratorPlugin first = plugin("devforge.generator.sample", "1.0.0", true);
+        GeneratorPlugin duplicate = plugin("devforge.generator.sample", "1.0.0", true);
+        assertThatThrownBy(() -> new GeneratorRegistry(java.util.List.of(first, duplicate)))
                 .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("Duplicate generator plugin id");
-    }
-
-    @Test
-    void rejectsAnEmptyRegistryAtStartup() {
-        assertThatThrownBy(() -> new GeneratorRegistry(List.of()))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("At least one trusted generator");
+                .hasMessageContaining("Duplicate generator plugin coordinate");
+        assertThatThrownBy(() -> new GeneratorDescriptor("devforge.generator.sample", "latest",
+                "sample", Set.of("1.0.0"), Map.of("language.java", "25")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("semantic versioning");
     }
 
     private JsonNode specification() throws Exception {
         return mapper.readTree("{\"specVersion\":\"1.0.0\"}");
     }
 
-    private static final class StubPlugin implements GeneratorPlugin {
-        private final GeneratorDescriptor descriptor;
-        private final boolean supported;
+    private GeneratorPlugin plugin(String id, String version, boolean supported) {
+        return new GeneratorPlugin() {
+            private final GeneratorDescriptor descriptor = new GeneratorDescriptor(id, version,
+                    "Test generator", Set.of("1.0.0"), Map.of("language.java", "25"));
 
-        private StubPlugin(String id, boolean supported) {
-            this.descriptor = new GeneratorDescriptor(id, "1.0.0", "Test generator",
-                    Set.of("1.0.0"), Map.of("language.java", "25"));
-            this.supported = supported;
-        }
-
-        @Override
-        public GeneratorDescriptor descriptor() {
-            return descriptor;
-        }
-
-        @Override
-        public boolean supports(JsonNode specification) {
-            return supported && "1.0.0".equals(specification.path("specVersion").asText());
-        }
-
-        @Override
-        public Map<String, String> generate(JsonNode specification) {
-            return Map.of("README.md", "test");
-        }
+            @Override public GeneratorDescriptor descriptor() { return descriptor; }
+            @Override public boolean supports(JsonNode specification) { return supported; }
+            @Override public Map<String, String> generate(JsonNode specification) { return Map.of("README.md", "test"); }
+        };
     }
 }
