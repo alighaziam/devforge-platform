@@ -7,7 +7,6 @@ on:
       - 'pom.xml'
       - 'platform/**'
       - 'studio/**'
-      - 'studio/**'
       - 'schemas/**'
       - 'catalogs/**'
       - 'docs/**'
@@ -16,6 +15,7 @@ on:
     paths:
       - 'pom.xml'
       - 'platform/**'
+      - 'studio/**'
       - 'schemas/**'
       - 'catalogs/**'
       - 'docs/**'
