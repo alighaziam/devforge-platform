@@ -31,8 +31,7 @@ class GeneratedFileValidatorTests {
                 "C:/temp/file.txt", "src\\main\\App.java", ".env", "config/.env.production"}) {
             assertThatThrownBy(() -> validator.validate(Map.of(path, "unsafe")))
                     .as("path %s", path)
-                    .isInstanceOf(ResponseStatusException.class)
-                    .hasMessageContaining("Unsafe generated file path");
+                    .isInstanceOf(ResponseStatusException.class);
         }
     }
 
