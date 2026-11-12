@@ -1,6 +1,7 @@
 package io.devforge.platform.core.generation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -43,6 +44,34 @@ class JavaSpringPostgresGeneratorTests {
 
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> generator.generate(spec))
                 .isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
+    }
+
+
+    @Test
+    void rejectsIndexesWithUnknownTablesOrColumns() throws Exception {
+        ObjectNode spec = (ObjectNode) mapper.readTree(specification());
+        ObjectNode index = mapper.createObjectNode().put("entity", "Customer").put("name", "idx_customer_missing");
+        index.putArray("columns").add("missing");
+        spec.withObject("/model").putArray("indexes").add(index);
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> generator.generate(spec))
+                .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
+                .hasMessageContaining("unknown column");
+    }
+
+    @Test
+    void rejectsUnsupportedPostgresIndexMethods() throws Exception {
+        ObjectNode spec = (ObjectNode) mapper.readTree(specification());
+        ObjectNode index = mapper.createObjectNode()
+                .put("entity", "Customer")
+                .put("name", "idx_customer_email")
+                .put("method", "gin");
+        index.putArray("columns").add("email");
+        spec.withObject("/model").putArray("indexes").add(index);
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> generator.generate(spec))
+                .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
+                .hasMessageContaining("btree indexes only");
     }
 
     private String specification() {
