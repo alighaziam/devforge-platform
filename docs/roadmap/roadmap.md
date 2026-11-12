@@ -1,35 +1,36 @@
 # Roadmap
 
-## Phase 0 — Foundation (current)
+## Phase 0 — Foundation
 
 - [x] Confirm product direction and repository.
 - [x] Establish repository documentation baseline.
-- [ ] Define Project Specification schema and validation rules.
+- [x] Define Project Specification schema and runtime validation.
 - [ ] Define plugin manifest and capability model.
 - [ ] Define technology catalog structure and compatibility rule format.
 - [ ] Define module boundaries and dependency rules.
-- [ ] Add CI quality gates and repository contribution standards.
+- [x] Add CI quality gates and repository contribution standards.
 
 **Exit criteria:** core contracts are reviewable, versioned, and internally consistent.
 
 ## Phase 1 — Platform skeleton
 
-- Create Java 25 / Spring Boot multi-module Maven build.
-- Create Angular Studio workspace.
-- Add health/readiness endpoints and structured logging.
-- Add local developer environment and CI pipeline.
-- Add architecture tests preventing module cycles.
-- Add API contract and schema validation tests.
+- [x] Create Java 25 / Spring Boot multi-module Maven build.
+- [ ] Create Angular Studio workspace.
+- [x] Add health/readiness endpoints and graceful shutdown configuration.
+- [x] Add CI pipeline.
+- [ ] Add architecture tests preventing module cycles.
+- [x] Add API contract and schema validation tests.
 
 **Exit criteria:** reproducible build and CI for platform skeleton.
 
 ## Phase 2 — Project and specification core
 
-- Project/workspace lifecycle.
-- Specification versioning, validation, immutable snapshots.
-- Requirements and artifact metadata.
-- Technology catalog read API.
-- ADR records and decision status.
+- [ ] Project/workspace lifecycle and persistence.
+- [x] Specification schema validation API.
+- [ ] Specification versioning and immutable snapshots.
+- [ ] Requirements and source-artifact metadata lifecycle.
+- [ ] Technology catalog read API.
+- [ ] ADR records and decision status.
 
 **Exit criteria:** user can create a project and save a validated specification snapshot.
 
