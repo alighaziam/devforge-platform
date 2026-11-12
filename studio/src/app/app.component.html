@@ -109,6 +109,24 @@
             <p><strong>Alternatives:</strong></p><ul><li *ngFor="let item of architectureAssessment.adrDraft.alternatives">{{ item }}</li></ul>
             <p><strong>Consequences:</strong></p><ul><li *ngFor="let item of architectureAssessment.adrDraft.consequences">{{ item }}</li></ul>
           </div>
+          <button class="primary-button" [disabled]="busy || !selectedProject" (click)="createAdrDraft()">Save ADR draft <span>＋</span></button>
+        </section>
+        <section class="panel" *ngIf="architectureDecisions.length">
+          <div class="panel-heading"><div><div class="eyebrow">DECISION GOVERNANCE</div><h2>Architecture decisions</h2></div><span class="schema-tag">{{ architectureDecisions.length }} records</span></div>
+          <label class="import-label">Transition rationale (required for rejection or supersession)</label>
+          <input class="text-input" [(ngModel)]="adrTransitionComment" placeholder="Explain why this decision is changing">
+          <article class="decision-card" *ngFor="let decision of architectureDecisions">
+            <div class="finding-top"><strong>{{ decision.title }}</strong><span>{{ decision.status }} · v{{ decision.version }}</span></div>
+            <p>{{ decision.decision }}</p>
+            <div class="decision-actions">
+              <button class="secondary-button" *ngIf="decision.status === 'DRAFT'" [disabled]="busy" (click)="transitionAdr(decision, 'PROPOSED')">Propose</button>
+              <button class="secondary-button" *ngIf="decision.status === 'PROPOSED'" [disabled]="busy" (click)="transitionAdr(decision, 'ACCEPTED')">Accept</button>
+              <button class="secondary-button" *ngIf="decision.status === 'DRAFT' || decision.status === 'PROPOSED'" [disabled]="busy" (click)="transitionAdr(decision, 'REJECTED')">Reject</button>
+              <button class="secondary-button" *ngIf="decision.status === 'PROPOSED' || decision.status === 'REJECTED'" [disabled]="busy" (click)="transitionAdr(decision, 'DRAFT')">Reopen draft</button>
+              <button class="secondary-button" *ngIf="decision.status === 'ACCEPTED'" [disabled]="busy" (click)="transitionAdr(decision, 'SUPERSEDED')">Supersede</button>
+            </div>
+            <div class="decision-history"><small *ngFor="let event of decision.history">{{ event.fromStatus || 'NEW' }} → {{ event.toStatus }} · {{ event.actor }} · {{ event.comment }}</small></div>
+          </article>
         </section>
       </ng-container>
 
@@ -124,10 +142,6 @@
             <div class="editor-actions">
               <button class="secondary-button" [disabled]="busy" (click)="validateSpecification()">Validate specification</button>
               <button class="primary-button" [disabled]="busy || !selectedProject" (click)="saveSnapshot()">Save immutable snapshot</button>
-            </div>
-            <div class="validation-result" *ngIf="modelImportWarnings.length">
-              <strong>Model import notes</strong>
-              <ul><li *ngFor="let warning of modelImportWarnings">{{ warning }}</li></ul>
             </div>
             <div class="validation-result" *ngIf="modelImportWarnings.length">
               <strong>Model import notes</strong>
