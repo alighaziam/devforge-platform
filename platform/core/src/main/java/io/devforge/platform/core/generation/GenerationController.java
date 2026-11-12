@@ -30,7 +30,7 @@ public class GenerationController {
     public ResponseEntity<byte[]> generate(
             @PathVariable UUID projectId,
             @RequestBody GenerationRequest request) throws JsonProcessingException {
-        GenerationArtifact artifact = generationService.generate(projectId, request.snapshotVersion());
+        GenerationArtifact artifact = generationService.generate(projectId, request.snapshotVersion(), request.generatorId());
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("application/zip"));
         headers.setContentDisposition(ContentDisposition.attachment()
@@ -41,5 +41,5 @@ public class GenerationController {
         return new ResponseEntity<>(artifact.content(), headers, HttpStatus.OK);
     }
 
-    public record GenerationRequest(int snapshotVersion) { }
+    public record GenerationRequest(int snapshotVersion, String generatorId) { }
 }
