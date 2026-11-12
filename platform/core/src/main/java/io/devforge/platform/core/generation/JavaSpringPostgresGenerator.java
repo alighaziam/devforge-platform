@@ -24,6 +24,7 @@ public class JavaSpringPostgresGenerator {
 
     public Map<String, String> generate(JsonNode spec) {
         validateStack(spec);
+        validateIndexes(spec.path("model"));
         String name = spec.path("project").path("name").asText("Generated Application");
         String slug = slug(name);
         String pkg = "io.devforge.generated." + slug.replace('-', '_');
@@ -102,6 +103,46 @@ public class JavaSpringPostgresGenerator {
             throw rejected("Relationships are not yet supported by generator 0.1.0.");
         String auth = spec.path("security").path("authentication").asText("none");
         if (!"none".equals(auth)) throw rejected("Identity integration is not yet supported by generator 0.1.0.");
+    }
+
+    private void validateIndexes(JsonNode model) {
+        Map<String, Set<String>> columnsByTable = new HashMap<>();
+        for (JsonNode entity : model.path("entities")) {
+            String table = snake(entity.path("name").asText());
+            Set<String> columns = new HashSet<>();
+            boolean hasId = false;
+            for (JsonNode attribute : entity.path("attributes")) {
+                String column = snake(attribute.path("name").asText());
+                if (!columns.add(column)) throw rejected("Duplicate SQL column name: " + table + "." + column);
+                hasId |= "id".equals(fieldName(attribute.path("name").asText()));
+            }
+            if (!hasId) columns.add("id");
+            if (columnsByTable.putIfAbsent(table, columns) != null) {
+                throw rejected("Duplicate SQL table name: " + table);
+            }
+        }
+
+        Set<String> indexNames = new HashSet<>();
+        for (JsonNode index : model.path("indexes")) {
+            String table = snake(index.path("entity").asText());
+            Set<String> columns = columnsByTable.get(table);
+            if (columns == null) throw rejected("Index references an unknown entity: " + table);
+            List<String> indexedColumns = new ArrayList<>();
+            index.path("columns").forEach(value -> indexedColumns.add(snake(value.asText())));
+            if (indexedColumns.isEmpty()) throw rejected("Index must include at least one column.");
+            for (String column : indexedColumns) {
+                if (!columns.contains(column)) {
+                    throw rejected("Index references an unknown column: " + table + "." + column);
+                }
+            }
+            String method = index.path("method").asText("btree").toLowerCase(Locale.ROOT);
+            if (!"btree".equals(method)) {
+                throw rejected("Generator 0.1.0 supports PostgreSQL btree indexes only.");
+            }
+            String name = index.hasNonNull("name") ? snake(index.path("name").asText())
+                    : "idx_" + table + "_" + String.join("_", indexedColumns);
+            if (!indexNames.add(name)) throw rejected("Duplicate index name: " + name);
+        }
     }
 
     private void require(Map<String, String> values, String id, String version) {
@@ -358,7 +399,7 @@ public class JavaSpringPostgresGenerator {
     private String snake(String value) {
         String result = value.replaceAll("([a-z0-9])([A-Z])", "$1_$2")
                 .replaceAll("[^A-Za-z0-9]+", "_").replaceAll("^_+|_+$", "").toLowerCase(Locale.ROOT);
-        if (result.isEmpty() || Character.isDigit(result.charAt(0))) throw rejected("Unsafe SQL identifier: " + value);
+        if (result.isEmpty() || Character.isDigit(result.charAt(0)) || result.length() > 63) throw rejected("Unsafe SQL identifier: " + value);
         return result;
     }
 
