@@ -4,20 +4,32 @@
 
 - Technology record: `schemas/technology-catalog/technology.schema.json`
 - Compatibility rule: `schemas/compatibility/compatibility-rule.schema.json`
-- Catalog records: `catalogs/technologies/`
+- Catalog index: `catalogs/catalog-index.json`
+- Technology records: `catalogs/technologies/`
 - Compatibility rules: `catalogs/compatibility/`
+
+## Read API
+
+- `GET /api/v1/catalog/technologies`
+- `GET /api/v1/catalog/technologies?category=database`
+- `GET /api/v1/catalog/technologies/{id}`
+- `GET /api/v1/catalog/compatibility-rules`
+
+The API exposes catalog metadata only. It does not imply that a technology is
+installed, selected, supported by a generator, or compatible with another
+selection. Unknown IDs return 404.
 
 ## Catalog semantics
 
-A technology ID is globally stable and independent of its display name or version.
-Each record describes one explicit version line. Lifecycle status is not inferred
-from a version number. A catalog entry is metadata, not an implicit project
-selection and not proof that a generator exists.
+A technology ID is globally stable and independent of its display name or
+version. Each record describes one explicit version line. Lifecycle status is
+not inferred from a version number. A catalog entry is metadata, not an
+implicit project selection and not proof that a generator exists.
 
 Dependencies and conflicts are expressed as technology IDs and version ranges.
-The compatibility engine resolves these against the selected, pinned versions.
+The compatibility engine resolves these against selected, pinned versions.
 Missing catalog entries or unknown version schemes produce an explicit
-`unknown` finding; they must never be treated as compatible.
+unknown finding; they must never be treated as compatible.
 
 ## Rule language
 

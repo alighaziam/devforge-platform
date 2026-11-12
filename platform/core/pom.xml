@@ -49,7 +49,18 @@
       <resource>
         <directory>${project.basedir}/../../schemas</directory>
         <includes>
-          <include>project-specification/project-specification.schema.json</include>
+          <include>project-specification/**</include>
+          <include>plugin-manifest/**</include>
+          <include>technology-catalog/**</include>
+          <include>compatibility/**</include>
+        </includes>
+      </resource>
+      <resource>
+        <directory>${project.basedir}/../../catalogs</directory>
+        <includes>
+          <include>catalog-index.json</include>
+          <include>technologies/**</include>
+          <include>compatibility/**</include>
         </includes>
       </resource>
     </resources>

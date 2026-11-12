@@ -6,6 +6,12 @@ on:
     paths:
       - 'pom.xml'
       - 'platform/**'
+      - 'schemas/**'
+      - 'catalogs/**'
+      - 'docs/**'
+      - 'schemas/**'
+      - 'catalogs/**'
+      - 'docs/**'
       - '.github/workflows/platform-ci.yml'
   pull_request:
     paths:
