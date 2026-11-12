@@ -67,7 +67,7 @@ class JavaSpringPostgresGeneratorTests {
                 .put("name", "idx_customer_email")
                 .put("method", "gin");
         index.putArray("columns").add("email");
-        spec.withObject("/model").putArray("indexes").add(index);
+        ((ObjectNode) spec.get("model")).putArray("indexes").add(index);
 
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> generator.generate(spec))
                 .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
