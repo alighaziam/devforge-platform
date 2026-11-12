@@ -1,6 +1,8 @@
 package io.devforge.platform.core.project;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.devforge.platform.core.specification.ProjectSpecificationValidator;
 import io.devforge.platform.core.specification.SpecificationValidationResult;
 import org.springframework.data.domain.Page;
@@ -25,6 +27,7 @@ public class ProjectLifecycleService {
     private final ProjectRepository projects;
     private final SpecificationSnapshotRepository snapshots;
     private final ProjectSpecificationValidator specificationValidator;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public ProjectLifecycleService(ProjectRepository projects,
             SpecificationSnapshotRepository snapshots,
@@ -66,6 +69,12 @@ public class ProjectLifecycleService {
         SpecificationValidationResult validation = specificationValidator.validate(json);
         if (!validation.valid()) {
             throw new InvalidSpecificationException(validation);
+        }
+        JsonNode root = objectMapper.readTree(json);
+        String specificationProjectId = root.path("project").path("id").asText();
+        if (!projectId.toString().equals(specificationProjectId)) {
+            throw new InvalidSpecificationException(new SpecificationValidationResult(
+                    false, List.of("$.project.id must match the project ID in the request path.")));
         }
 
         ProjectEntity project = projects.findByIdForUpdate(projectId)

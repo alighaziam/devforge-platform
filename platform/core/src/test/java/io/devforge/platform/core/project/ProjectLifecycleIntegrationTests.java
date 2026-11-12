@@ -18,8 +18,8 @@ class ProjectLifecycleIntegrationTests {
     @Test
     void createsProjectAndPersistsImmutableVersionedSpecificationSnapshots() throws Exception {
         var project = projects.create("Orders", "Order management");
-        var first = projects.createSnapshot(project.id(), validSpecification("First"));
-        var second = projects.createSnapshot(project.id(), validSpecification("Second"));
+        var first = projects.createSnapshot(project.id(), validSpecification(project.id(), "First"));
+        var second = projects.createSnapshot(project.id(), validSpecification(project.id(), "Second"));
 
         assertThat(first.snapshotVersion()).isEqualTo(1);
         assertThat(second.snapshotVersion()).isEqualTo(2);
@@ -39,12 +39,12 @@ class ProjectLifecycleIntegrationTests {
                 .contains(created.id());
     }
 
-    private String validSpecification(String description) {
+    private String validSpecification(java.util.UUID projectId, String description) {
         return """
                 {
                   "specVersion": "1.0.0",
                   "project": {
-                    "id": "orders",
+                    "id": "%s",
                     "name": "Orders",
                     "description": "%s"
                   },
@@ -67,6 +67,6 @@ class ProjectLifecycleIntegrationTests {
                     "outputLayout": "single-project"
                   }
                 }
-                """.formatted(description);
+                """.formatted(projectId, description);
     }
 }
