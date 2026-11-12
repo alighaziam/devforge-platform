@@ -59,19 +59,14 @@ public class JavaSpringPostgresGenerator {
                 server:
                   port: ${SERVER_PORT:8080}
                 """);
-        files.put("src/main/resources/db/migration/V1__create_domain_schema.sql", migration(spec.path("model")));
+        files.put("src/main/java/db/migration/V1__CreateDomainSchema.java", javaMigration(spec.path("model")));
         files.put("src/test/java/" + pkg.replace('.', '/') + "/ApplicationTests.java",
                 "package " + pkg + ";\n"
                 + "import org.junit.jupiter.api.Test;\n"
-                + "import java.nio.charset.StandardCharsets;\n"
                 + "import static org.junit.jupiter.api.Assertions.*;\n"
                 + "class ApplicationTests {\n"
-                + "  @Test void generatedMigrationIsAvailableOnClasspath() throws Exception {\n"
-                + "    try (var stream = getClass().getClassLoader().getResourceAsStream(\"db/migration/V1__create_domain_schema.sql\")) {\n"
-                + "      assertNotNull(stream, \"Flyway migration must be packaged on the application classpath\");\n"
-                + "      String sql = new String(stream.readAllBytes(), StandardCharsets.UTF_8);\n"
-                + "      assertTrue(sql.contains(\"CREATE TABLE customer\"));\n"
-                + "    }\n"
+                + "  @Test void generatedFlywayMigrationClassIsAvailableOnClasspath() {\n"
+                + "    assertNotNull(getClass().getClassLoader().getResource(\"db/migration/V1__CreateDomainSchema.class\"), \"Flyway Java migration must be packaged on the application classpath\");\n"
                 + "  }\n"
                 + "}\n");
         files.put("Dockerfile", "FROM eclipse-temurin:25-jre\nWORKDIR /app\nCOPY target/*.jar app.jar\nUSER 10001\nEXPOSE 8080\nENTRYPOINT [\"java\", \"-jar\", \"/app/app.jar\"]\n");
@@ -186,6 +181,39 @@ public class JavaSpringPostgresGenerator {
                     .append(" (").append(String.join(", ", cols)).append(");\n");
         }
         return sql.toString();
+    }
+
+    private String javaMigration(JsonNode model) {
+        String sql = migration(model).replaceFirst("(?m)^--[^\\r\\n]*\\r?\\n", "");
+        List<String> statements = Arrays.stream(sql.split(";"))
+                .map(String::trim)
+                .filter(statement -> !statement.isEmpty())
+                .toList();
+        StringBuilder source = new StringBuilder("package db.migration;\\n\\n")
+                .append("import org.flywaydb.core.api.migration.BaseJavaMigration;\\n")
+                .append("import org.flywaydb.core.api.migration.Context;\\n")
+                .append("import java.sql.Statement;\\n\\n")
+                .append("public class V1__CreateDomainSchema extends BaseJavaMigration {\\n")
+                .append("  private static final String[] STATEMENTS = {\\n");
+        for (String statement : statements) {
+            source.append("    \\\"").append(escapeJava(statement)).append("\\\",\\n");
+        }
+        source.append("  };\\n")
+                .append("  @Override public void migrate(Context context) throws Exception {\\n")
+                .append("    try (Statement statement = context.getConnection().createStatement()) {\\n")
+                .append("      for (String sql : STATEMENTS) statement.execute(sql);\\n")
+                .append("    }\\n")
+                .append("  }\\n")
+                .append("}\\n");
+        return source.toString();
+    }
+
+    private String escapeJava(String value) {
+        return value.replace("\\\\", "\\\\\\\\")
+                .replace("\\\"", "\\\\\\\"")
+                .replace("\\r", "\\\\r")
+                .replace("\\n", "\\\\n")
+                .replace("\\t", "\\\\t");
     }
 
     private String javaType(String type) {
