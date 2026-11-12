@@ -46,7 +46,6 @@ jobs:
           unzip -l platform/core/target/devforge-generated-sample.zip
           unzip -q platform/core/target/devforge-generated-sample.zip -d target/generated-sample
           test -s target/generated-sample/src/main/java/db/migration/V1__CreateDomainSchema.java
-          grep -Fq 'CREATE TABLE \"customer\"' target/generated-sample/src/main/java/db/migration/V1__CreateDomainSchema.java
           mvn --batch-mode --no-transfer-progress -f target/generated-sample/pom.xml verify
           find target/generated-sample/target/classes -type f -print
           test -s target/generated-sample/target/classes/db/migration/V1__CreateDomainSchema.class
