@@ -20,7 +20,8 @@ public class CompatibilityEvaluator {
     }
 
     public CompatibilityEvaluationResult evaluate(Map<String, String> selections) {
-        Map<String, String> safeSelections = selections == null ? Map.of() : Map.copyOf(selections);
+        Map<String, String> safeSelections = selections == null ? Map.of()
+                : java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(selections));
         List<CompatibilityFinding> findings = new ArrayList<>();
 
         evaluateUnknownSelections(safeSelections, findings);

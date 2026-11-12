@@ -23,7 +23,9 @@ public class CompatibilityController {
             @RequestBody CompatibilityEvaluationRequest request) {
         if (request.selections().size() > MAX_SELECTIONS
                 || request.selections().entrySet().stream().anyMatch(entry ->
-                entry.getKey().isBlank() || entry.getValue() == null || entry.getValue().isBlank())) {
+                entry.getKey() == null || entry.getKey().isBlank()
+                        || entry.getValue() == null || entry.getValue().isBlank()
+                        || entry.getKey().length() > 160 || entry.getValue().length() > 80)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Selections must contain at most 100 non-empty technology/version pairs");
         }

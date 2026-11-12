@@ -6,11 +6,16 @@
     { "technologyId": "framework.spring-boot", "versionRange": ">=4.0.0 <5.0.0" }
   ],
   "condition": {
-    "not": {
-      "operator": "version-in-range",
-      "technologyId": "language.java",
-      "versionRange": ">=17"
-    }
+    "allOf": [
+      { "operator": "selected", "technologyId": "language.java" },
+      {
+        "not": {
+          "operator": "version-in-range",
+          "technologyId": "language.java",
+          "versionRange": ">=17"
+        }
+      }
+    ]
   },
   "effect": "block",
   "message": "The selected Java version does not satisfy the Spring Boot runtime baseline.",
