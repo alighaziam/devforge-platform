@@ -30,6 +30,7 @@ public class GenerationController {
         headers.setContentDisposition(ContentDisposition.attachment()
                 .filename(artifact.fileName()).build());
         headers.set("X-Generation-SHA256", artifact.sha256());
+        headers.set("X-Generation-Run-Id", artifact.runId().toString());
         headers.set("X-Generated-Files", Integer.toString(artifact.generatedFiles()));
         return new ResponseEntity<>(artifact.content(), headers, HttpStatus.OK);
     }

@@ -30,16 +30,19 @@ public class GenerationService {
     private final SpecificationSnapshotRepository snapshots;
     private final CompatibilityEvaluator compatibilityEvaluator;
     private final JavaSpringPostgresGenerator generator;
+    private final GenerationRunRepository generationRuns;
     private final ObjectMapper mapper = new ObjectMapper();
 
     public GenerationService(SpecificationSnapshotRepository snapshots,
-            CompatibilityEvaluator compatibilityEvaluator, JavaSpringPostgresGenerator generator) {
+            CompatibilityEvaluator compatibilityEvaluator, JavaSpringPostgresGenerator generator,
+            GenerationRunRepository generationRuns) {
         this.snapshots = snapshots;
         this.compatibilityEvaluator = compatibilityEvaluator;
         this.generator = generator;
+        this.generationRuns = generationRuns;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public GenerationArtifact generate(UUID projectId, int snapshotVersion) throws JsonProcessingException {
         if (snapshotVersion < 1) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                 "snapshotVersion must be positive");
@@ -80,11 +83,15 @@ public class GenerationService {
 
         byte[] archive = zip(files);
         String digest = sha256(archive);
+        UUID runId = UUID.randomUUID();
+        generationRuns.saveAndFlush(new GenerationRunEntity(runId, snapshot.getProject(), snapshot,
+                JavaSpringPostgresGenerator.ID, JavaSpringPostgresGenerator.VERSION,
+                "GENERATED", digest, files.size()));
         String slug = spec.path("project").path("name").asText("devforge-project")
                 .toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9]+", "-")
                 .replaceAll("^-+|-+$", "");
         if (slug.isBlank()) slug = "devforge-project";
-        return new GenerationArtifact(slug + ".zip", archive, digest, files.size());
+        return new GenerationArtifact(runId, slug + ".zip", archive, digest, files.size());
     }
 
     private byte[] zip(Map<String, String> files) {

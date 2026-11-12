@@ -11,7 +11,9 @@ Request:
 ```
 
 The endpoint returns a ZIP archive and response headers containing the archive
-SHA-256 digest and generated file count. The archive includes
+SHA-256 digest, generated file count, and a persistent generation-run ID. Each
+run records its source snapshot, generator version, output digest, file count,
+and generated status. The archive includes
 `.devforge/manifest.json` with the generator ID/version, source snapshot ID,
 specification version, source specification digest, and generated file list.
 

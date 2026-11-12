@@ -1,6 +1,9 @@
 package io.devforge.platform.core.generation;
 
-public record GenerationArtifact(String fileName, byte[] content, String sha256, int generatedFiles) {
+import java.util.UUID;
+
+public record GenerationArtifact(UUID runId, String fileName, byte[] content,
+                                 String sha256, int generatedFiles) {
     public GenerationArtifact {
         content = content.clone();
     }

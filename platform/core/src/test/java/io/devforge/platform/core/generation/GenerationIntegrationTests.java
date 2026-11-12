@@ -22,6 +22,7 @@ class GenerationIntegrationTests {
 
     @Autowired private ProjectLifecycleService projects;
     @Autowired private GenerationService generationService;
+    @Autowired private GenerationRunRepository generationRuns;
 
     @Test
     void generatesReproducibleProjectArchiveFromValidatedSnapshot() throws Exception {
@@ -33,6 +34,10 @@ class GenerationIntegrationTests {
         java.nio.file.Files.write(java.nio.file.Path.of("target/devforge-generated-sample.zip"), first.content());
 
         assertThat(first.fileName()).isEqualTo("orders.zip");
+        assertThat(first.runId()).isNotNull();
+        assertThat(generationRuns.findAllByProject_IdOrderByCreatedAtAsc(project.id()))
+                .hasSize(2)
+                .allSatisfy(run -> assertThat(run.getStatus()).isEqualTo("GENERATED"));
         assertThat(first.sha256()).isEqualTo(second.sha256());
         assertThat(first.generatedFiles()).isGreaterThanOrEqualTo(8);
 
