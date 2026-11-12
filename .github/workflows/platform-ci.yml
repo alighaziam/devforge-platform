@@ -9,14 +9,14 @@ on:
       - 'schemas/**'
       - 'catalogs/**'
       - 'docs/**'
-      - 'schemas/**'
-      - 'catalogs/**'
-      - 'docs/**'
       - '.github/workflows/platform-ci.yml'
   pull_request:
     paths:
       - 'pom.xml'
       - 'platform/**'
+      - 'schemas/**'
+      - 'catalogs/**'
+      - 'docs/**'
       - '.github/workflows/platform-ci.yml'
   workflow_dispatch:
 

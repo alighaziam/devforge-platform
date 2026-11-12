@@ -19,6 +19,12 @@ The API exposes catalog metadata only. It does not imply that a technology is
 installed, selected, supported by a generator, or compatible with another
 selection. Unknown IDs return 404.
 
+## Runtime contract validation
+
+The platform validates every indexed technology record and compatibility rule
+against its matching Draft 2020-12 schema during the test suite. Catalog entries
+that do not conform block the verification build.
+
 ## Catalog semantics
 
 A technology ID is globally stable and independent of its display name or

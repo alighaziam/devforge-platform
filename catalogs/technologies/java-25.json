@@ -5,7 +5,7 @@
   "name": "Java",
   "vendor": "OpenJDK",
   "version": "25",
-  "versionScheme": "semver",
+  "versionScheme": "major-minor",
   "status": "supported",
   "capabilities": ["jvm", "static-typing", "virtual-threads", "structured-concurrency"],
   "requires": [],
