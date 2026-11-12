@@ -40,11 +40,17 @@ infrastructure/       Local development and deployment assets
 tests/                Contract, integration, and end-to-end tests
 ```
 
-## Status
+## Current implementation
 
-This repository is in the foundation phase. The first milestone establishes product boundaries, architecture, specification contracts, and engineering standards before implementation expands.
+The initial backend vertical slice now includes:
 
-See [Product Requirements](docs/product/requirements.md), [System Architecture](docs/architecture/system-architecture.md), and [Roadmap](docs/roadmap/roadmap.md).
+- Java 25 / Spring Boot 4 platform core with authenticated-by-default API security.
+- Draft 2020-12 Project Specification validation.
+- PostgreSQL-backed project lifecycle and immutable, versioned specification snapshots.
+- Versioned technology catalog read APIs and deterministic compatibility evaluation.
+- Flyway migrations, Docker Compose development database, and Java 25 CI verification.
+
+This is an actively developed foundation, not a production-ready application factory yet. Angular Studio, tenant-aware identity, model import, architecture analysis, deterministic generators, sandbox execution, and delivery automation remain on the roadmap. See [Local Development](docs/engineering/local-development.md), [Product Requirements](docs/product/requirements.md), [System Architecture](docs/architecture/system-architecture.md), and [Roadmap](docs/roadmap/roadmap.md).
 
 ## Development policy
 
