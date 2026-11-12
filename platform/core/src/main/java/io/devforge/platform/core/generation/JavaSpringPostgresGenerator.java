@@ -50,6 +50,7 @@ public class JavaSpringPostgresGenerator {
                       ddl-auto: validate
                   flyway:
                     enabled: true
+                    locations: classpath:db/migration
                 management:
                   endpoints:
                     web:

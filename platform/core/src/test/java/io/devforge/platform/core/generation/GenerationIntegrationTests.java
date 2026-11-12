@@ -49,6 +49,9 @@ class GenerationIntegrationTests {
                 "src/main/java/io/devforge/generated/orders/repository/CustomerRepository.java",
                 "src/main/resources/db/migration/V1__create_domain_schema.sql",
                 ".devforge/manifest.json");
+        assertThat(entries.get("src/main/resources/db/migration/V1__create_domain_schema.sql"))
+                .contains("CREATE TABLE customer")
+                .contains("email VARCHAR(255) NOT NULL UNIQUE");
         assertThat(entries.get(".devforge/manifest.json"))
                 .contains("devforge.generator.java-spring-postgres")
                 .contains(project.id().toString());

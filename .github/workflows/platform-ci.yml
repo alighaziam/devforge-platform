@@ -45,6 +45,9 @@ jobs:
           mkdir -p target/generated-sample
           unzip -q platform/core/target/devforge-generated-sample.zip -d target/generated-sample
           mvn --batch-mode --no-transfer-progress -f target/generated-sample/pom.xml verify
+      - name: Verify generated migration is packaged
+        run: |
+          jar tf target/generated-sample/target/*.jar | grep 'BOOT-INF/classes/db/migration/V1__create_domain_schema.sql'
       - name: Run generated sample runtime smoke test
         run: |
           cd target/generated-sample
