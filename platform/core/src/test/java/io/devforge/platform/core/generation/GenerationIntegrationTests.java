@@ -47,11 +47,12 @@ class GenerationIntegrationTests {
                 "pom.xml",
                 "src/main/java/io/devforge/generated/orders/model/Customer.java",
                 "src/main/java/io/devforge/generated/orders/repository/CustomerRepository.java",
-                "src/main/resources/db/migration/V1__create_domain_schema.sql",
+                "src/main/java/db/migration/V1__CreateDomainSchema.java",
                 ".devforge/manifest.json");
-        assertThat(entries.get("src/main/resources/db/migration/V1__create_domain_schema.sql"))
+        assertThat(entries.get("src/main/java/db/migration/V1__CreateDomainSchema.java"))
                 .contains("CREATE TABLE customer")
-                .contains("email VARCHAR(255) NOT NULL UNIQUE");
+                .contains("email VARCHAR(255) NOT NULL UNIQUE")
+                .contains("extends BaseJavaMigration");
         assertThat(entries.get(".devforge/manifest.json"))
                 .contains("devforge.generator.java-spring-postgres")
                 .contains(project.id().toString());
