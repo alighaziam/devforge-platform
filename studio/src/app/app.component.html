@@ -82,6 +82,10 @@
               <button class="secondary-button" [disabled]="busy" (click)="validateSpecification()">Validate specification</button>
               <button class="primary-button" [disabled]="busy || !selectedProject" (click)="saveSnapshot()">Save immutable snapshot</button>
             </div>
+            <div class="validation-result" *ngIf="modelImportWarnings.length">
+              <strong>Model import notes</strong>
+              <ul><li *ngFor="let warning of modelImportWarnings">{{ warning }}</li></ul>
+            </div>
             <div class="validation-result" *ngIf="validation" [class.valid]="validation.valid" [class.invalid]="!validation.valid">
               <strong>{{ validation.valid ? 'Specification valid' : 'Validation findings' }}</strong>
               <ul *ngIf="validation.errors.length"><li *ngFor="let error of validation.errors">{{ error }}</li></ul>

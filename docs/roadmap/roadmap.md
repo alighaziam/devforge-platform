@@ -38,7 +38,8 @@
 
 ## Phase 3 — Model and architecture engines
 
-- [ ] Import JSON, SQL DDL, OpenAPI, XML, and document formats.
+- [x] Import structured domain-model JSON and a bounded PostgreSQL SQL DDL subset as reviewable previews.
+- [ ] Import OpenAPI, XML, PDF, DOCX, and spreadsheet formats.
 - [ ] Domain model representation and model diff.
 - [ ] Architecture decision/risk engine.
 - [ ] Architecture Decision Records and approval lifecycle.
