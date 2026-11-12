@@ -30,7 +30,7 @@ class GenerationIntegrationTests {
         projects.createSnapshot(project.id(), specification(project.id()));
 
         GenerationArtifact first = generationService.generate(project.id(), 1);
-        GenerationArtifact second = generationService.generate(project.id(), 1);
+        GenerationArtifact second = generationService.generate(project.id(), 1, JavaSpringPostgresGenerator.ID + "@" + JavaSpringPostgresGenerator.VERSION);
         java.nio.file.Files.write(java.nio.file.Path.of("target/devforge-generated-sample.zip"), first.content());
 
         assertThat(first.fileName()).isEqualTo("orders.zip");
@@ -57,6 +57,7 @@ class GenerationIntegrationTests {
                 .contains("extends BaseJavaMigration");
         assertThat(entries.get(".devforge/manifest.json"))
                 .contains("devforge.generator.java-spring-postgres")
+                .contains("\"generatorVersion\" : \"0.1.0\"")
                 .contains(project.id().toString());
     }
 

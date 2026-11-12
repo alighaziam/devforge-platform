@@ -48,9 +48,10 @@
 
 ## Phase 4 — First generator vertical slice
 
-Start with one narrow, end-to-end supported stack rather than claiming broad support prematurely. The first supported slice is Java 25 / Spring Boot 4 / PostgreSQL 17; Angular generation, identity integration, and additional stacks remain separate milestones.
 
-- [x] Deterministic generator contract for the first supported stack.
+- [x] Deterministic generator plugin contract and registry for the first supported stack.
+- [x] Generator discovery API, explicit versioned selection, and duplicate-coordinate rejection.
+- [x] Generated artifact path, secret-file, reserved-manifest, and size validation.
 - [x] Generated project manifest and provenance, with persistent generation-run audit records.
 - [ ] Golden-file tests and regeneration safety.
 
@@ -68,7 +69,7 @@ Start with one narrow, end-to-end supported stack rather than claiming broad sup
 
 ## Phase 6 — Plugin ecosystem and delivery
 
-- [ ] Plugin registry, signing, and verification.
+- [ ] External plugin signing, verification, and sandboxed execution.
 - [ ] Additional Java/Python/.NET and frontend generators.
 - [ ] Git branch/PR delivery.
 - [ ] CI/CD and deployment profiles.
