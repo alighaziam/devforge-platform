@@ -240,6 +240,27 @@ public class JavaSpringPostgresGenerator {
                       <resource><directory>src/main/resources</directory><filtering>false</filtering></resource>
                     </resources>
                     <plugins>
+                      <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <version>3.3.1</version>
+                        <executions>
+                          <execution>
+                            <id>copy-generated-application-resources</id>
+                            <phase>process-resources</phase>
+                            <goals><goal>copy-resources</goal></goals>
+                            <configuration>
+                              <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                              <resources>
+                                <resource>
+                                  <directory>${project.basedir}/src/main/resources</directory>
+                                  <filtering>false</filtering>
+                                </resource>
+                              </resources>
+                            </configuration>
+                          </execution>
+                        </executions>
+                      </plugin>
                       <plugin><groupId>org.springframework.boot</groupId><artifactId>spring-boot-maven-plugin</artifactId></plugin>
                     </plugins>
                   </build>
