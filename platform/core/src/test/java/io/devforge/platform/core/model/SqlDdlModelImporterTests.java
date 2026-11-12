@@ -50,6 +50,12 @@ class SqlDdlModelImporterTests {
     }
 
     @Test
+    void rejectsAnIdColumnThatIsNotDeclaredAsThePrimaryKey() {
+        assertThatThrownBy(() -> importer.importDdl("CREATE TABLE customer (id UUID, email VARCHAR(255));"))
+                .isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
+    }
+
+    @Test
     void rejectsIndexesThatReferenceUnknownColumns() {
         assertThatThrownBy(() -> importer.importDdl("""
                 CREATE TABLE customer (id UUID PRIMARY KEY);

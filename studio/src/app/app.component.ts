@@ -79,7 +79,7 @@ export class AppComponent implements OnInit {
   snapshots: Snapshot[] = [];
   generationRuns: GenerationRun[] = [];
   modelImportFormat = 'sql-ddl';
-  modelImportContent = 'CREATE TABLE customer (\\n  id UUID PRIMARY KEY,\\n  email VARCHAR(255) NOT NULL UNIQUE\\n);';
+  modelImportContent = 'CREATE TABLE customer (\n  id UUID PRIMARY KEY,\n  email VARCHAR(255) NOT NULL UNIQUE\n);';
   modelImportWarnings: string[] = [];
   catalog: Technology[] = [];
   selectedProject: Project | null = null;

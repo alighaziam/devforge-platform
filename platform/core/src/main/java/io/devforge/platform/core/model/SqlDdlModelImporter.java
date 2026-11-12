@@ -128,6 +128,9 @@ public class SqlDdlModelImporter {
         if (primaryKeys.size() > 1) {
             throw rejected("Composite primary keys are not supported in this import profile.");
         }
+        if (primaryKeys.isEmpty() && columns.containsKey("id")) {
+            throw rejected("An id column must be declared as the UUID primary key in this import profile.");
+        }
         if (!primaryKeys.isEmpty()) {
             String key = primaryKeys.get(0);
             Map<String, Object> attribute = columns.get(key);
