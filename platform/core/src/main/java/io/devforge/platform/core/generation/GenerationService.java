@@ -32,22 +32,27 @@ public class GenerationService {
     private final SpecificationSnapshotRepository snapshots;
     private final ProjectRepository projects;
     private final CompatibilityEvaluator compatibilityEvaluator;
-    private final JavaSpringPostgresGenerator generator;
+    private final GeneratorRegistry generators;
     private final GenerationRunRepository generationRuns;
     private final ObjectMapper mapper = new ObjectMapper();
 
     public GenerationService(SpecificationSnapshotRepository snapshots, ProjectRepository projects,
-            CompatibilityEvaluator compatibilityEvaluator, JavaSpringPostgresGenerator generator,
+            CompatibilityEvaluator compatibilityEvaluator, GeneratorRegistry generators,
             GenerationRunRepository generationRuns) {
         this.snapshots = snapshots;
         this.projects = projects;
         this.compatibilityEvaluator = compatibilityEvaluator;
-        this.generator = generator;
+        this.generators = generators;
         this.generationRuns = generationRuns;
     }
 
     @Transactional
     public GenerationArtifact generate(UUID projectId, int snapshotVersion) throws JsonProcessingException {
+        return generate(projectId, snapshotVersion, null);
+    }
+
+    @Transactional
+    public GenerationArtifact generate(UUID projectId, int snapshotVersion, String requestedGeneratorId) throws JsonProcessingException {
         if (snapshotVersion < 1) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                 "snapshotVersion must be positive");
         SpecificationSnapshotEntity snapshot = snapshots
@@ -71,11 +76,13 @@ public class GenerationService {
                     "Generation blocked by compatibility findings: " + findings);
         }
 
+        GeneratorPlugin generator = generators.resolve(spec, requestedGeneratorId);
+        GeneratorDescriptor descriptor = generator.descriptor();
         Map<String, String> files = new TreeMap<>(generator.generate(spec));
         Map<String, Object> manifest = new java.util.LinkedHashMap<>();
         manifest.put("manifestVersion", "1.0.0");
-        manifest.put("generatorId", JavaSpringPostgresGenerator.ID);
-        manifest.put("generatorVersion", JavaSpringPostgresGenerator.VERSION);
+        manifest.put("generatorId", descriptor.id());
+        manifest.put("generatorVersion", descriptor.version());
         manifest.put("projectId", projectId.toString());
         manifest.put("snapshotId", snapshot.getId().toString());
         manifest.put("snapshotVersion", snapshot.getSnapshotVersion());
@@ -89,7 +96,7 @@ public class GenerationService {
         String digest = sha256(archive);
         UUID runId = UUID.randomUUID();
         generationRuns.saveAndFlush(new GenerationRunEntity(runId, snapshot.getProject(), snapshot,
-                JavaSpringPostgresGenerator.ID, JavaSpringPostgresGenerator.VERSION,
+                descriptor.id(), descriptor.version(),
                 "GENERATED", digest, files.size()));
         String slug = spec.path("project").path("name").asText("devforge-project")
                 .toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9]+", "-")
