@@ -57,7 +57,7 @@ class GenerationIntegrationTests {
                 .contains("extends BaseJavaMigration");
         assertThat(entries.get(".devforge/manifest.json"))
                 .contains("devforge.generator.java-spring-postgres")
-                .contains("\"generatorVersion\": \"0.1.0\"")
+                .contains("\"generatorVersion\" : \"0.1.0\"")
                 .contains(project.id().toString());
     }
 
