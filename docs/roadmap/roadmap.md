@@ -42,24 +42,25 @@
 - [ ] Import OpenAPI, XML, PDF, DOCX, and spreadsheet formats.
 - [ ] Domain model representation and model diff.
 - [x] Deterministic architecture decision/risk engine with explainable findings and ADR drafts.
-- [ ] Architecture Decision Records and approval lifecycle.
+- [x] Architecture Decision Records and approval lifecycle.
 
 **Exit criteria:** model and technology choices produce explainable validation findings.
 
 ## Phase 4 — First generator vertical slice
 
-Start with one narrow, end-to-end supported stack rather than claiming broad support prematurely. Proposed first slice: Java/Spring Boot + PostgreSQL + Angular, with optional security profile.
+Start with one narrow, end-to-end supported stack rather than claiming broad support prematurely. The first supported slice is Java 25 / Spring Boot 4 / PostgreSQL 17; Angular generation, identity integration, and additional stacks remain separate milestones.
 
 - [x] Deterministic generator contract for the first supported stack.
 - [x] Generated project manifest and provenance, with persistent generation-run audit records.
 - [ ] Golden-file tests and regeneration safety.
 
-- [x] Exit criteria: identical snapshots and generator versions produce reproducible output, verified by repeat-generation SHA-256 integration tests and a separate generated-project Maven CI build.
+**Exit criteria:** identical snapshots and generator versions produce reproducible output, verified by repeat-generation SHA-256 integration tests and a separate generated-project Maven CI build.
 
 ## Phase 5 — Quality and sandbox
 
 - [x] Independent test-plan preview generation from requirements, domain constraints, security decisions, and quality attributes.
-- [x] CI builds and smoke-runs the first generated sample with PostgreSQL and Actuator health verification.\n- [ ] Hardened isolated build workers for arbitrary generated projects.
+- [x] CI builds and smoke-runs the first generated sample with PostgreSQL and Actuator health verification.
+- [ ] Hardened isolated build workers for arbitrary generated projects.
 - [ ] Build, unit, integration, smoke, and API validation.
 - [ ] Evidence bundle and honest skipped/failed status.
 

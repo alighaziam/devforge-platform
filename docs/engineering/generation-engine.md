@@ -18,8 +18,8 @@ Generator `devforge.generator.java-spring-postgres@0.1.0` currently supports:
 - Layered or modular-monolith architecture styles
 - Single-project output layout
 - Basic domain entities and repositories
-- PostgreSQL tables and declared indexes
-- Maven, Flyway, Dockerfile, Docker Compose, and Actuator health endpoint
+- PostgreSQL tables and validated btree indexes
+- Compiled Java-based Flyway migration, Maven, Dockerfile, Docker Compose, and Actuator health endpoint
 
 Unsupported technology selections, authentication profiles, relationships,
 defaults, attribute types, and output layouts are rejected rather than silently
@@ -40,6 +40,4 @@ PostgreSQL and the generated application with Docker Compose, and probes the
 Actuator health endpoint. This is a controlled CI smoke test, not a hardened
 multi-tenant sandbox for arbitrary user-generated code.
 
-Generated output is a starting point, not a production deployment. Review
-secrets, database credentials, security, migrations, and operational settings
-before deployment. A hardened isolated build/runtime worker remains future work.
+Generated output is a starting point, not a production deployment. Compose requires an explicit DATABASE_PASSWORD, keeps PostgreSQL private to the Compose network, and binds the application port to localhost. Review secrets, database credentials, security, migrations, and operational settings before deployment. A hardened isolated build/runtime worker remains future work.
