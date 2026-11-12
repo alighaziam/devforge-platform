@@ -1,6 +1,5 @@
 package io.devforge.platform.core.specification;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -15,7 +14,7 @@ class ProjectSpecificationControllerTests {
     @BeforeEach
     void setUp() {
         controller = new ProjectSpecificationController(
-                new ProjectSpecificationValidator(new ObjectMapper()));
+                new ProjectSpecificationValidator());
     }
 
     @Test
