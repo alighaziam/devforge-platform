@@ -153,8 +153,8 @@ public class JavaSpringPostgresGenerator {
         StringBuilder out = new StringBuilder("package ").append(pkg).append(".model;\n")
                 .append("import jakarta.persistence.*;\nimport java.math.BigDecimal;\n")
                 .append("import java.time.Instant;\nimport java.time.LocalDate;\nimport java.util.UUID;\n")
-                .append("@Entity @Table(name = \"").append(snake(entity.path("name").asText()))
-                .append("\") public class ").append(cls).append(" {\n");
+                .append("@Entity @Table(name = \"\\\"").append(snake(entity.path("name").asText()))
+                .append("\\\"\") public class ").append(cls).append(" {\n");
         boolean id = false;
         Set<String> fields = new HashSet<>();
         for (JsonNode a : entity.path("attributes")) {
@@ -168,10 +168,12 @@ public class JavaSpringPostgresGenerator {
                 id = true;
                 out.append("@Id ");
             }
-            out.append("@Column(name = \"").append(snake(original)).append("\", nullable = ")
+            out.append("@Column(name = \"\\\"").append(snake(original)).append("\\\"\", nullable = ")
                     .append(!a.path("required").asBoolean(false));
             if (a.path("unique").asBoolean(false)) out.append(", unique = true");
             if ("string".equals(type)) out.append(", length = 255");
+            if ("text".equals(type)) out.append(", columnDefinition = \"text\"");
+            if ("decimal".equals(type)) out.append(", precision = 19, scale = 4");
             out.append(") private ").append(javaType(type)).append(' ').append(field).append(";\n");
         }
         if (!id) out.append("@Id @GeneratedValue(strategy = GenerationType.UUID) private UUID id;\n");
@@ -199,26 +201,32 @@ public class JavaSpringPostgresGenerator {
                 String field = fieldName(a.path("name").asText());
                 String type = a.path("type").asText().toLowerCase(Locale.ROOT);
                 id |= "id".equals(field);
-                String col = "    " + name + " " + sqlType(type);
+                String col = "    \"" + name + "\" " + sqlType(type);
                 if (a.path("required").asBoolean(false)) col += " NOT NULL";
                 if (a.path("unique").asBoolean(false)) col += " UNIQUE";
                 if ("id".equals(field)) col += " PRIMARY KEY";
                 columns.add(col);
             }
-            if (!id) columns.add(0, "    id UUID PRIMARY KEY");
-            sql.append("\nCREATE TABLE ").append(snake(entity.path("name").asText()))
+            if (!id) columns.add(0, "    \"id\" UUID PRIMARY KEY");
+            sql.append("\nCREATE TABLE \"").append(snake(entity.path("name").asText())).append("\"")
                     .append(" (\n").append(String.join(",\n", columns)).append("\n);\n");
         }
         for (JsonNode idx : model.path("indexes")) {
             String table = snake(idx.path("entity").asText());
             List<String> cols = new ArrayList<>();
-            idx.path("columns").forEach(v -> cols.add(snake(v.asText())));
+            List<String> indexColumns = new ArrayList<>();
+            idx.path("columns").forEach(v -> {
+                String column = snake(v.asText());
+                indexColumns.add(column);
+                cols.add("\"" + column + "\"");
+            });
             if (cols.isEmpty()) throw rejected("Index must include at least one column.");
             String name = idx.hasNonNull("name") ? snake(idx.path("name").asText())
-                    : "idx_" + table + "_" + String.join("_", cols);
+                    : "idx_" + table + "_" + String.join("_", indexColumns);
+            if (name.length() > 63) throw rejected("Generated index name exceeds PostgreSQL's 63-character limit.");
             sql.append("\nCREATE ");
             if (idx.path("unique").asBoolean(false)) sql.append("UNIQUE ");
-            sql.append("INDEX ").append(name).append(" ON ").append(table)
+            sql.append("INDEX \"").append(name).append("\" ON \"").append(table).append("\"")
                     .append(" (").append(String.join(", ", cols)).append(");\n");
         }
         return sql.toString();
