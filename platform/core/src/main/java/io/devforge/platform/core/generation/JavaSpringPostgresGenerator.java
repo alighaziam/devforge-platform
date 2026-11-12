@@ -247,14 +247,15 @@ public class JavaSpringPostgresGenerator {
                         <executions>
                           <execution>
                             <id>copy-generated-application-resources</id>
-                            <phase>process-resources</phase>
+                            <phase>generate-resources</phase>
                             <goals><goal>copy-resources</goal></goals>
                             <configuration>
-                              <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                              <outputDirectory>${project.basedir}/target/classes</outputDirectory>
                               <resources>
                                 <resource>
                                   <directory>${project.basedir}/src/main/resources</directory>
                                   <filtering>false</filtering>
+                                  <includes><include>**/*</include></includes>
                                 </resource>
                               </resources>
                             </configuration>
