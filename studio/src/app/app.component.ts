@@ -29,6 +29,14 @@ interface Technology {
   status: string;
   capabilities: string[];
 }
+interface QualityTestCase {
+  id: string; category: string; title: string; objective: string; priority: string;
+  sourcePath: string; steps: string[]; expectedResult: string;
+}
+interface QualityPlan {
+  projectId: string; snapshotId: string; snapshotVersion: number; generatedAt: string; planSha256: string;
+  summary: Record<string, number>; testCases: QualityTestCase[];
+}
 interface ArchitectureDecision {
   id: string; projectId: string; snapshotId: string; snapshotVersion: number;
   title: string; context: string; decision: string; alternatives: string[]; consequences: string[];
@@ -111,6 +119,7 @@ export class AppComponent implements OnInit {
   compatibility: CompatibilityResult | null = null;
   architectureAssessment: ArchitectureAssessment | null = null;
   architectureDecisions: ArchitectureDecision[] = [];
+  qualityPlan: QualityPlan | null = null;
   adrTransitionComment = '';
   validation: { valid: boolean; errors: string[] } | null = null;
   busy = false;
@@ -313,6 +322,26 @@ export class AppComponent implements OnInit {
       } else {
         this.handleError(error, 'Generation failed.');
       }
+    } finally {
+      this.busy = false;
+    }
+  }
+
+  async generateQualityPlan(): Promise<void> {
+    if (!this.selectedProject || this.snapshots.length === 0) {
+      this.setNotice('Save a specification snapshot before creating a quality plan.', 'error');
+      return;
+    }
+    this.busy = true;
+    try {
+      const latest = this.snapshots[this.snapshots.length - 1];
+      this.qualityPlan = await firstValueFrom(this.http.post<QualityPlan>(
+        '/api/v1/projects/' + this.selectedProject.id + '/quality/plan',
+        { snapshotVersion: latest.snapshotVersion }
+      ));
+      this.setNotice('Requirements-driven quality plan generated. These are test intentions, not execution results.', 'success');
+    } catch (error) {
+      this.handleError(error, 'Could not generate quality plan.');
     } finally {
       this.busy = false;
     }

@@ -12,6 +12,7 @@
     <button class="nav-item" [class.active]="activeView === 'generate'" (click)="activeView = 'generate'"><span class="nav-icon">⇩</span> Generate project</button>
     <button class="nav-item" [class.active]="activeView === 'architecture'" (click)="activeView = 'architecture'"><span class="nav-icon">⌘</span> Architecture advisor</button>
     <button class="nav-item" [class.active]="activeView === 'model-import'" (click)="activeView = 'model-import'"><span class="nav-icon">⇧</span> Import data model</button>
+    <button class="nav-item" [class.active]="activeView === 'quality'" (click)="activeView = 'quality'"><span class="nav-icon">✓</span> Quality plan</button>
     <div class="sidebar-bottom">
       <div class="environment"><span class="pulse"></span> LOCAL ENVIRONMENT</div>
       <div class="sidebar-version">Platform API · v1</div>
@@ -20,7 +21,7 @@
 
   <main class="main">
     <header class="topbar">
-      <div class="breadcrumbs">DevForge <span>/</span> {{ activeView === 'overview' ? 'Overview' : activeView === 'project' ? 'Project workspace' : activeView === 'catalog' ? 'Technology catalog' : activeView === 'generate' ? 'Generate project' : activeView === 'architecture' ? 'Architecture advisor' : activeView === 'model-import' ? 'Import data model' : 'Compatibility analysis' }}</div>
+      <div class="breadcrumbs">DevForge <span>/</span> {{ activeView === 'overview' ? 'Overview' : activeView === 'project' ? 'Project workspace' : activeView === 'catalog' ? 'Technology catalog' : activeView === 'generate' ? 'Generate project' : activeView === 'architecture' ? 'Architecture advisor' : activeView === 'model-import' ? 'Import data model' : activeView === 'quality' ? 'Quality plan' : 'Compatibility analysis' }}</div>
       <div class="top-actions">
         <span class="api-status" [class.connected]="noticeType === 'success'"><i></i> {{ noticeType === 'success' ? 'API connected' : 'Local API' }}</span>
         <button class="icon-button" title="Refresh workspace" (click)="loadWorkspace()">↻</button>
@@ -68,6 +69,29 @@
             <div><b>03</b><strong>Generate</strong><small>Deterministic project output</small></div><span>→</span>
             <div><b>04</b><strong>Verify</strong><small>Build, tests & runtime</small></div>
           </div>
+        </section>
+      </ng-container>
+
+      <ng-container *ngIf="activeView === 'quality'">
+        <div class="page-heading"><div><div class="eyebrow">REQUIREMENTS-DRIVEN QUALITY ENGINEERING</div><h1>Quality plan</h1><p>Derive independent test intentions from requirements, data constraints, quality attributes, and security decisions.</p></div></div>
+        <section class="panel">
+          <div class="panel-heading"><div><div class="eyebrow">PLAN INPUT</div><h2>Latest immutable snapshot</h2></div><span class="schema-tag">Independent of generated code</span></div>
+          <div class="generation-context" *ngIf="selectedProject"><strong>{{ selectedProject.name }}</strong><span>{{ snapshots.length }} snapshots</span></div>
+          <div class="empty-state compact" *ngIf="!selectedProject || snapshots.length === 0"><strong>Save a specification snapshot first</strong><p>The quality plan is derived from a versioned specification.</p></div>
+          <button class="primary-button" [disabled]="busy || !selectedProject || snapshots.length === 0" (click)="generateQualityPlan()">Generate quality plan <span>→</span></button>
+        </section>
+        <section class="panel" *ngIf="qualityPlan">
+          <div class="panel-heading"><div><div class="eyebrow">TEST INTENTIONS</div><h2>Snapshot v{{ qualityPlan.snapshotVersion }}</h2></div><span class="schema-tag">{{ qualityPlan.testCases.length }} test cases</span></div>
+          <div class="generation-context"><strong>Plan SHA-256</strong><code>{{ qualityPlan.planSha256 }}</code></div>
+          <div class="quality-summary"><div class="quality-stat" *ngFor="let item of qualityPlan.summary | keyvalue"><strong>{{ item.value }}</strong><span>{{ item.key }}</span></div></div>
+          <article class="quality-case" *ngFor="let test of qualityPlan.testCases">
+            <div class="finding-top"><strong>{{ test.id }} · {{ test.title }}</strong><span>{{ test.priority }}</span></div>
+            <p>{{ test.objective }}</p>
+            <small>Source: {{ test.sourcePath }}</small>
+            <ol><li *ngFor="let step of test.steps">{{ step }}</li></ol>
+            <p class="expected"><strong>Expected:</strong> {{ test.expectedResult }}</p>
+          </article>
+          <p class="generation-copy">These are test intentions, not execution evidence. No tests have been run by generating this plan.</p>
         </section>
       </ng-container>
 

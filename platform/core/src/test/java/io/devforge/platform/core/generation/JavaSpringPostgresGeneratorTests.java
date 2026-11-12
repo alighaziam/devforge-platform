@@ -1,6 +1,7 @@
 package io.devforge.platform.core.generation;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -21,12 +22,23 @@ class JavaSpringPostgresGeneratorTests {
                 "pom.xml",
                 "src/main/java/io/devforge/generated/orders/model/Customer.java",
                 "src/main/java/io/devforge/generated/orders/repository/CustomerRepository.java",
-                "src/main/resources/db/migration/V1__create_domain_schema.sql",
+                "src/main/java/db/migration/V1__CreateDomainSchema.java",
                 "Dockerfile",
-                "docker-compose.yml");
-        assertThat(files.get("src/main/resources/db/migration/V1__create_domain_schema.sql"))
-                .contains("CREATE TABLE customer")
-                .contains("email VARCHAR(255) NOT NULL UNIQUE");
+                "docker-compose.yml",
+                ".env.example",
+                ".gitignore");
+        assertThat(files.get("pom.xml")).contains("spring-boot-starter-actuator");
+        assertThat(files.get("docker-compose.yml")).contains("pg_isready", "service_healthy",
+                "SPRING_DATASOURCE_URL", "SPRING_DATASOURCE_USERNAME",
+                "SPRING_JPA_HIBERNATE_DDL_AUTO: validate", "SPRING_FLYWAY_ENABLED",
+                "DATABASE_PASSWORD:?Set DATABASE_PASSWORD in .env", "127.0.0.1:8080:8080")
+                .doesNotContain("local-only", "5432:5432");
+        assertThat(files.get(".env.example"))
+                .contains("DATABASE_PASSWORD=replace-with-a-long-random-password");
+        assertThat(files.get("src/main/java/db/migration/V1__CreateDomainSchema.java"))
+                .contains("extends BaseJavaMigration")
+                .contains("CREATE TABLE \\\"customer\\\"")
+                .contains("\\\"email\\\" VARCHAR(255) NOT NULL UNIQUE");
         assertThat(files.get("src/main/java/io/devforge/generated/orders/model/Customer.java"))
                 .contains("@Entity")
                 .contains("private String email;");
@@ -39,6 +51,34 @@ class JavaSpringPostgresGeneratorTests {
 
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> generator.generate(spec))
                 .isInstanceOf(org.springframework.web.server.ResponseStatusException.class);
+    }
+
+
+    @Test
+    void rejectsIndexesWithUnknownTablesOrColumns() throws Exception {
+        ObjectNode spec = (ObjectNode) mapper.readTree(specification());
+        ObjectNode index = mapper.createObjectNode().put("entity", "Customer").put("name", "idx_customer_missing");
+        index.putArray("columns").add("missing");
+        ((ObjectNode) spec.get("model")).putArray("indexes").add(index);
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> generator.generate(spec))
+                .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
+                .hasMessageContaining("unknown column");
+    }
+
+    @Test
+    void rejectsUnsupportedPostgresIndexMethods() throws Exception {
+        ObjectNode spec = (ObjectNode) mapper.readTree(specification());
+        ObjectNode index = mapper.createObjectNode()
+                .put("entity", "Customer")
+                .put("name", "idx_customer_email")
+                .put("method", "gin");
+        index.putArray("columns").add("email");
+        ((ObjectNode) spec.get("model")).putArray("indexes").add(index);
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> generator.generate(spec))
+                .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
+                .hasMessageContaining("btree indexes only");
     }
 
     private String specification() {

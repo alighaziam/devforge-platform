@@ -58,8 +58,8 @@ Start with one narrow, end-to-end supported stack rather than claiming broad sup
 
 ## Phase 5 — Quality and sandbox
 
-- [ ] Independent test-plan generation from requirements/contracts.
-- [ ] Isolated build workers.
+- [x] Independent test-plan preview generation from requirements, domain constraints, security decisions, and quality attributes.
+- [x] CI builds and smoke-runs the first generated sample with PostgreSQL and Actuator health verification.\n- [ ] Hardened isolated build workers for arbitrary generated projects.
 - [ ] Build, unit, integration, smoke, and API validation.
 - [ ] Evidence bundle and honest skipped/failed status.
 
