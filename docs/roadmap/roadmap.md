@@ -41,7 +41,7 @@
 - [x] Import structured domain-model JSON and a bounded PostgreSQL SQL DDL subset as reviewable previews.
 - [ ] Import OpenAPI, XML, PDF, DOCX, and spreadsheet formats.
 - [ ] Domain model representation and model diff.
-- [ ] Architecture decision/risk engine.
+- [x] Deterministic architecture decision/risk engine with explainable findings and ADR drafts.
 - [ ] Architecture Decision Records and approval lifecycle.
 
 **Exit criteria:** model and technology choices produce explainable validation findings.

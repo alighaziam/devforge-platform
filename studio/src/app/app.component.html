@@ -10,6 +10,8 @@
     <button class="nav-item" [class.active]="activeView === 'catalog'" (click)="activeView = 'catalog'"><span class="nav-icon">◈</span> Technology catalog</button>
     <button class="nav-item" [class.active]="activeView === 'compatibility'" (click)="activeView = 'compatibility'"><span class="nav-icon">⌁</span> Compatibility</button>
     <button class="nav-item" [class.active]="activeView === 'generate'" (click)="activeView = 'generate'"><span class="nav-icon">⇩</span> Generate project</button>
+    <button class="nav-item" [class.active]="activeView === 'architecture'" (click)="activeView = 'architecture'"><span class="nav-icon">⌘</span> Architecture advisor</button>
+    <button class="nav-item" [class.active]="activeView === 'model-import'" (click)="activeView = 'model-import'"><span class="nav-icon">⇧</span> Import data model</button>
     <div class="sidebar-bottom">
       <div class="environment"><span class="pulse"></span> LOCAL ENVIRONMENT</div>
       <div class="sidebar-version">Platform API · v1</div>
@@ -18,7 +20,7 @@
 
   <main class="main">
     <header class="topbar">
-      <div class="breadcrumbs">DevForge <span>/</span> {{ activeView === 'overview' ? 'Overview' : activeView === 'project' ? 'Project workspace' : activeView === 'catalog' ? 'Technology catalog' : activeView === 'generate' ? 'Generate project' : 'Compatibility analysis' }}</div>
+      <div class="breadcrumbs">DevForge <span>/</span> {{ activeView === 'overview' ? 'Overview' : activeView === 'project' ? 'Project workspace' : activeView === 'catalog' ? 'Technology catalog' : activeView === 'generate' ? 'Generate project' : activeView === 'architecture' ? 'Architecture advisor' : activeView === 'model-import' ? 'Import data model' : 'Compatibility analysis' }}</div>
       <div class="top-actions">
         <span class="api-status" [class.connected]="noticeType === 'success'"><i></i> {{ noticeType === 'success' ? 'API connected' : 'Local API' }}</span>
         <button class="icon-button" title="Refresh workspace" (click)="loadWorkspace()">↻</button>
@@ -69,6 +71,47 @@
         </section>
       </ng-container>
 
+      <ng-container *ngIf="activeView === 'model-import'">
+        <div class="page-heading"><div><div class="eyebrow">DOMAIN MODEL INGESTION</div><h1>Import a data model</h1><p>Preview structured JSON or supported PostgreSQL DDL, then review it in the Project Specification editor.</p></div></div>
+        <section class="panel import-panel">
+          <div class="panel-heading"><div><div class="eyebrow">SOURCE FORMAT</div><h2>Model source</h2></div><span class="schema-tag">512 KiB max</span></div>
+          <label class="import-label">Import format</label>
+          <select [(ngModel)]="modelImportFormat"><option value="sql-ddl">PostgreSQL SQL DDL</option><option value="json">Domain Model JSON</option></select>
+          <label class="import-label">Source content</label>
+          <textarea class="code-editor import-editor" spellcheck="false" [(ngModel)]="modelImportContent" rows="16"></textarea>
+          <button class="primary-button" [disabled]="busy || !selectedProject" (click)="importModel()">Import model preview <span>→</span></button>
+          <div class="empty-state compact" *ngIf="!selectedProject"><strong>Select a project first</strong><p>Model import is scoped to an existing project workspace.</p></div>
+        </section>
+      </ng-container>
+
+      <ng-container *ngIf="activeView === 'architecture'">
+        <div class="page-heading"><div><div class="eyebrow">DETERMINISTIC ARCHITECTURE REVIEW</div><h1>Architecture advisor</h1><p>Assess an immutable specification snapshot, review trade-offs, and draft an ADR. Recommendations never silently change your decisions.</p></div></div>
+        <section class="panel">
+          <div class="panel-heading"><div><div class="eyebrow">ASSESSMENT INPUT</div><h2>Latest project snapshot</h2></div><span class="schema-tag">Rule engine · v1</span></div>
+          <div class="generation-context" *ngIf="selectedProject"><strong>{{ selectedProject.name }}</strong><span>{{ snapshots.length }} snapshots</span></div>
+          <div class="empty-state compact" *ngIf="!selectedProject || snapshots.length === 0"><strong>Save a specification snapshot first</strong><p>Architecture assessment uses the saved, versioned specification.</p></div>
+          <button class="primary-button" [disabled]="busy || !selectedProject || snapshots.length === 0" (click)="evaluateArchitecture()">Evaluate architecture <span>→</span></button>
+        </section>
+        <section class="panel findings-panel" *ngIf="architectureAssessment">
+          <div class="panel-heading"><div><div class="eyebrow">RECOMMENDATION</div><h2>{{ architectureAssessment.recommendedStyle }}</h2></div><span class="result-pill" [class.good]="!architectureAssessment.requiresReview">{{ architectureAssessment.requiresReview ? 'Review required' : 'No blocking findings' }}</span></div>
+          <p class="generation-copy">{{ architectureAssessment.rationale }}</p>
+          <div class="finding" *ngFor="let finding of architectureAssessment.findings" [class.blocked]="finding.status === 'BLOCKED'" [class.warning]="finding.status === 'WARNING'">
+            <div class="finding-top"><strong>{{ finding.id }}</strong><span>{{ finding.status }} · {{ finding.severity }}</span></div>
+            <p>{{ finding.message }}</p><small>{{ finding.rationale }}</small>
+            <ul><li *ngFor="let action of finding.remediation">{{ action }}</li></ul>
+          </div>
+          <div class="tradeoffs"><div class="eyebrow">TRADE-OFFS</div><ul><li *ngFor="let item of architectureAssessment.tradeOffs">{{ item }}</li></ul></div>
+          <div class="adr-draft">
+            <div class="eyebrow">ADR DRAFT · NOT YET APPROVED</div>
+            <h3>{{ architectureAssessment.adrDraft.title }}</h3>
+            <p><strong>Context:</strong> {{ architectureAssessment.adrDraft.context }}</p>
+            <p><strong>Decision:</strong> {{ architectureAssessment.adrDraft.decision }}</p>
+            <p><strong>Alternatives:</strong></p><ul><li *ngFor="let item of architectureAssessment.adrDraft.alternatives">{{ item }}</li></ul>
+            <p><strong>Consequences:</strong></p><ul><li *ngFor="let item of architectureAssessment.adrDraft.consequences">{{ item }}</li></ul>
+          </div>
+        </section>
+      </ng-container>
+
       <ng-container *ngIf="activeView === 'project'">
         <div class="page-heading">
           <div><div class="eyebrow">PROJECT WORKSPACE</div><h1>{{ selectedProject?.name || 'Project specification' }}</h1><p>{{ selectedProject?.description || 'Select a project or create one from the overview.' }}</p></div>
@@ -81,6 +124,10 @@
             <div class="editor-actions">
               <button class="secondary-button" [disabled]="busy" (click)="validateSpecification()">Validate specification</button>
               <button class="primary-button" [disabled]="busy || !selectedProject" (click)="saveSnapshot()">Save immutable snapshot</button>
+            </div>
+            <div class="validation-result" *ngIf="modelImportWarnings.length">
+              <strong>Model import notes</strong>
+              <ul><li *ngFor="let warning of modelImportWarnings">{{ warning }}</li></ul>
             </div>
             <div class="validation-result" *ngIf="modelImportWarnings.length">
               <strong>Model import notes</strong>
