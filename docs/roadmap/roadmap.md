@@ -58,7 +58,7 @@ Start with one narrow, end-to-end supported stack rather than claiming broad sup
 
 ## Phase 5 — Quality and sandbox
 
-- [ ] Independent test-plan generation from requirements/contracts.
+- [x] Independent test-plan preview generation from requirements, domain constraints, security decisions, and quality attributes.
 - [ ] Isolated build workers.
 - [ ] Build, unit, integration, smoke, and API validation.
 - [ ] Evidence bundle and honest skipped/failed status.
