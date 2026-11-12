@@ -56,6 +56,8 @@ jobs:
       - name: Run generated sample runtime smoke test
         run: |
           cd target/generated-sample
+          cp .env.example .env
+          sed -i 's/replace-with-a-long-random-password/devforge-ci-only-password-2026/' .env
           cleanup() { docker compose down --volumes --remove-orphans; }
           trap cleanup EXIT
           export DATABASE_PASSWORD='ci-only-devforge-password'
