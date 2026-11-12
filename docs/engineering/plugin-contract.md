@@ -5,10 +5,15 @@
 Plugins extend DevForge through explicit, versioned capabilities. A plugin is
 not trusted merely because it is present in a repository or registry.
 
+## Manifest validation API
+
+`POST /api/v1/plugins/manifests/validate` validates a manifest against
+`schemas/plugin-manifest/plugin-manifest.schema.json`. It is a validation-only
+endpoint: it does not register, install, approve, or execute a plugin.
+
 ## Manifest
 
-The canonical manifest is
-`schemas/plugin-manifest/plugin-manifest.schema.json`. It declares:
+The canonical manifest declares:
 
 - Stable plugin ID, publisher, semantic version, and kind.
 - Capabilities and supported platform API / specification versions.
