@@ -18,6 +18,7 @@ explicitly and validates the submitted JSON instance against the packaged schema
 - `200 OK`: valid specification; response contains `valid: true` and an empty `errors` array.
 - `422 Unprocessable Entity`: syntactically valid JSON that violates the schema; response contains `valid: false` and validation messages.
 - `400 Bad Request`: malformed JSON; response contains a generic error without echoing the submitted payload.
+- `413 Payload Too Large`: request bodies larger than 1 MiB are rejected before JSON parsing.
 
 The endpoint inherits the platform's authenticated-by-default security policy.
 Only the health probe is public at this stage.
