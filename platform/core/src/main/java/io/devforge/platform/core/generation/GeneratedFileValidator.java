@@ -62,14 +62,16 @@ public class GeneratedFileValidator {
                 || path.contains("\\") || path.contains(":")) {
             throw rejected("Unsafe generated file path.");
         }
-        if (path.equals(".") || path.equals("..") || path.equals(".env")
-                || path.endsWith("/.env") || path.contains("/../") || path.startsWith("../")) {
+        if (path.equals(".") || path.equals("..") || path.contains("/../") || path.startsWith("../")) {
             throw rejected("Unsafe generated file path: " + path);
         }
-        if (path.matches("(^|/)\\.env\\.(?!example$)[^/]+$")) {
+        String[] segments = path.split("/", -1);
+        String fileName = segments[segments.length - 1];
+        if (".env".equalsIgnoreCase(fileName)
+                || (fileName.toLowerCase(java.util.Locale.ROOT).startsWith(".env.")
+                    && !".env.example".equalsIgnoreCase(fileName))) {
             throw rejected("Generated environment secret files are not allowed: " + path);
         }
-        String[] segments = path.split("/", -1);
         if (segments.length > 16) {
             throw rejected("Generated file path is too deeply nested: " + path);
         }
