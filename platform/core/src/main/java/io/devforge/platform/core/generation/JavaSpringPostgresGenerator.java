@@ -33,6 +33,10 @@ public class JavaSpringPostgresGenerator implements GeneratorPlugin {
 
     @Override
     public boolean supports(JsonNode spec) {
+        if (spec == null || !DESCRIPTOR.supportedSpecificationVersions()
+                .contains(spec.path("specVersion").asText())) {
+            return false;
+        }
         try {
             validateStack(spec);
             validateIndexes(spec.path("model"));
