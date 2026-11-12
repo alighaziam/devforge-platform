@@ -206,6 +206,43 @@ export class AppComponent implements OnInit {
     }
   }
 
+  async generateProject(): Promise<void> {
+    if (!this.selectedProject || this.snapshots.length === 0) {
+      this.setNotice('Save a valid specification snapshot before generation.', 'error');
+      return;
+    }
+    const latest = this.snapshots[this.snapshots.length - 1];
+    this.busy = true;
+    try {
+      const archive = await firstValueFrom(this.http.post(
+        '/api/v1/projects/' + this.selectedProject.id + '/generations',
+        { snapshotVersion: latest.snapshotVersion },
+        { responseType: 'blob' }
+      ));
+      const url = window.URL.createObjectURL(archive);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = this.selectedProject.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.zip';
+      anchor.click();
+      window.URL.revokeObjectURL(url);
+      this.setNotice('Generated project archive downloaded.', 'success');
+    } catch (error) {
+      if (error instanceof HttpErrorResponse && error.error instanceof Blob) {
+        const raw = await error.error.text();
+        try {
+          const body = JSON.parse(raw) as { message?: string; error?: string };
+          this.setNotice(body.message ?? body.error ?? 'Generation failed.', 'error');
+        } catch {
+          this.setNotice('Generation failed. Review compatibility findings and backend logs.', 'error');
+        }
+      } else {
+        this.handleError(error, 'Generation failed.');
+      }
+    } finally {
+      this.busy = false;
+    }
+  }
+
   async evaluateCompatibility(): Promise<void> {
     this.busy = true;
     try {

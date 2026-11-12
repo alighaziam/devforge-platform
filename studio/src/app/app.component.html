@@ -9,6 +9,7 @@
     <button class="nav-item" [class.active]="activeView === 'project'" (click)="activeView = 'project'"><span class="nav-icon">▤</span> Project specification</button>
     <button class="nav-item" [class.active]="activeView === 'catalog'" (click)="activeView = 'catalog'"><span class="nav-icon">◈</span> Technology catalog</button>
     <button class="nav-item" [class.active]="activeView === 'compatibility'" (click)="activeView = 'compatibility'"><span class="nav-icon">⌁</span> Compatibility</button>
+    <button class="nav-item" [class.active]="activeView === 'generate'" (click)="activeView = 'generate'"><span class="nav-icon">⇩</span> Generate project</button>
     <div class="sidebar-bottom">
       <div class="environment"><span class="pulse"></span> LOCAL ENVIRONMENT</div>
       <div class="sidebar-version">Platform API · v1</div>
@@ -17,7 +18,7 @@
 
   <main class="main">
     <header class="topbar">
-      <div class="breadcrumbs">DevForge <span>/</span> {{ activeView === 'overview' ? 'Overview' : activeView === 'project' ? 'Project workspace' : activeView === 'catalog' ? 'Technology catalog' : 'Compatibility analysis' }}</div>
+      <div class="breadcrumbs">DevForge <span>/</span> {{ activeView === 'overview' ? 'Overview' : activeView === 'project' ? 'Project workspace' : activeView === 'catalog' ? 'Technology catalog' : activeView === 'generate' ? 'Generate project' : 'Compatibility analysis' }}</div>
       <div class="top-actions">
         <span class="api-status" [class.connected]="noticeType === 'success'"><i></i> {{ noticeType === 'success' ? 'API connected' : 'Local API' }}</span>
         <button class="icon-button" title="Refresh workspace" (click)="loadWorkspace()">↻</button>
@@ -110,6 +111,18 @@
             <div class="capabilities"><span *ngFor="let capability of item.capabilities.slice(0, 4)">{{ capability }}</span></div>
           </article>
         </div>
+      </ng-container>
+
+      <ng-container *ngIf="activeView === 'generate'">
+        <div class="page-heading"><div><div class="eyebrow">DETERMINISTIC GENERATION</div><h1>Generate project</h1><p>Generate a reproducible project archive from an immutable, validated specification snapshot.</p></div></div>
+        <section class="panel">
+          <div class="panel-heading"><div><div class="eyebrow">SUPPORTED VERTICAL SLICE</div><h2>Java 25 · Spring Boot 4 · PostgreSQL 17</h2></div><span class="schema-tag">Generator 0.1.0</span></div>
+          <p class="generation-copy">The initial generator creates a Maven application, JPA entities and repositories, PostgreSQL migration, Dockerfile, Docker Compose, and a provenance manifest. Unsupported relationships, identity profiles, and technology selections are rejected rather than silently skipped.</p>
+          <div class="generation-context" *ngIf="selectedProject"><strong>{{ selectedProject.name }}</strong><span>{{ snapshots.length }} immutable snapshots</span></div>
+          <div class="empty-state compact" *ngIf="!selectedProject"><strong>No project selected</strong><p>Select a project from the overview before generating.</p></div>
+          <div class="empty-state compact" *ngIf="selectedProject && snapshots.length === 0"><strong>No valid snapshot available</strong><p>Open the project specification, validate it, and save a snapshot.</p></div>
+          <button class="primary-button" [disabled]="busy || !selectedProject || snapshots.length === 0" (click)="generateProject()">Generate latest snapshot <span>↓</span></button>
+        </section>
       </ng-container>
 
       <ng-container *ngIf="activeView === 'compatibility'">
