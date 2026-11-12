@@ -189,31 +189,31 @@ public class JavaSpringPostgresGenerator {
                 .map(String::trim)
                 .filter(statement -> !statement.isEmpty())
                 .toList();
-        StringBuilder source = new StringBuilder("package db.migration;\\n\\n")
-                .append("import org.flywaydb.core.api.migration.BaseJavaMigration;\\n")
-                .append("import org.flywaydb.core.api.migration.Context;\\n")
-                .append("import java.sql.Statement;\\n\\n")
-                .append("public class V1__CreateDomainSchema extends BaseJavaMigration {\\n")
-                .append("  private static final String[] STATEMENTS = {\\n");
+        StringBuilder source = new StringBuilder("package db.migration;\n\n")
+                .append("import org.flywaydb.core.api.migration.BaseJavaMigration;\n")
+                .append("import org.flywaydb.core.api.migration.Context;\n")
+                .append("import java.sql.Statement;\n\n")
+                .append("public class V1__CreateDomainSchema extends BaseJavaMigration {\n")
+                .append("  private static final String[] STATEMENTS = {\n");
         for (String statement : statements) {
-            source.append("    \\\"").append(escapeJava(statement)).append("\\\",\\n");
+            source.append("    \"").append(escapeJava(statement)).append("\",\n");
         }
-        source.append("  };\\n")
-                .append("  @Override public void migrate(Context context) throws Exception {\\n")
-                .append("    try (Statement statement = context.getConnection().createStatement()) {\\n")
-                .append("      for (String sql : STATEMENTS) statement.execute(sql);\\n")
-                .append("    }\\n")
-                .append("  }\\n")
-                .append("}\\n");
+        source.append("  };\n")
+                .append("  @Override public void migrate(Context context) throws Exception {\n")
+                .append("    try (Statement statement = context.getConnection().createStatement()) {\n")
+                .append("      for (String sql : STATEMENTS) statement.execute(sql);\n")
+                .append("    }\n")
+                .append("  }\n")
+                .append("}\n");
         return source.toString();
     }
 
     private String escapeJava(String value) {
-        return value.replace("\\\\", "\\\\\\\\")
-                .replace("\\\"", "\\\\\\\"")
-                .replace("\\r", "\\\\r")
-                .replace("\\n", "\\\\n")
-                .replace("\\t", "\\\\t");
+        return value.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\r", "\\r")
+                .replace("\n", "\\n")
+                .replace("\t", "\\t");
     }
 
     private String javaType(String type) {
