@@ -102,10 +102,14 @@ public class JavaSpringPostgresGenerator implements GeneratorPlugin {
             String id = entry.getValue().path("id").asText();
             if (!id.isBlank()) selected.put(id, entry.getValue().path("version").asText());
         });
-        require(selected, "language.java", "25");
-        require(selected, "framework.spring-boot", "4.0.0");
-        require(selected, "database.postgresql", "17");
-        if (selected.size() != 3) throw rejected("Generator 0.1.0 supports only Java 25, Spring Boot 4.0.0, and PostgreSQL 17.");
+        DESCRIPTOR.supportedTechnologyVersions().forEach((technologyId, version) ->
+                require(selected, technologyId, version));
+        if (selected.size() != DESCRIPTOR.supportedTechnologyVersions().size()) {
+            String supported = DESCRIPTOR.supportedTechnologyVersions().entrySet().stream()
+                    .map(entry -> entry.getKey() + " " + entry.getValue())
+                    .collect(java.util.stream.Collectors.joining(", "));
+            throw rejected("Generator " + VERSION + " supports only: " + supported + ".");
+        }
         if (!Set.of("layered", "modular-monolith").contains(spec.path("architecture").path("style").asText()))
             throw rejected("Unsupported architecture style for generator 0.1.0.");
         if (!"single-project".equals(spec.path("generation").path("outputLayout").asText()))
