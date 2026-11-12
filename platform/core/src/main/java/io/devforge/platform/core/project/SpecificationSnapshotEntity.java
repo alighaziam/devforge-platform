@@ -16,7 +16,8 @@ public class SpecificationSnapshotEntity {
     private ProjectEntity project;
     @Column(name = "snapshot_version", nullable = false) private int snapshotVersion;
     @Column(name = "schema_version", nullable = false, length = 32) private String schemaVersion;
-    @Column(name = "content_sha256", nullable = false, length = 64) private String contentSha256;
+    @Column(name = "content_sha256", nullable = false, columnDefinition = "char(64)")
+    private String contentSha256;
     @Column(name = "specification_json", nullable = false, columnDefinition = "text")
     private String specificationJson;
     @Column(name = "created_at", nullable = false, updatable = false) private Instant createdAt;
