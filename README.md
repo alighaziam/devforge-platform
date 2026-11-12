@@ -29,15 +29,13 @@ DevForge is a data-model-first, specification-driven platform for designing, gen
 ## Repository layout
 
 ```text
-docs/                 Product, architecture, security, roadmap, ADRs
-schemas/              Project Specification and plugin contracts
-catalogs/             Technology and compatibility metadata
-platform/             Java 25 / Spring Boot platform modules
+docs/                 Product, architecture, security, engineering, roadmap, ADRs
+schemas/              Project Specification, plugin, catalog contracts
+catalogs/             Versioned technology and compatibility metadata
+platform/core/        Java 25 / Spring Boot modular platform core
 studio/               Angular engineering studio
-generators/           Stack-specific project generators
-plugins/              Optional integrations
-infrastructure/       Local development and deployment assets
-tests/                Contract, integration, and end-to-end tests
+.github/workflows/    Java, generated-project, and Angular CI
+docker-compose.yml    Local PostgreSQL development service
 ```
 
 ## Current implementation
@@ -53,7 +51,7 @@ The initial backend vertical slice now includes:
 - Versioned technology catalog read APIs and deterministic compatibility evaluation.
 - Flyway migrations, Docker Compose development database, and Java 25 CI verification.
 
-This is an actively developed foundation, not a production-ready application factory yet. Angular Studio, tenant-aware identity, model import, architecture analysis, deterministic generators, sandbox execution, and delivery automation remain on the roadmap. See [Local Development](docs/engineering/local-development.md), [Product Requirements](docs/product/requirements.md), [System Architecture](docs/architecture/system-architecture.md), and [Roadmap](docs/roadmap/roadmap.md).
+This is an actively developed foundation, not a production-ready application factory yet. Tenant-aware identity, model import, architecture analysis, broader generator coverage, sandboxed runtime validation, plugin execution, and delivery automation remain on the roadmap. See [Local Development](docs/engineering/local-development.md), [Product Requirements](docs/product/requirements.md), [System Architecture](docs/architecture/system-architecture.md), and [Roadmap](docs/roadmap/roadmap.md).
 
 ## Development policy
 

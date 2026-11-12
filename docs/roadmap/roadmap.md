@@ -53,7 +53,7 @@ Start with one narrow, end-to-end supported stack rather than claiming broad sup
 - [x] Generated project manifest and provenance, with persistent generation-run audit records.
 - [ ] Golden-file tests and regeneration safety.
 
-**Exit criteria:** same specification and generator versions produce reproducible output. [x] Verified by repeat-generation SHA-256 integration test and generated-project Maven CI build.
+- [x] Exit criteria: identical snapshots and generator versions produce reproducible output, verified by repeat-generation SHA-256 integration tests and a separate generated-project Maven CI build.
 
 ## Phase 5 — Quality and sandbox
 
