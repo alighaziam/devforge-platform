@@ -310,9 +310,7 @@ public class JavaSpringPostgresGenerator {
                     environment:
                       POSTGRES_DB: %s
                       POSTGRES_USER: generated
-                      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-local-only}
-                    ports:
-                      - "5432:5432"
+                      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:?Set DATABASE_PASSWORD in .env}
                     healthcheck:
                       test: ["CMD-SHELL", "pg_isready -U generated -d %s"]
                       interval: 5s
@@ -329,7 +327,7 @@ public class JavaSpringPostgresGenerator {
                       SPRING_APPLICATION_NAME: %s
                       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/%s
                       SPRING_DATASOURCE_USERNAME: generated
-                      SPRING_DATASOURCE_PASSWORD: ${DATABASE_PASSWORD:-local-only}
+                      SPRING_DATASOURCE_PASSWORD: ${DATABASE_PASSWORD:?Set DATABASE_PASSWORD in .env}
                       SPRING_JPA_OPEN_IN_VIEW: "false"
                       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
                       SPRING_FLYWAY_ENABLED: "true"
@@ -337,7 +335,7 @@ public class JavaSpringPostgresGenerator {
                       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health
                       SERVER_PORT: "8080"
                     ports:
-                      - "8080:8080"
+                      - "127.0.0.1:8080:8080"
                 volumes:
                   postgres-data:
                 """.formatted(slug, slug, slug, slug);
