@@ -29,6 +29,15 @@ interface Technology {
   status: string;
   capabilities: string[];
 }
+interface ArchitectureFinding {
+  id: string; status: string; severity: string; message: string; rationale: string;
+  affectedPaths: string[]; remediation: string[];
+}
+interface ArchitectureAssessment {
+  selectedStyle: string; recommendedStyle: string; rationale: string; requiresReview: boolean;
+  findings: ArchitectureFinding[]; tradeOffs: string[];
+  adrDraft: { title: string; context: string; decision: string; alternatives: string[]; consequences: string[] };
+}
 interface ModelImportResult {
   model: { entities: unknown[]; relationships: unknown[]; indexes: unknown[] };
   warnings: string[];
@@ -94,6 +103,7 @@ export class AppComponent implements OnInit {
     'database.postgresql': '17'
   };
   compatibility: CompatibilityResult | null = null;
+  architectureAssessment: ArchitectureAssessment | null = null;
   validation: { valid: boolean; errors: string[] } | null = null;
   busy = false;
   notice = 'Connect to your local DevForge API to begin.';
@@ -294,6 +304,26 @@ export class AppComponent implements OnInit {
       } else {
         this.handleError(error, 'Generation failed.');
       }
+    } finally {
+      this.busy = false;
+    }
+  }
+
+  async evaluateArchitecture(): Promise<void> {
+    if (!this.selectedProject || this.snapshots.length === 0) {
+      this.setNotice('Save a specification snapshot before architecture assessment.', 'error');
+      return;
+    }
+    this.busy = true;
+    try {
+      const latest = this.snapshots[this.snapshots.length - 1];
+      this.architectureAssessment = await firstValueFrom(this.http.post<ArchitectureAssessment>(
+        '/api/v1/projects/' + this.selectedProject.id + '/architecture/evaluate',
+        { snapshotVersion: latest.snapshotVersion }
+      ));
+      this.setNotice('Architecture assessment completed. Review findings and the ADR draft before adopting it.', 'success');
+    } catch (error) {
+      this.handleError(error, 'Architecture assessment failed.');
     } finally {
       this.busy = false;
     }
