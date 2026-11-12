@@ -45,6 +45,20 @@ jobs:
           mkdir -p target/generated-sample
           unzip -q platform/core/target/devforge-generated-sample.zip -d target/generated-sample
           mvn --batch-mode --no-transfer-progress -f target/generated-sample/pom.xml verify
+      - name: Run generated sample runtime smoke test
+        run: |
+          cd target/generated-sample
+          cleanup() { docker compose down --volumes --remove-orphans; }
+          trap cleanup EXIT
+          docker compose up --build --detach
+          for attempt in $(seq 1 36); do
+            if curl --fail --silent http://localhost:8080/actuator/health; then
+              exit 0
+            fi
+            sleep 5
+          done
+          docker compose logs
+          exit 1
 
   studio:
     name: Angular Studio build

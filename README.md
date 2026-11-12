@@ -48,7 +48,7 @@ The initial backend vertical slice now includes:
 - A deterministic architecture advisor that reports security, availability, scalability, and distributed-systems risks with trade-offs and ADR drafts.
 - Persistent ADR lifecycle with explicit proposal, acceptance, rejection, supersession, optimistic locking, and transition audit history.
 - Requirements-driven quality-plan previews with independent functional, data-integrity, security, and non-functional test intentions.
-- A deterministic Java 25 / Spring Boot 4 / PostgreSQL 17 generator with provenance manifests and auditable generation runs.
+- A deterministic Java 25 / Spring Boot 4 / PostgreSQL 17 generator with provenance manifests and auditable generation runs; CI builds and smoke-runs a generated sample with PostgreSQL.
 - CI compiles the generated sample project as a separate Maven build.
 - Draft 2020-12 Project Specification validation.
 - PostgreSQL-backed project lifecycle and immutable, versioned specification snapshots.

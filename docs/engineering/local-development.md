@@ -83,7 +83,7 @@ workflow; never expose this profile to a network or production environment.
 - `POST /api/v1/projects/{id}/architecture/evaluate` — assess a stored specification snapshot and return findings, trade-offs, and an ADR draft.
 - `GET|POST /api/v1/projects/{id}/architecture/decisions` — list ADRs or create a draft from a snapshot.
 - `POST /api/v1/projects/{id}/architecture/decisions/{decisionId}/transition` — transition an ADR through its audited state machine.
-- `POST /api/v1/projects/{id}/quality/plan` — create a requirements-driven test-plan preview from an immutable snapshot.
+- `POST /api/v1/projects/{id}/quality/plan` — create a requirements-driven test-plan preview from an immutable snapshot.\n\nThe CI workflow also builds the generated sample archive and runs a Docker Compose smoke test against PostgreSQL and `/actuator/health`.
 
 All API routes other than the health probe require authentication. The current
 HTTP Basic setup is a development security baseline; production OIDC, tenant

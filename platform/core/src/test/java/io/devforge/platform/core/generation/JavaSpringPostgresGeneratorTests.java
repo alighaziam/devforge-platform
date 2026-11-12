@@ -24,6 +24,9 @@ class JavaSpringPostgresGeneratorTests {
                 "src/main/resources/db/migration/V1__create_domain_schema.sql",
                 "Dockerfile",
                 "docker-compose.yml");
+        assertThat(files.get("pom.xml")).contains("spring-boot-starter-actuator");
+        assertThat(files.get("docker-compose.yml")).contains("pg_isready", "service_healthy");
+        assertThat(files.get("src/main/resources/application.yml")).contains("management:", "include: health");
         assertThat(files.get("src/main/resources/db/migration/V1__create_domain_schema.sql"))
                 .contains("CREATE TABLE customer")
                 .contains("email VARCHAR(255) NOT NULL UNIQUE");

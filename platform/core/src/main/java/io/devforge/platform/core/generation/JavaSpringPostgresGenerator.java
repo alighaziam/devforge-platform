@@ -50,6 +50,11 @@ public class JavaSpringPostgresGenerator {
                       ddl-auto: validate
                   flyway:
                     enabled: true
+                management:
+                  endpoints:
+                    web:
+                      exposure:
+                        include: health
                 server:
                   port: ${SERVER_PORT:8080}
                 """);
@@ -211,6 +216,7 @@ public class JavaSpringPostgresGenerator {
                   <properties><java.version>25</java.version></properties>
                   <dependencies>
                     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-webmvc</artifactId></dependency>
+                    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-actuator</artifactId></dependency>
                     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-data-jpa</artifactId></dependency>
                     <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-flyway</artifactId></dependency>
                     <dependency><groupId>org.flywaydb</groupId><artifactId>flyway-database-postgresql</artifactId></dependency>
@@ -233,12 +239,18 @@ public class JavaSpringPostgresGenerator {
                       POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-local-only}
                     ports:
                       - "5432:5432"
+                    healthcheck:
+                      test: ["CMD-SHELL", "pg_isready -U generated -d %s"]
+                      interval: 5s
+                      timeout: 3s
+                      retries: 20
                     volumes:
                       - postgres-data:/var/lib/postgresql/data
                   application:
                     build: .
                     depends_on:
-                      - postgres
+                      postgres:
+                        condition: service_healthy
                     environment:
                       DATABASE_URL: jdbc:postgresql://postgres:5432/%s
                       DATABASE_USERNAME: generated
@@ -247,7 +259,7 @@ public class JavaSpringPostgresGenerator {
                       - "8080:8080"
                 volumes:
                   postgres-data:
-                """.formatted(slug, slug);
+                """.formatted(slug, slug, slug);
     }
 
     private String className(String value) {
