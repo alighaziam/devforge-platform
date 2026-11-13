@@ -130,4 +130,28 @@ class ProjectLifecycleIntegrationTests {
                 }
                 """.formatted(projectId, description);
     }
+
+    @Test
+    void projectOwnershipIsScopedToAuthenticatedSubject() {
+        var authentication = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                "tenant-alice", "n/a", java.util.List.of(
+                        new org.springframework.security.core.authority.SimpleGrantedAuthority("SCOPE_devforge.write")));
+        org.springframework.security.core.context.SecurityContextHolder.getContext()
+                .setAuthentication(authentication);
+        var created = projects.create("Alice private project", "Tenant isolation");
+
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                        "tenant-bob", "n/a", java.util.List.of(
+                                new org.springframework.security.core.authority.SimpleGrantedAuthority("SCOPE_devforge.read"))));
+        org.springframework.web.server.ResponseStatusException hidden = org.junit.jupiter.api.Assertions.assertThrows(
+                org.springframework.web.server.ResponseStatusException.class,
+                () -> projects.get(created.id()));
+        org.junit.jupiter.api.Assertions.assertEquals(404, hidden.getStatusCode().value());
+
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(authentication);
+        org.junit.jupiter.api.Assertions.assertEquals(created.id(), projects.get(created.id()).id());
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+    }
+
 }
