@@ -41,4 +41,9 @@ public class ProjectEntity {
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
     public long getVersion() { return version; }
+
+    public void rename(String name, String description) {
+        this.name = name;
+        this.description = description;
+    }
 }

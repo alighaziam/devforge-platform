@@ -2,245 +2,576 @@
   <aside class="sidebar">
     <a class="brand" href="#" (click)="$event.preventDefault(); activeView = 'overview'">
       <span class="brand-mark">D</span>
-      <span><strong>DevForge</strong><small>ENGINEERING STUDIO</small></span>
+      <span><strong>DevForge</strong><small>{{ t('brand.studio') }}</small></span>
     </a>
-    <div class="workspace-label">WORKSPACE</div>
-    <button class="nav-item" [class.active]="activeView === 'overview'" (click)="activeView = 'overview'"><span class="nav-icon">◫</span> Overview</button>
-    <button class="nav-item" [class.active]="activeView === 'project'" (click)="activeView = 'project'"><span class="nav-icon">▤</span> Project specification</button>
-    <button class="nav-item" [class.active]="activeView === 'catalog'" (click)="activeView = 'catalog'"><span class="nav-icon">◈</span> Technology catalog</button>
-    <button class="nav-item" [class.active]="activeView === 'compatibility'" (click)="activeView = 'compatibility'"><span class="nav-icon">⌁</span> Compatibility</button>
-    <button class="nav-item" [class.active]="activeView === 'generate'" (click)="activeView = 'generate'"><span class="nav-icon">⇩</span> Generate project</button>
-    <button class="nav-item" [class.active]="activeView === 'architecture'" (click)="activeView = 'architecture'"><span class="nav-icon">⌘</span> Architecture advisor</button>
-    <button class="nav-item" [class.active]="activeView === 'model-import'" (click)="activeView = 'model-import'"><span class="nav-icon">⇧</span> Import data model</button>
-    <button class="nav-item" [class.active]="activeView === 'quality'" (click)="activeView = 'quality'"><span class="nav-icon">✓</span> Quality plan</button>
+    <nav [attr.aria-label]="t('brand.studio')">
+      <div class="nav-group" *ngFor="let group of navGroups">
+        <div class="workspace-label">{{ t(group) }}</div>
+        <button class="nav-item" type="button" *ngFor="let item of itemsIn(group)"
+                [class.active]="activeView === item.id"
+                [attr.aria-current]="activeView === item.id ? 'page' : null"
+                (click)="activeView = item.id">
+          <span>{{ t(item.label) }}</span>
+        </button>
+      </div>
+    </nav>
     <div class="sidebar-bottom">
-      <div class="environment"><span class="pulse"></span> LOCAL ENVIRONMENT</div>
-      <div class="sidebar-version">Platform API · v1</div>
+      <div class="current-project" *ngIf="selectedProject">
+        <span class="workspace-label">{{ t('shell.current') }}</span>
+        <strong>{{ selectedProject.name }}</strong>
+        <small>{{ tf('shell.meta', { status: selectedProject.status, count: snapshots.length, version: selectedProject.version }) }}</small>
+      </div>
+      <div class="environment"><span class="pulse" [class.offline]="apiState === 'offline'"></span> {{ t('shell.environment') }}</div>
+      <div class="sidebar-version">{{ t('shell.api') }}</div>
     </div>
   </aside>
 
   <main class="main">
     <header class="topbar">
-      <div class="breadcrumbs">DevForge <span>/</span> {{ activeView === 'overview' ? 'Overview' : activeView === 'project' ? 'Project workspace' : activeView === 'catalog' ? 'Technology catalog' : activeView === 'generate' ? 'Generate project' : activeView === 'architecture' ? 'Architecture advisor' : activeView === 'model-import' ? 'Import data model' : activeView === 'quality' ? 'Quality plan' : 'Compatibility analysis' }}</div>
+      <div class="breadcrumbs">DevForge <span>/</span> {{ t(activeNavigation.group) }} <span>/</span> {{ t(activeNavigation.label) }}</div>
       <div class="top-actions">
-        <span class="api-status" [class.connected]="noticeType === 'success'"><i></i> {{ noticeType === 'success' ? 'API connected' : 'Local API' }}</span>
-        <button class="icon-button" title="Refresh workspace" (click)="loadWorkspace()">↻</button>
+        <div class="lang-switch" role="group" aria-label="Language">
+          <button type="button" [attr.aria-pressed]="locale === 'en'" (click)="setLocale('en')">{{ t('lang.en') }}</button>
+          <button type="button" [attr.aria-pressed]="locale === 'fa'" (click)="setLocale('fa')">{{ t('lang.fa') }}</button>
+        </div>
+        <label class="project-switch">
+          <span>{{ t('top.project') }}</span>
+          <select [ngModel]="selectedProject?.id || ''" (ngModelChange)="switchProject($event)" [attr.aria-label]="t('top.project')">
+            <option value="">{{ t('top.none') }}</option>
+            <option *ngFor="let project of projects" [value]="project.id">{{ project.name }}</option>
+          </select>
+        </label>
+        <span class="api-status" [class.connected]="apiState === 'connected'" [class.offline]="apiState === 'offline'">
+          <i></i> {{ apiState === 'connected' ? t('top.connected') : apiState === 'offline' ? t('top.offline') : t('top.checking') }}
+        </span>
+        <button class="icon-button" type="button" [title]="t('top.refresh')" (click)="loadWorkspace()" [disabled]="busy">↻</button>
       </div>
     </header>
+    <div class="progress" *ngIf="busy" role="progressbar" aria-label="Working"></div>
 
     <section class="content">
-      <div class="notice" *ngIf="notice" [class.success]="noticeType === 'success'" [class.error]="noticeType === 'error'">
-        <span>{{ notice }}</span><button (click)="notice = ''" aria-label="Dismiss">×</button>
+      <div class="notice" *ngIf="notice" [class.success]="noticeType === 'success'" [class.error]="noticeType === 'error'" role="status">
+        <span>{{ notice }}</span>
+        <button type="button" (click)="notice = ''" [attr.aria-label]="t('notice.dismiss')">×</button>
       </div>
 
       <ng-container *ngIf="activeView === 'overview'">
         <div class="page-heading">
-          <div><div class="eyebrow">ENGINEERING WORKSPACE</div><h1>Build with decisions, not guesswork.</h1><p>Start with a project specification. Validate your model and technology choices before generation.</p></div>
-          <div class="heading-chip"><span class="pulse"></span> Foundation build</div>
+          <div>
+            <div class="eyebrow">{{ t('overview.eyebrow') }}</div>
+            <h1>{{ t('overview.title') }}</h1>
+            <p>{{ t('overview.summary') }}</p>
+          </div>
+          <div class="heading-chip"><span class="pulse" [class.offline]="apiState === 'offline'"></span> {{ apiState === 'connected' ? t('overview.ready') : apiState === 'offline' ? t('top.offline') : t('top.checking') }}</div>
         </div>
         <div class="stats-grid">
-          <article class="stat-card"><span>PROJECTS</span><strong>{{ projects.length }}</strong><small>In this workspace</small></article>
-          <article class="stat-card"><span>CATALOG ENTRIES</span><strong>{{ catalog.length }}</strong><small>Versioned technologies</small></article>
-          <article class="stat-card"><span>SNAPSHOTS</span><strong>{{ snapshots.length }}</strong><small>For selected project</small></article>
-          <article class="stat-card"><span>PLATFORM</span><strong class="status-word">ACTIVE</strong><small>API v1 · Local profile</small></article>
+          <article class="stat-card"><span>{{ t('stat.projects') }}</span><strong>{{ projectTotal }}</strong><small>{{ t('stat.projectsHint') }}</small></article>
+          <article class="stat-card"><span>{{ t('stat.catalog') }}</span><strong>{{ catalog.length }}</strong><small>{{ t('stat.catalogHint') }}</small></article>
+          <article class="stat-card"><span>{{ t('stat.snapshots') }}</span><strong>{{ snapshots.length }}</strong><small>{{ selectedProject ? selectedProject.name : t('stat.selectProject') }}</small></article>
+          <article class="stat-card"><span>{{ t('stat.generations') }}</span><strong>{{ generationRuns.length }}</strong><small>{{ tf('stat.generators', { count: generators.length }) }}</small></article>
         </div>
         <div class="section-grid">
-          <section class="panel create-panel">
-            <div class="panel-heading"><div><div class="eyebrow">GET STARTED</div><h2>Create a project</h2></div><span class="step-number">01</span></div>
-            <label>Project name</label><input [(ngModel)]="projectName" placeholder="e.g. Customer Platform">
-            <label>Description</label><textarea [(ngModel)]="projectDescription" rows="3" placeholder="What are you engineering?"></textarea>
-            <button class="primary-button" [disabled]="busy" (click)="createProject()">Create project <span>→</span></button>
+          <section class="panel">
+            <div class="panel-heading"><div><div class="eyebrow">{{ t('overview.createEyebrow') }}</div><h2>{{ t('overview.createTitle') }}</h2></div><span class="step-number">01</span></div>
+            <label class="field" for="project-name">{{ t('overview.name') }} <small>{{ projectName.trim().length }}/120</small></label>
+            <input id="project-name" [(ngModel)]="projectName" maxlength="120" [placeholder]="t('overview.namePlaceholder')">
+            <label class="field" for="project-description">{{ t('overview.description') }} <small>{{ projectDescription.trim().length }}/2000</small></label>
+            <textarea id="project-description" [(ngModel)]="projectDescription" rows="4" maxlength="2000" [placeholder]="t('overview.descriptionPlaceholder')"></textarea>
+            <button class="primary-button" type="button" [disabled]="busy || !projectName.trim()" (click)="createProject()">{{ t('overview.create') }}</button>
           </section>
           <section class="panel">
-            <div class="panel-heading"><div><div class="eyebrow">YOUR WORKSPACE</div><h2>Recent projects</h2></div><span class="count">{{ projects.length }} total</span></div>
-            <div *ngIf="projects.length === 0" class="empty-state"><div class="empty-icon">◇</div><strong>No projects yet</strong><p>Create your first project to begin defining its specification.</p></div>
-            <button class="project-row" *ngFor="let project of projects" (click)="selectProject(project)">
-              <span class="project-avatar">{{ project.name.slice(0, 1).toUpperCase() }}</span>
-              <span class="project-info"><strong>{{ project.name }}</strong><small>{{ project.description || 'No description' }}</small></span>
-              <span class="project-status">{{ project.status }}</span><span class="arrow">→</span>
-            </button>
+            <div class="panel-heading"><div><div class="eyebrow">{{ t('overview.listEyebrow') }}</div><h2>{{ t('overview.listTitle') }}</h2></div><span class="count">{{ projectTotal }}</span></div>
+            <div class="filter-bar">
+              <label class="sr" for="project-query">{{ t('projects.search') }}</label>
+              <input id="project-query" [(ngModel)]="projectQuery" [placeholder]="t('projects.search')" (keyup.enter)="applyProjectFilter()">
+              <label class="sr" for="project-status">{{ t('projects.statusAll') }}</label>
+              <select id="project-status" [(ngModel)]="projectStatus">
+                <option value="">{{ t('projects.statusAll') }}</option>
+                <option value="ACTIVE">{{ t('projects.statusActive') }}</option>
+              </select>
+              <button class="secondary-button" type="button" [disabled]="busy" (click)="applyProjectFilter()">{{ t('projects.filter') }}</button>
+            </div>
+            <div *ngIf="projects.length === 0" class="empty-state">
+              <strong>{{ t('overview.emptyTitle') }}</strong>
+              <p>{{ t('overview.emptyBody') }}</p>
+            </div>
+            <div class="project-row" *ngFor="let project of projects" [class.active]="selectedProject?.id === project.id">
+              <button class="project-open" type="button" (click)="selectProject(project)">
+                <span class="project-avatar">{{ project.name.slice(0, 1).toUpperCase() }}</span>
+                <span class="project-info">
+                  <strong>{{ project.name }}</strong>
+                  <small>{{ project.description || '—' }}</small>
+                  <small>{{ project.status }} · v{{ project.version }} · {{ project.updatedAt | date:'medium':undefined:dateLocale }}</small>
+                </span>
+              </button>
+              <span class="row-actions">
+                <button class="secondary-button" type="button" (click)="beginEdit(project)">{{ t('projects.edit') }}</button>
+                <button class="secondary-button danger" type="button" (click)="askDelete(project)">{{ t('projects.delete') }}</button>
+              </span>
+            </div>
+            <div class="pager" *ngIf="projectTotalPages > 1 || projectTotal > projectPageSize">
+              <button class="secondary-button" type="button" [disabled]="busy || projectPage === 0" (click)="changeProjectPage(projectPage - 1)">{{ t('pager.previous') }}</button>
+              <span>{{ tf('pager.status', { page: projectPage + 1, pages: projectTotalPages, total: projectTotal }) }}</span>
+              <button class="secondary-button" type="button" [disabled]="busy || projectPage + 1 >= projectTotalPages" (click)="changeProjectPage(projectPage + 1)">{{ t('pager.next') }}</button>
+            </div>
+            <div class="edit-box" *ngIf="editingProject">
+              <h3>{{ t('projects.editTitle') }}</h3>
+              <label class="field" for="edit-name">{{ t('overview.name') }} <small>{{ editName.trim().length }}/120</small></label>
+              <input id="edit-name" [(ngModel)]="editName" maxlength="120">
+              <label class="field" for="edit-description">{{ t('overview.description') }} <small>{{ editDescription.trim().length }}/2000</small></label>
+              <textarea id="edit-description" [(ngModel)]="editDescription" rows="3" maxlength="2000"></textarea>
+              <div class="editor-actions">
+                <button class="secondary-button" type="button" (click)="editingProject = null">{{ t('projects.cancel') }}</button>
+                <button class="primary-button" type="button" [disabled]="busy || !editName.trim()" (click)="saveProject()">{{ t('projects.save') }}</button>
+              </div>
+            </div>
+            <div class="edit-box confirm" *ngIf="pendingDelete as project">
+              <h3>{{ t('projects.deleteTitle') }}</h3>
+              <p>{{ tf('projects.deleteBody', { name: project.name }) }}</p>
+              <div class="editor-actions">
+                <button class="secondary-button" type="button" (click)="pendingDelete = null">{{ t('projects.cancel') }}</button>
+                <button class="secondary-button danger" type="button" [disabled]="busy" (click)="confirmDelete()">{{ t('projects.delete') }}</button>
+              </div>
+            </div>
           </section>
         </div>
         <section class="journey-panel">
-          <div class="eyebrow">THE DEVFORGE FLOW</div>
+          <div class="eyebrow">{{ t('flow.eyebrow') }}</div>
           <div class="journey">
-            <div><b>01</b><strong>Specify</strong><small>Requirements & domain model</small></div><span>→</span>
-            <div><b>02</b><strong>Evaluate</strong><small>Architecture & compatibility</small></div><span>→</span>
-            <div><b>03</b><strong>Generate</strong><small>Deterministic project output</small></div><span>→</span>
-            <div><b>04</b><strong>Verify</strong><small>Build, tests & runtime</small></div>
+            <button type="button" (click)="activeView = 'project'"><b>01</b><strong>{{ t('flow.specify') }}</strong><small>{{ t('flow.specifyHint') }}</small></button>
+            <button type="button" (click)="activeView = 'compatibility'"><b>02</b><strong>{{ t('flow.evaluate') }}</strong><small>{{ t('flow.evaluateHint') }}</small></button>
+            <button type="button" (click)="activeView = 'generate'"><b>03</b><strong>{{ t('flow.generate') }}</strong><small>{{ t('flow.generateHint') }}</small></button>
+            <button type="button" (click)="activeView = 'quality'"><b>04</b><strong>{{ t('flow.verify') }}</strong><small>{{ t('flow.verifyHint') }}</small></button>
           </div>
-        </section>
-      </ng-container>
-
-      <ng-container *ngIf="activeView === 'quality'">
-        <div class="page-heading"><div><div class="eyebrow">REQUIREMENTS-DRIVEN QUALITY ENGINEERING</div><h1>Quality plan</h1><p>Derive independent test intentions from requirements, data constraints, quality attributes, and security decisions.</p></div></div>
-        <section class="panel">
-          <div class="panel-heading"><div><div class="eyebrow">PLAN INPUT</div><h2>Latest immutable snapshot</h2></div><span class="schema-tag">Independent of generated code</span></div>
-          <div class="generation-context" *ngIf="selectedProject"><strong>{{ selectedProject.name }}</strong><span>{{ snapshots.length }} snapshots</span></div>
-          <div class="empty-state compact" *ngIf="!selectedProject || snapshots.length === 0"><strong>Save a specification snapshot first</strong><p>The quality plan is derived from a versioned specification.</p></div>
-          <button class="primary-button" [disabled]="busy || !selectedProject || snapshots.length === 0" (click)="generateQualityPlan()">Generate quality plan <span>→</span></button>
-        </section>
-        <section class="panel" *ngIf="qualityPlan">
-          <div class="panel-heading"><div><div class="eyebrow">TEST INTENTIONS</div><h2>Snapshot v{{ qualityPlan.snapshotVersion }}</h2></div><span class="schema-tag">{{ qualityPlan.testCases.length }} test cases</span></div>
-          <div class="generation-context"><strong>Plan SHA-256</strong><code>{{ qualityPlan.planSha256 }}</code></div>
-          <div class="quality-summary"><div class="quality-stat" *ngFor="let item of qualityPlan.summary | keyvalue"><strong>{{ item.value }}</strong><span>{{ item.key }}</span></div></div>
-          <article class="quality-case" *ngFor="let test of qualityPlan.testCases">
-            <div class="finding-top"><strong>{{ test.id }} · {{ test.title }}</strong><span>{{ test.priority }}</span></div>
-            <p>{{ test.objective }}</p>
-            <small>Source: {{ test.sourcePath }}</small>
-            <ol><li *ngFor="let step of test.steps">{{ step }}</li></ol>
-            <p class="expected"><strong>Expected:</strong> {{ test.expectedResult }}</p>
-          </article>
-          <p class="generation-copy">These are test intentions, not execution evidence. No tests have been run by generating this plan.</p>
-        </section>
-      </ng-container>
-
-      <ng-container *ngIf="activeView === 'model-import'">
-        <div class="page-heading"><div><div class="eyebrow">DOMAIN MODEL INGESTION</div><h1>Import a data model</h1><p>Preview structured JSON or supported PostgreSQL DDL, then review it in the Project Specification editor.</p></div></div>
-        <section class="panel import-panel">
-          <div class="panel-heading"><div><div class="eyebrow">SOURCE FORMAT</div><h2>Model source</h2></div><span class="schema-tag">512 KiB max</span></div>
-          <label class="import-label">Import format</label>
-          <select [(ngModel)]="modelImportFormat"><option value="sql-ddl">PostgreSQL SQL DDL</option><option value="json">Domain Model JSON</option></select>
-          <label class="import-label">Source content</label>
-          <textarea class="code-editor import-editor" spellcheck="false" [(ngModel)]="modelImportContent" rows="16"></textarea>
-          <button class="primary-button" [disabled]="busy || !selectedProject" (click)="importModel()">Import model preview <span>→</span></button>
-          <div class="empty-state compact" *ngIf="!selectedProject"><strong>Select a project first</strong><p>Model import is scoped to an existing project workspace.</p></div>
-        </section>
-      </ng-container>
-
-      <ng-container *ngIf="activeView === 'architecture'">
-        <div class="page-heading"><div><div class="eyebrow">DETERMINISTIC ARCHITECTURE REVIEW</div><h1>Architecture advisor</h1><p>Assess an immutable specification snapshot, review trade-offs, and draft an ADR. Recommendations never silently change your decisions.</p></div></div>
-        <section class="panel">
-          <div class="panel-heading"><div><div class="eyebrow">ASSESSMENT INPUT</div><h2>Latest project snapshot</h2></div><span class="schema-tag">Rule engine · v1</span></div>
-          <div class="generation-context" *ngIf="selectedProject"><strong>{{ selectedProject.name }}</strong><span>{{ snapshots.length }} snapshots</span></div>
-          <div class="empty-state compact" *ngIf="!selectedProject || snapshots.length === 0"><strong>Save a specification snapshot first</strong><p>Architecture assessment uses the saved, versioned specification.</p></div>
-          <button class="primary-button" [disabled]="busy || !selectedProject || snapshots.length === 0" (click)="evaluateArchitecture()">Evaluate architecture <span>→</span></button>
-        </section>
-        <section class="panel findings-panel" *ngIf="architectureAssessment">
-          <div class="panel-heading"><div><div class="eyebrow">RECOMMENDATION</div><h2>{{ architectureAssessment.recommendedStyle }}</h2></div><span class="result-pill" [class.good]="!architectureAssessment.requiresReview">{{ architectureAssessment.requiresReview ? 'Review required' : 'No blocking findings' }}</span></div>
-          <p class="generation-copy">{{ architectureAssessment.rationale }}</p>
-          <div class="finding" *ngFor="let finding of architectureAssessment.findings" [class.blocked]="finding.status === 'BLOCKED'" [class.warning]="finding.status === 'WARNING'">
-            <div class="finding-top"><strong>{{ finding.id }}</strong><span>{{ finding.status }} · {{ finding.severity }}</span></div>
-            <p>{{ finding.message }}</p><small>{{ finding.rationale }}</small>
-            <ul><li *ngFor="let action of finding.remediation">{{ action }}</li></ul>
-          </div>
-          <div class="tradeoffs"><div class="eyebrow">TRADE-OFFS</div><ul><li *ngFor="let item of architectureAssessment.tradeOffs">{{ item }}</li></ul></div>
-          <div class="adr-draft">
-            <div class="eyebrow">ADR DRAFT · NOT YET APPROVED</div>
-            <h3>{{ architectureAssessment.adrDraft.title }}</h3>
-            <p><strong>Context:</strong> {{ architectureAssessment.adrDraft.context }}</p>
-            <p><strong>Decision:</strong> {{ architectureAssessment.adrDraft.decision }}</p>
-            <p><strong>Alternatives:</strong></p><ul><li *ngFor="let item of architectureAssessment.adrDraft.alternatives">{{ item }}</li></ul>
-            <p><strong>Consequences:</strong></p><ul><li *ngFor="let item of architectureAssessment.adrDraft.consequences">{{ item }}</li></ul>
-          </div>
-          <button class="primary-button" [disabled]="busy || !selectedProject" (click)="createAdrDraft()">Save ADR draft <span>＋</span></button>
-        </section>
-        <section class="panel" *ngIf="architectureDecisions.length">
-          <div class="panel-heading"><div><div class="eyebrow">DECISION GOVERNANCE</div><h2>Architecture decisions</h2></div><span class="schema-tag">{{ architectureDecisions.length }} records</span></div>
-          <label class="import-label">Transition rationale (required for rejection or supersession)</label>
-          <input class="text-input" [(ngModel)]="adrTransitionComment" placeholder="Explain why this decision is changing">
-          <article class="decision-card" *ngFor="let decision of architectureDecisions">
-            <div class="finding-top"><strong>{{ decision.title }}</strong><span>{{ decision.status }} · v{{ decision.version }}</span></div>
-            <p>{{ decision.decision }}</p>
-            <div class="decision-actions">
-              <button class="secondary-button" *ngIf="decision.status === 'DRAFT'" [disabled]="busy" (click)="transitionAdr(decision, 'PROPOSED')">Propose</button>
-              <button class="secondary-button" *ngIf="decision.status === 'PROPOSED'" [disabled]="busy" (click)="transitionAdr(decision, 'ACCEPTED')">Accept</button>
-              <button class="secondary-button" *ngIf="decision.status === 'DRAFT' || decision.status === 'PROPOSED'" [disabled]="busy" (click)="transitionAdr(decision, 'REJECTED')">Reject</button>
-              <button class="secondary-button" *ngIf="decision.status === 'PROPOSED' || decision.status === 'REJECTED'" [disabled]="busy" (click)="transitionAdr(decision, 'DRAFT')">Reopen draft</button>
-              <button class="secondary-button" *ngIf="decision.status === 'ACCEPTED'" [disabled]="busy" (click)="transitionAdr(decision, 'SUPERSEDED')">Supersede</button>
-            </div>
-            <div class="decision-history"><small *ngFor="let event of decision.history">{{ event.fromStatus || 'NEW' }} → {{ event.toStatus }} · {{ event.actor }} · {{ event.comment }}</small></div>
-          </article>
         </section>
       </ng-container>
 
       <ng-container *ngIf="activeView === 'project'">
         <div class="page-heading">
-          <div><div class="eyebrow">PROJECT WORKSPACE</div><h1>{{ selectedProject?.name || 'Project specification' }}</h1><p>{{ selectedProject?.description || 'Select a project or create one from the overview.' }}</p></div>
-          <span class="heading-chip" *ngIf="selectedProject">ID · {{ selectedProject.id.slice(0, 8) }}</span>
+          <div>
+            <div class="eyebrow">{{ t('spec.eyebrow') }}</div>
+            <h1>{{ selectedProject?.name || t('spec.fallback') }}</h1>
+            <p>{{ selectedProject?.description || t('spec.needProject') }}</p>
+          </div>
+          <span class="heading-chip" *ngIf="selectedProject">{{ selectedProject.id }}</span>
         </div>
-        <div class="editor-layout">
-          <section class="panel editor-panel">
-            <div class="panel-heading"><div><div class="eyebrow">SOURCE OF TRUTH</div><h2>Project Specification</h2></div><span class="schema-tag">JSON · v1.0.0</span></div>
-            <textarea class="code-editor" spellcheck="false" [(ngModel)]="specificationJson"></textarea>
-            <div class="editor-actions">
-              <button class="secondary-button" [disabled]="busy" (click)="validateSpecification()">Validate specification</button>
-              <button class="primary-button" [disabled]="busy || !selectedProject" (click)="saveSnapshot()">Save immutable snapshot</button>
+        <ng-container *ngIf="selectedProject; else projectGate">
+          <div class="summary-strip" *ngIf="specificationSummary as summary">
+            <article><span>{{ t('spec.schema') }}</span><strong>{{ summary.specVersion }}</strong></article>
+            <article><span>{{ t('spec.architecture') }}</span><strong>{{ summary.style }}</strong></article>
+            <article><span>{{ t('spec.entities') }}</span><strong>{{ summary.entities }}</strong></article>
+            <article><span>{{ t('spec.relationships') }}</span><strong>{{ summary.relationships }}</strong></article>
+            <article><span>{{ t('spec.requirements') }}</span><strong>{{ summary.functional }}</strong></article>
+            <article><span>{{ t('spec.technologies') }}</span><strong>{{ summary.technologies }}</strong></article>
+            <article><span>{{ t('spec.profile') }}</span><strong>{{ summary.profile }}</strong></article>
+            <article><span>{{ t('spec.layout') }}</span><strong>{{ summary.outputLayout }}</strong></article>
+          </div>
+          <div class="summary-strip invalid" *ngIf="!specificationSummary"><strong>{{ t('spec.unparsed') }}</strong></div>
+          <div class="editor-layout">
+            <section class="panel">
+              <div class="panel-heading">
+                <div><div class="eyebrow">{{ t('spec.working') }}</div><h2>{{ t('spec.source') }}</h2></div>
+                <span class="schema-tag">{{ t('spec.draft') }}</span>
+              </div>
+              <label class="sr" for="spec-editor">{{ t('spec.editor') }}</label>
+              <textarea id="spec-editor" class="code-editor" spellcheck="false" [(ngModel)]="specificationJson"></textarea>
+              <div class="editor-meta" [class.over]="editorBytes > 1048576">{{ tf('spec.bytes', { bytes: editorBytes, quality: specificationSummary?.qualityAttributes ?? 0, constraints: specificationSummary?.constraints ?? 0 }) }}</div>
+              <div class="editor-actions">
+                <button class="secondary-button" type="button" [disabled]="busy" (click)="formatSpecification()">{{ t('spec.format') }}</button>
+                <button class="secondary-button" type="button" [disabled]="busy" (click)="validateSpecification()">{{ t('spec.validate') }}</button>
+                <button class="primary-button" type="button" [disabled]="busy || editorBytes > 1048576" (click)="saveSnapshot()">{{ t('spec.save') }}</button>
+              </div>
+              <div class="validation-result" *ngIf="validation" [class.valid]="validation.valid" [class.invalid]="!validation.valid">
+                <strong>{{ validation.valid ? t('spec.valid') : t('spec.findings') }}</strong>
+                <ul *ngIf="validation.errors.length"><li *ngFor="let error of validation.errors">{{ error }}</li></ul>
+                <small *ngIf="validation.valid">{{ t('spec.validDetail') }}</small>
+              </div>
+            </section>
+            <div class="stack">
+              <section class="panel">
+                <div class="panel-heading"><div><div class="eyebrow">{{ t('spec.history') }}</div><h2>{{ t('spec.snapshots') }}</h2></div><span class="count">{{ snapshots.length }}</span></div>
+                <div class="empty-state compact" *ngIf="snapshots.length === 0"><strong>{{ t('spec.noSnapshots') }}</strong><p>{{ t('spec.noSnapshotsHint') }}</p></div>
+                <button class="snapshot-row" type="button" *ngFor="let snapshot of pagedSnapshots" (click)="openSnapshot(snapshot)" [class.active]="selectedSnapshot?.id === snapshot.id" [attr.aria-pressed]="selectedSnapshot?.id === snapshot.id">
+                  <span>
+                    <strong>{{ tf('spec.version', { version: snapshot.snapshotVersion }) }}</strong>
+                    <small>{{ tf('spec.schemaLine', { schema: snapshot.schemaVersion, time: (snapshot.createdAt | date:'medium':undefined:dateLocale) || '' }) }}</small>
+                  </span>
+                  <span class="arrow">→</span>
+                </button>
+                <div class="pager" *ngIf="snapshotPageCount > 1">
+                  <button class="secondary-button" type="button" [disabled]="snapshotPage === 0" (click)="changeSnapshotPage(snapshotPage - 1)">{{ t('pager.previous') }}</button>
+                  <span>{{ tf('pager.status', { page: snapshotPage + 1, pages: snapshotPageCount, total: snapshots.length }) }}</span>
+                  <button class="secondary-button" type="button" [disabled]="snapshotPage + 1 >= snapshotPageCount" (click)="changeSnapshotPage(snapshotPage + 1)">{{ t('pager.next') }}</button>
+                </div>
+              </section>
+              <section class="panel" *ngIf="selectedSnapshot as snapshot">
+                <div class="panel-heading"><div><div class="eyebrow">{{ t('spec.stored') }}</div><h2>{{ tf('arch.snapshot', { version: snapshot.snapshotVersion }) }}</h2></div><span class="schema-tag">{{ t('spec.readOnly') }}</span></div>
+                <dl class="meta-grid">
+                  <div><dt>{{ t('spec.schema') }}</dt><dd>{{ snapshot.schemaVersion }}</dd></div>
+                  <div><dt>{{ t('spec.created') }}</dt><dd>{{ snapshot.createdAt | date:'medium':undefined:dateLocale }}</dd></div>
+                  <div><dt>{{ t('spec.snapshotId') }}</dt><dd class="break">{{ snapshot.id }}</dd></div>
+                </dl>
+                <div class="hash-row">
+                  <code>{{ snapshot.contentSha256 }}</code>
+                  <button class="secondary-button" type="button" (click)="copyText(snapshot.contentSha256, t('copy.digest'))">{{ t('spec.copyDigest') }}</button>
+                </div>
+                <label class="sr" for="snapshot-json">{{ t('spec.storedJson') }}</label>
+                <textarea id="snapshot-json" class="code-editor compact-editor" readonly [ngModel]="selectedSnapshotJson"></textarea>
+                <button class="primary-button" type="button" (click)="loadSnapshotIntoEditor()">{{ t('spec.copyEditor') }}</button>
+                <p class="hint">{{ t('spec.copyHint') }}</p>
+              </section>
             </div>
-            <div class="validation-result" *ngIf="modelImportWarnings.length">
-              <strong>Model import notes</strong>
-              <ul><li *ngFor="let warning of modelImportWarnings">{{ warning }}</li></ul>
-            </div>
-            <div class="validation-result" *ngIf="validation" [class.valid]="validation.valid" [class.invalid]="!validation.valid">
-              <strong>{{ validation.valid ? 'Specification valid' : 'Validation findings' }}</strong>
-              <ul *ngIf="validation.errors.length"><li *ngFor="let error of validation.errors">{{ error }}</li></ul>
-              <small *ngIf="validation.valid">The payload conforms to the canonical Project Specification schema.</small>
-            </div>
-          </section>
-          <section class="panel snapshots-panel">
-            <div class="panel-heading"><div><div class="eyebrow">VERSION HISTORY</div><h2>Snapshots</h2></div><span class="count">{{ snapshots.length }}</span></div>
-            <div class="empty-state compact" *ngIf="snapshots.length === 0"><strong>No snapshots saved</strong><p>Validate and save the first version.</p></div>
-            <button class="snapshot-row" *ngFor="let snapshot of snapshots" (click)="openSnapshot(snapshot)">
-              <span class="snapshot-icon">◷</span><span><strong>Version {{ snapshot.snapshotVersion }}</strong><small>{{ snapshot.createdAt | date:'medium' }}</small></span><span class="arrow">→</span>
-            </button>
-            <div class="hash-note">Every snapshot is immutable and includes a SHA-256 content digest.</div>
-          </section>
+          </div>
+        </ng-container>
+      </ng-container>
+
+      <ng-container *ngIf="activeView === 'model-import'">
+        <div class="page-heading">
+          <div>
+            <div class="eyebrow">{{ t('model.eyebrow') }}</div>
+            <h1>{{ t('model.title') }}</h1>
+            <p>{{ t('model.summary') }}</p>
+          </div>
         </div>
+        <ng-container *ngIf="selectedProject; else projectGate">
+          <section class="panel">
+            <div class="panel-heading"><div><div class="eyebrow">{{ t('model.source') }}</div><h2>{{ selectedProject.name }}</h2></div><span class="schema-tag" [class.over]="importBytes > 524288">{{ tf('model.bytes', { used: importBytes }) }}</span></div>
+            <label class="field" for="import-format">{{ t('model.format') }}</label>
+            <select id="import-format" [(ngModel)]="modelImportFormat">
+              <option value="sql-ddl">{{ t('model.sql') }}</option>
+              <option value="json">{{ t('model.json') }}</option>
+            </select>
+            <p class="hint" *ngIf="modelImportFormat === 'sql-ddl'">{{ t('model.sqlHint') }}</p>
+            <p class="hint" *ngIf="modelImportFormat === 'json'">{{ t('model.jsonHint') }}</p>
+            <label class="field" for="import-source">{{ t('model.content') }}</label>
+            <textarea id="import-source" class="code-editor import-editor" spellcheck="false" [(ngModel)]="modelImportContent"></textarea>
+            <button class="primary-button" type="button" [disabled]="busy || !modelImportContent.trim() || importBytes > 524288" (click)="importModel()">{{ t('model.import') }}</button>
+          </section>
+          <section class="panel" *ngIf="modelPreview">
+            <div class="panel-heading"><div><div class="eyebrow">{{ t('model.preview') }}</div><h2>{{ tf('model.counts', { entities: previewEntities.length, relationships: previewRelationships.length, indexes: previewIndexes.length }) }}</h2></div></div>
+            <div class="validation-result invalid" *ngIf="modelPreview.warnings.length">
+              <strong>{{ t('model.notes') }}</strong>
+              <ul><li *ngFor="let warning of modelPreview.warnings">{{ warning }}</li></ul>
+            </div>
+            <article class="entity-card" *ngFor="let entity of previewEntities">
+              <header>
+                <strong>{{ entity.name }}</strong>
+                <span *ngIf="entity.boundedContext">{{ entity.boundedContext }}</span>
+              </header>
+              <div class="attr" *ngFor="let attribute of attributesOf(entity)">
+                <strong>{{ attribute.name }}</strong>
+                <code>{{ attribute.type }}</code>
+                <span class="badge" *ngIf="attribute.required">{{ t('model.required') }}</span>
+                <span class="badge" *ngIf="attribute.unique">{{ t('model.unique') }}</span>
+                <small *ngIf="attribute.description">{{ attribute.description }}</small>
+              </div>
+              <p class="hint" *ngIf="attributesOf(entity).length === 0">{{ t('model.none') }}</p>
+            </article>
+            <article class="entity-card" *ngFor="let relationship of previewRelationships">
+              <header><strong>{{ relationship.name }}</strong><span>{{ relationship.cardinality }}</span></header>
+              <p>{{ relationship.from }} → {{ relationship.to }}</p>
+              <p class="hint">{{ relationship.ownership || t('model.ownership') }}<span *ngIf="relationship.optional"> · {{ t('model.optional') }}</span></p>
+            </article>
+            <article class="entity-card" *ngFor="let index of previewIndexes">
+              <header><strong>{{ index.name || t('model.unnamed') }}</strong><span>{{ index.unique ? t('model.unique') : t('model.plain') }}</span></header>
+              <p>{{ index.entity }} ({{ index.columns.join(', ') }})</p>
+              <p class="hint" *ngIf="index.method">{{ tf('model.method', { method: index.method }) }}</p>
+            </article>
+            <button class="secondary-button" type="button" (click)="activeView = 'project'">{{ t('model.review') }}</button>
+          </section>
+        </ng-container>
       </ng-container>
 
       <ng-container *ngIf="activeView === 'catalog'">
-        <div class="page-heading"><div><div class="eyebrow">VERSIONED METADATA</div><h1>Technology catalog</h1><p>Only explicitly selected technologies are included in a generated application.</p></div></div>
-        <div class="filter-row"><button [class.selected]="selectedCategory === 'all'" (click)="selectedCategory = 'all'">All</button><button *ngFor="let category of categories" [class.selected]="selectedCategory === category" (click)="selectedCategory = category">{{ category }}</button></div>
-        <div class="catalog-grid">
-          <article class="catalog-card" *ngFor="let item of filteredCatalog">
-            <div class="catalog-card-top"><span class="category-label">{{ item.category }}</span><span class="supported" [class.deprecated]="item.status !== 'supported'">{{ item.status }}</span></div>
-            <h3>{{ item.name }}</h3><div class="catalog-id">{{ item.id }}</div>
-            <div class="version-row"><span>Catalog version</span><strong>{{ item.version }}</strong></div>
-            <div class="range-row"><span>Supported range</span><code>{{ item.supportedRange }}</code></div>
-            <div class="capabilities"><span *ngFor="let capability of item.capabilities.slice(0, 4)">{{ capability }}</span></div>
-          </article>
+        <div class="page-heading">
+          <div>
+            <div class="eyebrow">{{ t('catalog.eyebrow') }}</div>
+            <h1>{{ t('catalog.title') }}</h1>
+            <p>{{ t('catalog.summary') }}</p>
+          </div>
+        </div>
+        <div class="toolbar">
+          <label class="sr" for="catalog-search">{{ t('catalog.search') }}</label>
+          <input id="catalog-search" [ngModel]="catalogQuery" (ngModelChange)="onCatalogQuery($event)" [placeholder]="t('catalog.search')">
+        </div>
+        <div class="filter-row">
+          <button type="button" [class.selected]="selectedCategory === 'all'" (click)="chooseCategory('all')">{{ t('catalog.all') }} · {{ categoryCount('all') }}</button>
+          <button type="button" *ngFor="let category of categories" [class.selected]="selectedCategory === category" (click)="chooseCategory(category)">{{ category }} · {{ categoryCount(category) }}</button>
+        </div>
+        <div class="catalog-layout">
+          <div class="catalog-grid">
+            <button class="catalog-card" type="button" *ngFor="let item of pagedCatalog" (click)="selectedTechnologyId = item.id" [class.selected]="selectedTechnologyId === item.id">
+              <div class="catalog-card-top"><span class="category-label">{{ item.category }}</span><span class="supported" [class.deprecated]="item.status !== 'supported'">{{ item.status }}</span></div>
+              <h3>{{ item.name }}</h3>
+              <div class="catalog-id">{{ item.id }}</div>
+              <div class="version-row"><span>{{ t('catalog.versionLabel') }}</span><strong>{{ item.version }}</strong></div>
+              <div class="range-row"><span>{{ t('catalog.rangeLabel') }}</span><code>{{ item.supportedRange }}</code></div>
+              <div class="capabilities"><span *ngFor="let capability of item.capabilities">{{ capability }}</span></div>
+            </button>
+            <div class="empty-state" *ngIf="filteredCatalog.length === 0 && catalog.length === 0"><strong>{{ t('catalog.empty') }}</strong><p>{{ t('catalog.emptyHint') }}</p></div>
+            <div class="empty-state" *ngIf="filteredCatalog.length === 0 && catalog.length > 0"><strong>{{ t('catalog.noMatch') }}</strong><p>{{ t('catalog.noMatchHint') }}</p></div>
+            <div class="pager" *ngIf="catalogPageCount > 1">
+              <button class="secondary-button" type="button" [disabled]="catalogPage === 0" (click)="changeCatalogPage(catalogPage - 1)">{{ t('pager.previous') }}</button>
+              <span>{{ tf('pager.status', { page: catalogPage + 1, pages: catalogPageCount, total: filteredCatalog.length }) }}</span>
+              <button class="secondary-button" type="button" [disabled]="catalogPage + 1 >= catalogPageCount" (click)="changeCatalogPage(catalogPage + 1)">{{ t('pager.next') }}</button>
+            </div>
+          </div>
+          <section class="panel detail-panel" *ngIf="selectedTechnology as technology">
+            <div class="panel-heading"><div><div class="eyebrow">{{ technology.category }}</div><h2>{{ technology.name }}</h2></div><span class="schema-tag">{{ technology.status }}</span></div>
+            <dl class="meta-grid">
+              <div><dt>{{ t('catalog.id') }}</dt><dd class="break">{{ technology.id }}</dd></div>
+              <div><dt>{{ t('catalog.vendor') }}</dt><dd>{{ technology.vendor || '—' }}</dd></div>
+              <div><dt>{{ t('catalog.version') }}</dt><dd>{{ technology.version }}</dd></div>
+              <div><dt>{{ t('catalog.scheme') }}</dt><dd>{{ technology.versionScheme || '—' }}</dd></div>
+              <div><dt>{{ t('catalog.range') }}</dt><dd>{{ technology.supportedRange }}</dd></div>
+            </dl>
+            <h3>{{ t('catalog.capabilities') }}</h3>
+            <div class="capabilities"><span *ngFor="let capability of technology.capabilities">{{ capability }}</span></div>
+            <h3>{{ t('catalog.requires') }}</h3>
+            <article class="entity-card" *ngFor="let requirement of technology.requires || []">
+              <strong>{{ technologyName(requirement.technologyId) }}</strong>
+              <p><code>{{ requirement.versionRange }}</code></p>
+              <p class="hint">{{ requirement.reason }}</p>
+            </article>
+            <p class="hint" *ngIf="!(technology.requires || []).length">{{ t('catalog.noRequires') }}</p>
+            <h3>{{ t('catalog.conflicts') }}</h3>
+            <ul *ngIf="(technology.conflicts || []).length"><li *ngFor="let conflict of technology.conflicts || []">{{ conflictLabel(conflict) }}</li></ul>
+            <p class="hint" *ngIf="!(technology.conflicts || []).length">{{ t('catalog.noConflicts') }}</p>
+            <h3>{{ t('catalog.platforms') }}</h3>
+            <div class="capabilities"><span *ngFor="let platform of technology.platforms || []">{{ platform }}</span></div>
+            <h3>{{ t('catalog.modes') }}</h3>
+            <div class="capabilities"><span *ngFor="let mode of technology.operatingModes || []">{{ mode }}</span></div>
+            <h3>{{ t('catalog.docs') }}</h3>
+            <ul class="link-list"><li *ngFor="let link of linksOf(technology)"><a [href]="link" target="_blank" rel="noopener noreferrer">{{ link }}</a></li></ul>
+            <p class="hint" *ngIf="linksOf(technology).length === 0">{{ t('catalog.noDocs') }}</p>
+          </section>
+          <section class="panel detail-panel" *ngIf="!selectedTechnology">
+            <h2>{{ t('catalog.pick') }}</h2>
+            <p class="hint">{{ t('catalog.pickHint') }}</p>
+          </section>
         </div>
       </ng-container>
 
-      <ng-container *ngIf="activeView === 'generate'">
-        <div class="page-heading"><div><div class="eyebrow">DETERMINISTIC GENERATION</div><h1>Generate project</h1><p>Generate a reproducible project archive from an immutable, validated specification snapshot.</p></div></div>
+      <ng-container *ngIf="activeView === 'compatibility'">
+        <div class="page-heading">
+          <div>
+            <div class="eyebrow">{{ t('compat.eyebrow') }}</div>
+            <h1>{{ t('compat.title') }}</h1>
+            <p>{{ t('compat.summary') }}</p>
+          </div>
+        </div>
         <section class="panel">
-          <div class="panel-heading"><div><div class="eyebrow">SUPPORTED VERTICAL SLICE</div><h2>Java 25 · Spring Boot 4 · PostgreSQL 17</h2></div><span class="schema-tag">Generator 0.1.0</span></div>
-          <p class="generation-copy">The initial generator creates a Maven application, JPA entities and repositories, PostgreSQL migration, Dockerfile, Docker Compose, and a provenance manifest. Unsupported relationships, identity profiles, and technology selections are rejected rather than silently skipped.</p>
-          <div class="generation-context" *ngIf="selectedProject"><strong>{{ selectedProject.name }}</strong><span>{{ snapshots.length }} immutable snapshots</span></div>
-          <div class="empty-state compact" *ngIf="!selectedProject"><strong>No project selected</strong><p>Select a project from the overview before generating.</p></div>
-          <div class="empty-state compact" *ngIf="selectedProject && snapshots.length === 0"><strong>No valid snapshot available</strong><p>Open the project specification, validate it, and save a snapshot.</p></div>
-          <button class="primary-button" [disabled]="busy || !selectedProject || snapshots.length === 0" (click)="generateProject()">Generate latest snapshot <span>↓</span></button>
-          <div class="run-history" *ngIf="generationRuns.length">
-            <div class="eyebrow">GENERATION HISTORY</div>
-            <div class="run-row" *ngFor="let run of generationRuns">
-              <span><strong>Snapshot v{{ run.snapshotVersion }}</strong><small>{{ run.generatorId }} · {{ run.generatorVersion }}</small></span>
-              <span class="run-status">{{ run.status }}</span>
-              <code>{{ run.outputSha256.slice(0, 12) }}…</code>
+          <div class="panel-heading"><div><div class="eyebrow">{{ t('compat.stack') }}</div><h2>{{ catalog.length ? tf('compat.count', { count: activeSelections.length }) : t('compat.required') }}</h2></div></div>
+          <div class="empty-state compact" *ngIf="catalog.length === 0"><strong>{{ t('compat.missing') }}</strong><p>{{ t('compat.missingHint') }}</p></div>
+          <div class="selection-grid" *ngIf="catalog.length">
+            <label *ngFor="let item of catalog">
+              <span>{{ item.name }} <small>{{ tf('compat.meta', { id: item.id, version: item.version, range: item.supportedRange }) }}</small></span>
+              <input [(ngModel)]="selections[item.id]" [attr.aria-label]="tf('compat.versionFor', { name: item.name })" [placeholder]="item.version">
+            </label>
+          </div>
+          <div class="capabilities" *ngIf="catalog.length && activeSelections.length"><span *ngFor="let item of activeSelections">{{ item.name }} {{ item.version }}</span></div>
+          <button class="primary-button" type="button" [disabled]="busy || catalog.length === 0 || activeSelections.length === 0" (click)="evaluateCompatibility()">{{ t('compat.evaluate') }}</button>
+        </section>
+        <section class="panel" *ngIf="compatibility">
+          <div class="panel-heading">
+            <div><div class="eyebrow">{{ t('compat.result') }}</div><h2>{{ t('compat.findings') }}</h2></div>
+            <div class="pill-row">
+              <span class="result-pill" [class.good]="compatibility.compatible">{{ compatibility.compatible ? t('compat.ok') : t('compat.action') }}</span>
+              <span class="result-pill" [class.warn]="compatibility.requiresReview" [class.good]="!compatibility.requiresReview">{{ compatibility.requiresReview ? t('compat.review') : t('compat.clear') }}</span>
             </div>
           </div>
-        </section>
-      </ng-container>
-
-      <ng-container *ngIf="activeView === 'compatibility'">
-        <div class="page-heading"><div><div class="eyebrow">DETERMINISTIC ANALYSIS</div><h1>Compatibility analysis</h1><p>Evaluate selected versions against catalog dependencies, lifecycle policies and compatibility rules.</p></div></div>
-        <section class="panel selection-panel">
-          <div class="panel-heading"><div><div class="eyebrow">SELECTED STACK</div><h2>Technology versions</h2></div><span class="schema-tag">Up to 100 selections</span></div>
-          <div class="selection-grid">
-            <label *ngFor="let item of catalog"><span>{{ item.name }} <small>{{ item.id }}</small></span><input [(ngModel)]="selections[item.id]" [placeholder]="item.version"></label>
-          </div>
-          <button class="primary-button" [disabled]="busy" (click)="evaluateCompatibility()">Evaluate compatibility <span>→</span></button>
-        </section>
-        <section class="panel findings-panel" *ngIf="compatibility">
-          <div class="panel-heading"><div><div class="eyebrow">ANALYSIS RESULT</div><h2>Findings</h2></div><span class="result-pill" [class.good]="compatibility.compatible">{{ compatibility.compatible ? 'Compatible' : 'Action required' }}</span></div>
-          <div class="empty-state compact" *ngIf="compatibility.findings.length === 0"><strong>No compatibility findings</strong><p>The selected technologies satisfy all currently loaded catalog rules.</p></div>
+          <div class="empty-state compact" *ngIf="compatibility.findings.length === 0"><strong>{{ t('compat.none') }}</strong><p>{{ t('compat.noneHint') }}</p></div>
           <article class="finding" *ngFor="let finding of compatibility.findings" [class.blocked]="finding.status === 'BLOCKED'" [class.warning]="finding.status === 'WARNING' || finding.status === 'INDETERMINATE'">
-            <div class="finding-top"><strong>{{ finding.ruleId }}</strong><span>{{ finding.status }}</span></div>
-            <p>{{ finding.message }}</p><small>{{ finding.rationale }}</small>
+            <div class="finding-top"><strong>{{ finding.ruleId }}</strong><span>{{ finding.status }} · {{ finding.severity }}</span></div>
+            <p>{{ finding.message }}</p>
+            <small>{{ finding.rationale }}</small>
+            <div class="capabilities"><span *ngFor="let id of finding.affectedTechnologyIds">{{ technologyName(id) }}</span></div>
+            <h3 *ngIf="finding.evidence.length">{{ t('compat.evidence') }}</h3>
+            <ul *ngIf="finding.evidence.length"><li *ngFor="let item of finding.evidence">{{ item }}</li></ul>
+            <h3 *ngIf="finding.remediation.length">{{ t('compat.remediation') }}</h3>
             <ul *ngIf="finding.remediation.length"><li *ngFor="let action of finding.remediation">{{ action }}</li></ul>
+            <p class="hint">{{ tf('compat.override', { policy: finding.overridePolicy }) }}</p>
           </article>
         </section>
       </ng-container>
+
+      <ng-container *ngIf="activeView === 'architecture'">
+        <div class="page-heading">
+          <div>
+            <div class="eyebrow">{{ t('arch.eyebrow') }}</div>
+            <h1>{{ t('arch.title') }}</h1>
+            <p>{{ t('arch.summary') }}</p>
+          </div>
+        </div>
+        <ng-container *ngIf="selectedProject; else projectGate">
+          <section class="panel">
+            <div class="panel-heading"><div><div class="eyebrow">{{ t('arch.input') }}</div><h2>{{ selectedProject.name }}</h2></div><span class="schema-tag" *ngIf="latestSnapshot as latest">{{ tf('arch.snapshot', { version: latest.snapshotVersion }) }}</span></div>
+            <div class="empty-state compact" *ngIf="!latestSnapshot"><strong>{{ t('arch.need') }}</strong><p>{{ t('arch.needHint') }}</p></div>
+            <button class="primary-button" type="button" [disabled]="busy || !latestSnapshot" (click)="evaluateArchitecture()">{{ t('arch.evaluate') }}</button>
+          </section>
+          <section class="panel" *ngIf="architectureAssessment as assessment">
+            <div class="compare">
+              <article><span>{{ t('arch.selected') }}</span><strong>{{ assessment.selectedStyle }}</strong></article>
+              <article><span>{{ t('arch.recommended') }}</span><strong>{{ assessment.recommendedStyle }}</strong></article>
+            </div>
+            <div class="pill-row">
+              <span class="result-pill" [class.good]="!assessment.requiresReview" [class.warn]="assessment.requiresReview">{{ assessment.requiresReview ? t('arch.blocking') : t('arch.noBlocking') }}</span>
+            </div>
+            <p>{{ assessment.rationale }}</p>
+            <article class="finding" *ngFor="let finding of assessment.findings" [class.blocked]="finding.status === 'BLOCKED'" [class.warning]="finding.status === 'WARNING'">
+              <div class="finding-top"><strong>{{ finding.id }}</strong><span>{{ finding.status }} · {{ finding.severity }}</span></div>
+              <p>{{ finding.message }}</p>
+              <small>{{ finding.rationale }}</small>
+              <div class="capabilities"><span *ngFor="let path of finding.affectedPaths">{{ path }}</span></div>
+              <ul *ngIf="finding.remediation.length"><li *ngFor="let action of finding.remediation">{{ action }}</li></ul>
+            </article>
+            <div class="empty-state compact" *ngIf="assessment.findings.length === 0"><strong>{{ t('arch.noFindings') }}</strong><p>{{ t('arch.noFindingsHint') }}</p></div>
+            <div class="tradeoffs">
+              <div class="eyebrow">{{ t('arch.tradeoffs') }}</div>
+              <ul><li *ngFor="let item of assessment.tradeOffs">{{ item }}</li></ul>
+            </div>
+            <div class="adr-draft">
+              <div class="eyebrow">{{ t('arch.draft') }}</div>
+              <h3>{{ assessment.adrDraft.title }}</h3>
+              <p><strong>{{ t('arch.context') }}</strong> {{ assessment.adrDraft.context }}</p>
+              <p><strong>{{ t('arch.decision') }}</strong> {{ assessment.adrDraft.decision }}</p>
+              <p><strong>{{ t('arch.alternatives') }}</strong></p>
+              <ul><li *ngFor="let item of assessment.adrDraft.alternatives">{{ item }}</li></ul>
+              <p><strong>{{ t('arch.consequences') }}</strong></p>
+              <ul><li *ngFor="let item of assessment.adrDraft.consequences">{{ item }}</li></ul>
+            </div>
+            <button class="primary-button" type="button" [disabled]="busy || !latestSnapshot" (click)="createAdrDraft()">{{ t('arch.save') }}</button>
+          </section>
+          <section class="panel">
+            <div class="panel-heading"><div><div class="eyebrow">{{ t('arch.governance') }}</div><h2>{{ t('arch.records') }}</h2></div><span class="count">{{ architectureDecisions.length }}</span></div>
+            <div class="empty-state compact" *ngIf="architectureDecisions.length === 0"><strong>{{ t('arch.none') }}</strong><p>{{ t('arch.noneHint') }}</p></div>
+            <label class="field" for="adr-comment">{{ t('arch.rationale') }} <small>{{ adrTransitionComment.length }}/2000</small></label>
+            <textarea id="adr-comment" [(ngModel)]="adrTransitionComment" maxlength="2000" rows="3" [placeholder]="t('arch.rationalePlaceholder')"></textarea>
+            <p class="hint">{{ t('arch.rationaleHint') }}</p>
+            <article class="decision-card" *ngFor="let decision of architectureDecisions">
+              <div class="finding-top"><strong>{{ decision.title }}</strong><span>{{ tf('arch.meta', { status: decision.status, version: decision.version, snapshot: decision.snapshotVersion }) }}</span></div>
+              <p><strong>{{ t('arch.context') }}</strong> {{ decision.context }}</p>
+              <p><strong>{{ t('arch.decision') }}</strong> {{ decision.decision }}</p>
+              <p><strong>{{ t('arch.alternatives') }}</strong></p>
+              <ul><li *ngFor="let item of decision.alternatives">{{ item }}</li></ul>
+              <p><strong>{{ t('arch.consequences') }}</strong></p>
+              <ul><li *ngFor="let item of decision.consequences">{{ item }}</li></ul>
+              <dl class="meta-grid">
+                <div><dt>{{ t('arch.created') }}</dt><dd>{{ decision.createdAt | date:'medium':undefined:dateLocale }}</dd></div>
+                <div><dt>{{ t('arch.updated') }}</dt><dd>{{ decision.updatedAt | date:'medium':undefined:dateLocale }}</dd></div>
+                <div><dt>{{ t('arch.id') }}</dt><dd class="break">{{ decision.id }}</dd></div>
+              </dl>
+              <div class="decision-actions">
+                <button class="secondary-button" type="button" *ngIf="decision.status === 'DRAFT'" [disabled]="busy" (click)="transitionAdr(decision, 'PROPOSED')">{{ t('arch.propose') }}</button>
+                <button class="secondary-button" type="button" *ngIf="decision.status === 'PROPOSED'" [disabled]="busy" (click)="transitionAdr(decision, 'ACCEPTED')">{{ t('arch.accept') }}</button>
+                <button class="secondary-button" type="button" *ngIf="decision.status === 'DRAFT' || decision.status === 'PROPOSED'" [disabled]="busy || commentRequired" (click)="transitionAdr(decision, 'REJECTED')">{{ t('arch.reject') }}</button>
+                <button class="secondary-button" type="button" *ngIf="decision.status === 'PROPOSED' || decision.status === 'REJECTED'" [disabled]="busy" (click)="transitionAdr(decision, 'DRAFT')">{{ t('arch.reopen') }}</button>
+                <button class="secondary-button" type="button" *ngIf="decision.status === 'ACCEPTED'" [disabled]="busy || commentRequired" (click)="transitionAdr(decision, 'SUPERSEDED')">{{ t('arch.supersede') }}</button>
+              </div>
+              <ol class="decision-history">
+                <li *ngFor="let event of decision.history">
+                  <strong>{{ event.fromStatus || 'NEW' }} → {{ event.toStatus }}</strong>
+                  <span>{{ event.actor }} · {{ event.createdAt | date:'medium':undefined:dateLocale }}</span>
+                  <p *ngIf="event.comment">{{ event.comment }}</p>
+                </li>
+              </ol>
+            </article>
+          </section>
+        </ng-container>
+      </ng-container>
+
+      <ng-container *ngIf="activeView === 'quality'">
+        <div class="page-heading">
+          <div>
+            <div class="eyebrow">{{ t('quality.eyebrow') }}</div>
+            <h1>{{ t('quality.title') }}</h1>
+            <p>{{ t('quality.summary') }}</p>
+          </div>
+        </div>
+        <ng-container *ngIf="selectedProject; else projectGate">
+          <section class="panel">
+            <div class="panel-heading"><div><div class="eyebrow">{{ t('quality.input') }}</div><h2>{{ selectedProject.name }}</h2></div><span class="schema-tag" *ngIf="latestSnapshot as latest">{{ tf('arch.snapshot', { version: latest.snapshotVersion }) }}</span></div>
+            <div class="empty-state compact" *ngIf="!latestSnapshot"><strong>{{ t('quality.need') }}</strong><p>{{ t('quality.needHint') }}</p></div>
+            <button class="primary-button" type="button" [disabled]="busy || !latestSnapshot" (click)="generateQualityPlan()">{{ t('quality.generate') }}</button>
+          </section>
+          <section class="panel" *ngIf="qualityPlan as plan">
+            <div class="panel-heading"><div><div class="eyebrow">{{ t('quality.intentions') }}</div><h2>{{ tf('arch.snapshot', { version: plan.snapshotVersion }) }}</h2></div><span class="schema-tag">{{ tf('quality.cases', { count: plan.testCases.length }) }}</span></div>
+            <dl class="meta-grid">
+              <div><dt>{{ t('quality.generated') }}</dt><dd>{{ plan.generatedAt | date:'medium':undefined:dateLocale }}</dd></div>
+              <div><dt>{{ t('quality.snapshotId') }}</dt><dd class="break">{{ plan.snapshotId }}</dd></div>
+            </dl>
+            <div class="hash-row">
+              <code>{{ plan.planSha256 }}</code>
+              <button class="secondary-button" type="button" (click)="copyText(plan.planSha256, t('quality.copy'))">{{ t('quality.copy') }}</button>
+            </div>
+            <div class="quality-summary">
+              <button class="quality-stat" type="button" [class.selected]="qualityCategory === 'all'" (click)="qualityCategory = 'all'"><strong>{{ plan.testCases.length }}</strong><span>{{ t('quality.all') }}</span></button>
+              <button class="quality-stat" type="button" *ngFor="let item of plan.summary | keyvalue" [class.selected]="qualityCategory === item.key" (click)="qualityCategory = item.key"><strong>{{ item.value }}</strong><span>{{ readable(item.key) }}</span></button>
+            </div>
+            <article class="quality-case" *ngFor="let test of visibleTests">
+              <div class="finding-top"><strong>{{ test.id }} · {{ test.title }}</strong><span>{{ readable(test.category) }} · {{ test.priority }}</span></div>
+              <p>{{ test.objective }}</p>
+              <small>{{ tf('quality.source', { path: test.sourcePath }) }}</small>
+              <ol><li *ngFor="let step of test.steps">{{ step }}</li></ol>
+              <p class="expected"><strong>{{ t('quality.expected') }}</strong> {{ test.expectedResult }}</p>
+            </article>
+            <div class="empty-state compact" *ngIf="visibleTests.length === 0"><strong>{{ t('quality.empty') }}</strong></div>
+            <p class="hint">{{ t('quality.hint') }}</p>
+          </section>
+        </ng-container>
+      </ng-container>
+
+      <ng-container *ngIf="activeView === 'generate'">
+        <div class="page-heading">
+          <div>
+            <div class="eyebrow">{{ t('gen.eyebrow') }}</div>
+            <h1>{{ t('gen.title') }}</h1>
+            <p>{{ t('gen.summary') }}</p>
+          </div>
+        </div>
+        <section class="panel">
+          <div class="panel-heading"><div><div class="eyebrow">{{ t('gen.registry') }}</div><h2>{{ t('gen.available') }}</h2></div><span class="count">{{ generators.length }}</span></div>
+          <div class="empty-state compact" *ngIf="generators.length === 0"><strong>{{ t('gen.none') }}</strong><p>{{ t('gen.noneHint') }}</p></div>
+          <article class="entity-card" *ngFor="let generator of generators">
+            <header><strong>{{ generator.id }}</strong><span>{{ generator.version }}</span></header>
+            <p>{{ generator.description }}</p>
+            <p class="hint">{{ tf('gen.specs', { versions: generator.supportedSpecificationVersions.join(', ') }) }}</p>
+            <div class="capabilities"><span *ngFor="let item of generator.supportedTechnologyVersions | keyvalue">{{ item.key }} {{ item.value }}</span></div>
+          </article>
+        </section>
+        <ng-container *ngIf="selectedProject; else projectGate">
+          <section class="panel">
+            <div class="panel-heading"><div><div class="eyebrow">{{ t('gen.input') }}</div><h2>{{ selectedProject.name }}</h2></div></div>
+            <div class="generation-context" *ngIf="latestSnapshot as latest">
+              <strong>{{ tf('gen.latest', { version: latest.snapshotVersion }) }}</strong>
+              <code>{{ latest.contentSha256 }}</code>
+            </div>
+            <div class="empty-state compact" *ngIf="!latestSnapshot"><strong>{{ t('gen.need') }}</strong><p>{{ t('gen.needHint') }}</p></div>
+            <button class="primary-button" type="button" [disabled]="busy || !latestSnapshot" (click)="generateProject()">{{ t('gen.run') }}</button>
+            <div class="run-history" *ngIf="generationRuns.length">
+              <div class="eyebrow">{{ t('gen.history') }}</div>
+              <article class="run-row" *ngFor="let run of generationRuns">
+                <div>
+                  <strong>{{ tf('gen.files', { version: run.snapshotVersion, count: run.generatedFileCount }) }}</strong>
+                  <small>{{ run.generatorId }} {{ run.generatorVersion }} · {{ run.createdAt | date:'medium':undefined:dateLocale }}</small>
+                  <code>{{ run.outputSha256 }}</code>
+                </div>
+                <span class="run-status">{{ run.status }}</span>
+                <button class="secondary-button" type="button" (click)="copyText(run.outputSha256, t('gen.copy'))">{{ t('gen.copy') }}</button>
+              </article>
+            </div>
+          </section>
+        </ng-container>
+      </ng-container>
+
+      <ng-template #projectGate>
+        <section class="panel gate">
+          <div class="eyebrow">{{ t('gate.eyebrow') }}</div>
+          <h2>{{ t('gate.title') }}</h2>
+          <p>{{ t('gate.body') }}</p>
+          <button class="primary-button" type="button" (click)="activeView = 'overview'">{{ t('gate.action') }}</button>
+        </section>
+      </ng-template>
     </section>
   </main>
 </div>

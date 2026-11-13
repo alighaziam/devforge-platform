@@ -39,4 +39,10 @@ public class ProjectSpecificationSnapshotController {
     public List<ProjectLifecycleService.SnapshotView> list(@PathVariable UUID projectId) {
         return projects.listSnapshots(projectId);
     }
+
+    @GetMapping("/{snapshotVersion}")
+    public ProjectLifecycleService.SnapshotDocument read(@PathVariable UUID projectId,
+                                                         @PathVariable int snapshotVersion) {
+        return projects.readSnapshot(projectId, snapshotVersion);
+    }
 }

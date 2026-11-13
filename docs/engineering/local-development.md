@@ -73,9 +73,12 @@ workflow; never expose this profile to a network or production environment.
 - `POST /api/v1/specifications/validate` — validate a Project Specification.
 - `POST /api/v1/projects` — create a project.
 - `GET /api/v1/projects/{id}` — retrieve a project.
-- `GET /api/v1/projects?page=0&size=20` — list projects.
+- `GET /api/v1/projects?page=0&size=20&query=&status=` — list and filter projects.
+- `PUT /api/v1/projects/{id}` — update a project name and description with optimistic locking.
+- `DELETE /api/v1/projects/{id}` — delete a project and its dependent records.
 - `POST /api/v1/projects/{id}/specifications` — create an immutable specification snapshot.
 - `GET /api/v1/projects/{id}/specifications` — list snapshots.
+- `GET /api/v1/projects/{id}/specifications/{version}` — read one immutable snapshot document.
 - `GET /api/v1/catalog/technologies` — list catalog entries.
 - `POST /api/v1/compatibility/evaluate` — evaluate selected technology versions.
 - `POST /api/v1/projects/{id}/generations` — generate a ZIP from a stored immutable snapshot; returns SHA-256 and generation-run ID.
