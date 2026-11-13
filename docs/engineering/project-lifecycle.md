@@ -24,6 +24,9 @@ variables or a secret manager.
 - `GET /api/v1/projects/{id}/specifications` — list immutable snapshots.
 - `GET /api/v1/projects/{id}/specifications/{version}` — read one stored snapshot,
   including its exact specification document. Reading does not create a version.
+- `GET /api/v1/projects/{id}/specifications/{version}/requirements` — read the
+  functional requirements, quality attributes, constraints, and source-artifact
+  metadata stored in that snapshot. Missing arrays are returned empty.
 
 Snapshot creation validates the payload before persistence, takes a pessimistic
 lock on the owning project to serialize version assignment, increments the
@@ -38,8 +41,9 @@ final guard against duplicate version numbers. Snapshot content is retained as
 text to preserve the exact submitted representation; the canonical schema
 version and content digest are stored separately.
 
-This first lifecycle slice does not yet implement tenant ownership, user/role
-authorization, soft deletion, retention policies, or artifact upload. The
-current HTTP Basic security chain is a development skeleton, not a production
-identity solution. These limitations must be resolved before multi-user
-production deployment.
+Project rows store an owner subject. Reads, updates, deletes, and nested
+project APIs are limited to that subject. Requirements and source-artifact
+metadata live inside the immutable specification; editing them means saving a
+new snapshot. The platform does not yet store uploaded artifact bytes, soft
+deletion, or retention policies. The default profile still uses HTTP Basic, and
+the WSO2 profile is the deployed identity boundary.

@@ -29,7 +29,7 @@
 - [x] Project create/read/list lifecycle and PostgreSQL persistence.
 - [x] Specification schema validation API.
 - [x] Immutable, versioned specification snapshots with SHA-256 provenance.
-- [ ] Requirements and source-artifact metadata lifecycle.
+- [x] Requirements and source-artifact metadata lifecycle. Metadata is edited in the working specification and read back from an immutable snapshot.
 - [x] Technology catalog read API.
 - [x] ADR drafts, explicit decision status transitions, optimistic locking, and transition audit history.
 - [x] Deterministic technology dependency and compatibility evaluation API.

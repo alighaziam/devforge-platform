@@ -78,6 +78,7 @@ workflow; never expose this profile to a network or production environment.
 - `DELETE /api/v1/projects/{id}` — delete a project and its dependent records.
 - `POST /api/v1/projects/{id}/specifications` — create an immutable specification snapshot.
 - `GET /api/v1/projects/{id}/specifications` — list snapshots.
+- `GET /api/v1/projects/{id}/specifications/{version}/requirements` — read requirement and source-artifact metadata from one snapshot.
 - `GET /api/v1/projects/{id}/specifications/{version}` — read one immutable snapshot document.
 - `GET /api/v1/catalog/technologies` — list catalog entries.
 - `POST /api/v1/compatibility/evaluate` — evaluate selected technology versions.

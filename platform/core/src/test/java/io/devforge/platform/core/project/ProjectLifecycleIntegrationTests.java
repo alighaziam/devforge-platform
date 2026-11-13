@@ -100,6 +100,48 @@ class ProjectLifecycleIntegrationTests {
                         .isEqualTo(HttpStatus.BAD_REQUEST));
     }
 
+    @Test
+    void readsRequirementsAndSourceArtifactsFromStoredSnapshot() throws Exception {
+        var project = projects.create("Billing", "Invoice ledger");
+        String digest = "a".repeat(64);
+        projects.createSnapshot(project.id(), """
+                {
+                  "specVersion": "1.0.0",
+                  "project": { "id": "%s", "name": "Billing", "description": "Invoice ledger" },
+                  "requirements": {
+                    "functional": [{
+                      "id": "FR-1",
+                      "statement": "Record an invoice",
+                      "priority": "must",
+                      "acceptanceCriteria": ["The invoice total is stored"],
+                      "sourceRefs": ["brief.pdf"]
+                    }],
+                    "qualityAttributes": [{ "attribute": "security", "target": "authenticated", "priority": "high" }],
+                    "constraints": ["Amounts use decimal currency"],
+                    "sourceArtifacts": [{
+                      "id": "brief",
+                      "mediaType": "application/pdf",
+                      "sha256": "%s",
+                      "sourceName": "brief.pdf"
+                    }]
+                  },
+                  "model": { "entities": [], "relationships": [] },
+                  "architecture": { "style": "modular-monolith", "decisions": [] },
+                  "technologySelections": {},
+                  "generation": { "profile": "recommended", "outputLayout": "single-project" }
+                }
+                """.formatted(project.id(), digest));
+
+        var requirements = projects.readRequirements(project.id(), 1);
+        assertThat(requirements.snapshotVersion()).isEqualTo(1);
+        assertThat(requirements.functional()).hasSize(1);
+        assertThat(requirements.functional().get(0).path("id").asText()).isEqualTo("FR-1");
+        assertThat(requirements.qualityAttributes().get(0).path("attribute").asText()).isEqualTo("security");
+        assertThat(requirements.constraints()).extracting(node -> node.asText())
+                .containsExactly("Amounts use decimal currency");
+        assertThat(requirements.sourceArtifacts().get(0).path("sha256").asText()).isEqualTo(digest);
+    }
+
     private String validSpecification(java.util.UUID projectId, String description) {
         return """
                 {

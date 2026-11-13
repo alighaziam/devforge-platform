@@ -45,4 +45,10 @@ public class ProjectSpecificationSnapshotController {
                                                          @PathVariable int snapshotVersion) {
         return projects.readSnapshot(projectId, snapshotVersion);
     }
+
+    @GetMapping("/{snapshotVersion}/requirements")
+    public ProjectLifecycleService.RequirementsDocument requirements(@PathVariable UUID projectId,
+                                                                     @PathVariable int snapshotVersion) {
+        return projects.readRequirements(projectId, snapshotVersion);
+    }
 }

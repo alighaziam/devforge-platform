@@ -167,6 +167,75 @@
             <article><span>{{ t('spec.layout') }}</span><strong>{{ summary.outputLayout }}</strong></article>
           </div>
           <div class="summary-strip invalid" *ngIf="!specificationSummary"><strong>{{ t('spec.unparsed') }}</strong></div>
+          <section class="panel req-board">
+            <div class="panel-heading"><div><div class="eyebrow">{{ t('req.eyebrow') }}</div><h2>{{ t('req.title') }}</h2></div></div>
+            <p class="hint">{{ requirementsEditable ? t('req.summary') : t('req.locked') }}</p>
+            <ng-container *ngIf="requirementsEditable">
+              <div class="req-section">
+                <div class="req-card-top"><h3>{{ t('req.functional') }}</h3><button class="secondary-button" type="button" (click)="addFunctional()">{{ t('req.addFunctional') }}</button></div>
+                <p class="hint" *ngIf="functionalDrafts.length === 0">{{ t('req.empty') }}</p>
+                <article class="req-card" *ngFor="let item of functionalDrafts; let index = index">
+                  <div class="inline-fields">
+                    <label class="field">{{ t('req.id') }}<input [(ngModel)]="item.id" (ngModelChange)="writeRequirements()"></label>
+                    <label class="field">{{ t('req.priority') }}
+                      <select [(ngModel)]="item.priority" (ngModelChange)="writeRequirements()">
+                        <option *ngFor="let priority of requirementPriorities" [value]="priority">{{ priority }}</option>
+                      </select>
+                    </label>
+                  </div>
+                  <label class="field">{{ t('req.statement') }}<textarea rows="2" [(ngModel)]="item.statement" (ngModelChange)="writeRequirements()"></textarea></label>
+                  <label class="field">{{ t('req.acceptance') }}<textarea rows="2" [(ngModel)]="item.acceptanceText" (ngModelChange)="writeRequirements()"></textarea></label>
+                  <label class="field">{{ t('req.sources') }}<textarea rows="2" [(ngModel)]="item.sourceText" (ngModelChange)="writeRequirements()"></textarea></label>
+                  <button class="secondary-button danger" type="button" (click)="removeAt(functionalDrafts, index)">{{ t('req.remove') }}</button>
+                </article>
+              </div>
+              <div class="req-section">
+                <div class="req-card-top"><h3>{{ t('req.quality') }}</h3><button class="secondary-button" type="button" (click)="addQuality()">{{ t('req.addQuality') }}</button></div>
+                <p class="hint" *ngIf="qualityDrafts.length === 0">{{ t('req.empty') }}</p>
+                <article class="req-card" *ngFor="let item of qualityDrafts; let index = index">
+                  <div class="inline-fields">
+                    <label class="field">{{ t('req.attribute') }}
+                      <select [(ngModel)]="item.attribute" (ngModelChange)="writeRequirements()">
+                        <option *ngFor="let attribute of qualityAttributeNames" [value]="attribute">{{ attribute }}</option>
+                      </select>
+                    </label>
+                    <label class="field">{{ t('req.priority') }}
+                      <select [(ngModel)]="item.priority" (ngModelChange)="writeRequirements()">
+                        <option *ngFor="let priority of qualityPriorities" [value]="priority">{{ priority }}</option>
+                      </select>
+                    </label>
+                  </div>
+                  <div class="inline-fields">
+                    <label class="field">{{ t('req.target') }}<input [(ngModel)]="item.target" (ngModelChange)="writeRequirements()"></label>
+                    <label class="field">{{ t('req.measure') }}<input [(ngModel)]="item.measure" (ngModelChange)="writeRequirements()"></label>
+                  </div>
+                  <button class="secondary-button danger" type="button" (click)="removeAt(qualityDrafts, index)">{{ t('req.remove') }}</button>
+                </article>
+              </div>
+              <div class="req-section">
+                <div class="req-card-top"><h3>{{ t('req.constraints') }}</h3><button class="secondary-button" type="button" (click)="addConstraint()">{{ t('req.addConstraint') }}</button></div>
+                <p class="hint" *ngIf="constraintDrafts.length === 0">{{ t('req.empty') }}</p>
+                <article class="req-card" *ngFor="let item of constraintDrafts; let index = index">
+                  <label class="field">{{ t('req.constraint') }}<input [ngModel]="item" (ngModelChange)="constraintDrafts[index] = $event; writeRequirements()"></label>
+                  <button class="secondary-button danger" type="button" (click)="removeAt(constraintDrafts, index)">{{ t('req.remove') }}</button>
+                </article>
+              </div>
+              <div class="req-section">
+                <div class="req-card-top"><h3>{{ t('req.artifacts') }}</h3><button class="secondary-button" type="button" (click)="addArtifact()">{{ t('req.addArtifact') }}</button></div>
+                <p class="hint">{{ t('req.shaHint') }}</p>
+                <p class="hint" *ngIf="artifactDrafts.length === 0">{{ t('req.empty') }}</p>
+                <article class="req-card" *ngFor="let item of artifactDrafts; let index = index">
+                  <div class="inline-fields">
+                    <label class="field">{{ t('req.id') }}<input [(ngModel)]="item.id" (ngModelChange)="writeRequirements()"></label>
+                    <label class="field">{{ t('req.mediaType') }}<input [(ngModel)]="item.mediaType" (ngModelChange)="writeRequirements()"></label>
+                  </div>
+                  <label class="field">{{ t('req.sha') }}<input [(ngModel)]="item.sha256" (ngModelChange)="writeRequirements()" spellcheck="false"></label>
+                  <label class="field">{{ t('req.fileName') }}<input [(ngModel)]="item.sourceName" (ngModelChange)="writeRequirements()"></label>
+                  <button class="secondary-button danger" type="button" (click)="removeAt(artifactDrafts, index)">{{ t('req.remove') }}</button>
+                </article>
+              </div>
+            </ng-container>
+          </section>
           <div class="editor-layout">
             <section class="panel">
               <div class="panel-heading">
@@ -174,7 +243,7 @@
                 <span class="schema-tag">{{ t('spec.draft') }}</span>
               </div>
               <label class="sr" for="spec-editor">{{ t('spec.editor') }}</label>
-              <textarea id="spec-editor" class="code-editor" spellcheck="false" [(ngModel)]="specificationJson"></textarea>
+              <textarea id="spec-editor" class="code-editor" spellcheck="false" [(ngModel)]="specificationJson" (blur)="syncRequirementDrafts()"></textarea>
               <div class="editor-meta" [class.over]="editorBytes > 1048576">{{ tf('spec.bytes', { bytes: editorBytes, quality: specificationSummary?.qualityAttributes ?? 0, constraints: specificationSummary?.constraints ?? 0 }) }}</div>
               <div class="editor-actions">
                 <button class="secondary-button" type="button" [disabled]="busy" (click)="formatSpecification()">{{ t('spec.format') }}</button>

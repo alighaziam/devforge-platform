@@ -32,6 +32,25 @@ interface Snapshot {
 interface SnapshotDocument extends Snapshot {
   specification: unknown;
 }
+interface FunctionalDraft {
+  id: string;
+  statement: string;
+  priority: string;
+  acceptanceText: string;
+  sourceText: string;
+}
+interface QualityDraft {
+  attribute: string;
+  target: string;
+  measure: string;
+  priority: string;
+}
+interface ArtifactDraft {
+  id: string;
+  mediaType: string;
+  sha256: string;
+  sourceName: string;
+}
 interface TechnologyRequirement {
   technologyId: string;
   versionRange: string;
@@ -253,6 +272,14 @@ export class AppComponent implements OnInit {
   readonly snapshotPageSize = 6;
   locale: Locale = 'en';
   specificationJson = this.initialSpecification();
+  functionalDrafts: FunctionalDraft[] = [];
+  qualityDrafts: QualityDraft[] = [];
+  constraintDrafts: string[] = [];
+  artifactDrafts: ArtifactDraft[] = [];
+  requirementsEditable = true;
+  readonly requirementPriorities = ['must', 'should', 'could', 'wont'];
+  readonly qualityAttributeNames = ['performance', 'scalability', 'availability', 'security', 'maintainability', 'usability', 'portability', 'interoperability', 'observability', 'cost'];
+  readonly qualityPriorities = ['critical', 'high', 'medium', 'low'];
   selections: Record<string, string> = {
     'framework.spring-boot': '4.0.0',
     'language.java': '25',
@@ -397,6 +424,7 @@ export class AppComponent implements OnInit {
     this.setLocale(stored === 'fa' ? 'fa' : 'en');
     this.noticeKey = '';
     this.notice = '';
+    this.syncRequirementDrafts();
     void this.loadWorkspace();
   }
 
@@ -526,14 +554,14 @@ export class AppComponent implements OnInit {
     this.selectedSnapshot = null;
     this.selectedSnapshotJson = '';
     if (switching) {
-      this.specificationJson = this.initialSpecification();
+      this.replaceSpecification(this.initialSpecification());
       this.applyProjectIdentity(project);
     }
     try {
       await Promise.all([this.loadSnapshots(), this.loadGenerationRuns(), this.loadArchitectureDecisions()]);
       const latest = this.latestSnapshot;
       const opened = latest ? await this.openSnapshot(latest, false) : false;
-      if (switching && opened) this.specificationJson = this.selectedSnapshotJson;
+      if (switching && opened) this.replaceSpecification(this.selectedSnapshotJson);
       if (switching && (opened || !latest)) {
         this.setNotice(this.tf(opened ? 'notice.openedStored' : 'notice.openedDraft', {
           name: project.name,
@@ -579,7 +607,7 @@ export class AppComponent implements OnInit {
 
   loadSnapshotIntoEditor(): void {
     if (!this.selectedSnapshotJson) return;
-    this.specificationJson = this.selectedSnapshotJson;
+    this.replaceSpecification(this.selectedSnapshotJson);
     this.validation = null;
     this.setNotice(this.t('notice.snapshotCopied'), 'info');
   }
@@ -605,7 +633,7 @@ export class AppComponent implements OnInit {
       ));
       const spec = this.record(JSON.parse(this.specificationJson));
       spec['model'] = result.model;
-      this.specificationJson = JSON.stringify(spec, null, 2);
+      this.replaceSpecification(JSON.stringify(spec, null, 2));
       this.modelPreview = result;
       this.validation = null;
       this.setNotice(this.t('notice.importMerged'), 'success');
@@ -631,9 +659,99 @@ export class AppComponent implements OnInit {
     }
   }
 
+  syncRequirementDrafts(): void {
+    try {
+      const spec = JSON.parse(this.specificationJson) as { requirements?: Record<string, unknown> };
+      const requirements = spec.requirements ?? {};
+      this.functionalDrafts = this.objectArray(requirements['functional']).map(item => ({
+        id: this.text(item['id']),
+        statement: this.text(item['statement']),
+        priority: this.text(item['priority']) || 'must',
+        acceptanceText: this.stringArray(item['acceptanceCriteria']).join('\n'),
+        sourceText: this.stringArray(item['sourceRefs']).join('\n')
+      }));
+      this.qualityDrafts = this.objectArray(requirements['qualityAttributes']).map(item => ({
+        attribute: this.text(item['attribute']) || 'security',
+        target: this.text(item['target']),
+        measure: this.text(item['measure']),
+        priority: this.text(item['priority']) || 'high'
+      }));
+      this.constraintDrafts = this.stringArray(requirements['constraints']);
+      this.artifactDrafts = this.objectArray(requirements['sourceArtifacts']).map(item => ({
+        id: this.text(item['id']),
+        mediaType: this.text(item['mediaType']),
+        sha256: this.text(item['sha256']),
+        sourceName: this.text(item['sourceName'])
+      }));
+      this.requirementsEditable = true;
+    } catch {
+      this.requirementsEditable = false;
+    }
+  }
+
+  addFunctional(): void {
+    this.functionalDrafts.push({ id: 'FR-' + (this.functionalDrafts.length + 1), statement: '', priority: 'must', acceptanceText: '', sourceText: '' });
+    this.writeRequirements();
+  }
+
+  addQuality(): void {
+    this.qualityDrafts.push({ attribute: 'security', target: '', measure: '', priority: 'high' });
+    this.writeRequirements();
+  }
+
+  addConstraint(): void {
+    this.constraintDrafts.push('');
+    this.writeRequirements();
+  }
+
+  addArtifact(): void {
+    this.artifactDrafts.push({ id: 'source-' + (this.artifactDrafts.length + 1), mediaType: 'application/pdf', sha256: '', sourceName: '' });
+    this.writeRequirements();
+  }
+
+  removeAt<T>(items: T[], index: number): void {
+    items.splice(index, 1);
+    this.writeRequirements();
+  }
+
+  writeRequirements(): void {
+    let spec: Record<string, unknown>;
+    try {
+      spec = JSON.parse(this.specificationJson) as Record<string, unknown>;
+    } catch {
+      this.requirementsEditable = false;
+      this.setNotice(this.t('notice.invalidJson'), 'error');
+      return;
+    }
+    spec['requirements'] = {
+      functional: this.functionalDrafts.map(item => this.withoutEmpty({
+        id: item.id.trim(),
+        statement: item.statement,
+        priority: item.priority,
+        acceptanceCriteria: this.lines(item.acceptanceText),
+        sourceRefs: this.lines(item.sourceText)
+      })),
+      qualityAttributes: this.qualityDrafts.map(item => this.withoutEmpty({
+        attribute: item.attribute,
+        target: item.target.trim(),
+        measure: item.measure.trim(),
+        priority: item.priority
+      })),
+      constraints: this.constraintDrafts,
+      sourceArtifacts: this.artifactDrafts.map(item => this.withoutEmpty({
+        id: item.id.trim(),
+        mediaType: item.mediaType.trim(),
+        sha256: item.sha256.trim(),
+        sourceName: item.sourceName.trim()
+      }))
+    };
+    this.specificationJson = JSON.stringify(spec, null, 2);
+    this.requirementsEditable = true;
+  }
+
   formatSpecification(): void {
     try {
-      this.specificationJson = JSON.stringify(JSON.parse(this.specificationJson), null, 2);
+      this.replaceSpecification(JSON.stringify(JSON.parse(this.specificationJson), null, 2));
       this.setNotice(this.t('notice.formatted'), 'success');
     } catch {
       this.setNotice(this.t('notice.invalidJson'), 'error');
@@ -974,6 +1092,31 @@ export class AppComponent implements OnInit {
     }
   }
 
+  private replaceSpecification(json: string): void {
+    this.specificationJson = json;
+    this.syncRequirementDrafts();
+  }
+
+  private objectArray(value: unknown): Record<string, unknown>[] {
+    return Array.isArray(value) ? value.filter(item => item && typeof item === 'object').map(item => item as Record<string, unknown>) : [];
+  }
+
+  private stringArray(value: unknown): string[] {
+    return Array.isArray(value) ? value.filter(item => typeof item === 'string') : [];
+  }
+
+  private lines(value: string): string[] {
+    return value.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  }
+
+  private withoutEmpty(value: Record<string, unknown>): Record<string, unknown> {
+    return Object.fromEntries(Object.entries(value).filter(([, item]) => {
+      if (typeof item === 'string') return item.trim().length > 0;
+      if (Array.isArray(item)) return item.length > 0;
+      return item != null;
+    }));
+  }
+
   private clearProjectContext(): void {
     this.selectedProject = null;
     this.snapshots = [];
@@ -995,7 +1138,7 @@ export class AppComponent implements OnInit {
       projectNode['name'] = project.name;
       projectNode['description'] = project.description || '';
       spec['project'] = projectNode;
-      this.specificationJson = JSON.stringify(spec, null, 2);
+      this.replaceSpecification(JSON.stringify(spec, null, 2));
     } catch {
       this.say('notice.identity', 'error');
     }

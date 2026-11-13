@@ -173,6 +173,22 @@ public class ProjectLifecycleService {
         }
     }
 
+    @Transactional(readOnly = true)
+    public RequirementsDocument readRequirements(UUID projectId, int snapshotVersion) {
+        SnapshotDocument document = readSnapshot(projectId, snapshotVersion);
+        JsonNode requirements = document.specification().path("requirements");
+        return new RequirementsDocument(
+                document.snapshotVersion(),
+                arrayOrEmpty(requirements.path("functional")),
+                arrayOrEmpty(requirements.path("qualityAttributes")),
+                arrayOrEmpty(requirements.path("constraints")),
+                arrayOrEmpty(requirements.path("sourceArtifacts")));
+    }
+
+    private JsonNode arrayOrEmpty(JsonNode node) {
+        return node != null && node.isArray() ? node : objectMapper.createArrayNode();
+    }
+
     private String currentOwnerSubject() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()
@@ -215,6 +231,9 @@ public class ProjectLifecycleService {
                     entity.getContentSha256(), entity.getCreatedAt());
         }
     }
+
+    public record RequirementsDocument(int snapshotVersion, JsonNode functional, JsonNode qualityAttributes,
+                                       JsonNode constraints, JsonNode sourceArtifacts) {}
 
     public record SnapshotDocument(UUID id, UUID projectId, int snapshotVersion, String schemaVersion,
                                    String contentSha256, java.time.Instant createdAt, JsonNode specification) {
