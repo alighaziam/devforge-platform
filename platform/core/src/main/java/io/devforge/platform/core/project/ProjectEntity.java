@@ -8,6 +8,7 @@ import java.util.UUID;
 @Table(name = "projects")
 public class ProjectEntity {
     @Id private UUID id;
+    @Column(name = "owner_subject", nullable = false, length = 255) private String ownerSubject;
     @Column(nullable = false, length = 120) private String name;
     @Column(length = 2000) private String description;
     @Column(nullable = false, length = 24) private String status;
@@ -18,7 +19,12 @@ public class ProjectEntity {
     protected ProjectEntity() { }
 
     public ProjectEntity(UUID id, String name, String description) {
+        this(id, "local", name, description);
+    }
+
+    public ProjectEntity(UUID id, String ownerSubject, String name, String description) {
         this.id = id;
+        this.ownerSubject = ownerSubject;
         this.name = name;
         this.description = description;
         this.status = "ACTIVE";
@@ -35,6 +41,7 @@ public class ProjectEntity {
     void onUpdate() { updatedAt = Instant.now(); }
 
     public UUID getId() { return id; }
+    public String getOwnerSubject() { return ownerSubject; }
     public String getName() { return name; }
     public String getDescription() { return description; }
     public String getStatus() { return status; }

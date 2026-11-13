@@ -81,3 +81,16 @@ The WSO2 profile validates bearer JWTs and applies scope-based authorization:
 Health probes remain public and reveal no component details. Unmatched routes are denied. The `local` profile deliberately disables authentication for isolated development; never expose it on a shared or public network. Use the `wso2` profile for deployed environments and install the WSO2 CA chain in the JVM truststore when using TLS.
 
 WSO2 mode is exercised by `Wso2SecurityConfigurationTests`, including anonymous denial and read/write scope separation.
+
+
+## Project ownership and tenant isolation
+
+Project rows now store the authenticated owner subject. Under the WSO2 profile, the JWT `sub` (Spring Security principal name) owns the project; the same owner check is applied to project reads, updates, deletes, snapshots, and every nested project API through a request interceptor. Projects are hidden from other subjects with HTTP 404 to avoid leaking their existence.
+
+The migration assigns existing projects to the local-development owner `local` so the existing single-machine workflow remains usable. Before enabling WSO2 for an existing installation, transfer those rows to the intended JWT subject, for example:
+
+```sql
+UPDATE projects SET owner_subject = '<your-wso2-subject>' WHERE owner_subject = 'local';
+```
+
+Do not use a shared service account subject for multiple human users. This first ownership boundary is project-level; a later phase should extend the same tenant context to organization membership, invitations, audit ownership and background job attribution.

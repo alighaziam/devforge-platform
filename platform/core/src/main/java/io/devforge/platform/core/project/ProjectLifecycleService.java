@@ -14,6 +14,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -48,7 +51,7 @@ public class ProjectLifecycleService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Project name must contain 1 to 120 characters and description must not exceed 2000 characters");
         }
-        ProjectEntity entity = new ProjectEntity(UUID.randomUUID(), name.trim(),
+        ProjectEntity entity = new ProjectEntity(UUID.randomUUID(), currentOwnerSubject(), name.trim(),
                 description == null ? null : description.trim());
         return ProjectView.from(projects.saveAndFlush(entity));
     }
@@ -75,7 +78,7 @@ public class ProjectLifecycleService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Project status filter must be an uppercase status code");
         }
-        return projects.search(normalizedQuery, normalizedStatus, PageRequest.of(Math.max(0, page),
+        return projects.search(currentOwnerSubject(), normalizedQuery, normalizedStatus, PageRequest.of(Math.max(0, page),
                         Math.min(Math.max(1, size), 100),
                         Sort.by(Sort.Direction.DESC, "createdAt")))
                 .map(ProjectView::from);
@@ -102,9 +105,7 @@ public class ProjectLifecycleService {
     }
 
     public void delete(UUID id) {
-        if (!projects.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found");
-        }
+        findProject(id);
         entityManager.clear();
         entityManager.createNativeQuery("""
                 delete from architecture_decision_events
@@ -136,7 +137,7 @@ public class ProjectLifecycleService {
                     false, List.of("$.project.id must match the project ID in the request path.")));
         }
 
-        ProjectEntity project = projects.findByIdForUpdate(projectId)
+        ProjectEntity project = projects.findByIdAndOwnerSubjectForUpdate(projectId, currentOwnerSubject())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Project not found"));
         int nextVersion = snapshots.findTopByProject_IdOrderBySnapshotVersionDesc(projectId)
@@ -149,9 +150,7 @@ public class ProjectLifecycleService {
 
     @Transactional(readOnly = true)
     public List<SnapshotView> listSnapshots(UUID projectId) {
-        if (!projects.existsById(projectId)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found");
-        }
+        findProject(projectId);
         return snapshots.findAllByProject_IdOrderBySnapshotVersionAsc(projectId)
                 .stream().map(SnapshotView::from).toList();
     }
@@ -162,6 +161,7 @@ public class ProjectLifecycleService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Snapshot version must be a positive integer");
         }
+        findProject(projectId);
         SpecificationSnapshotEntity entity = snapshots
                 .findByProject_IdAndSnapshotVersion(projectId, snapshotVersion)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
@@ -173,8 +173,18 @@ public class ProjectLifecycleService {
         }
     }
 
+    private String currentOwnerSubject() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication instanceof AnonymousAuthenticationToken
+                || authentication.getName() == null || authentication.getName().isBlank()) {
+            return "local";
+        }
+        return authentication.getName();
+    }
+
     private ProjectEntity findProject(UUID id) {
-        return projects.findById(id)
+        return projects.findByIdAndOwnerSubject(id, currentOwnerSubject())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
                         "Project not found"));
     }
