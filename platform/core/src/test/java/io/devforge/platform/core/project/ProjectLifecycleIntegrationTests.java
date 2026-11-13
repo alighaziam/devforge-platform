@@ -133,6 +133,7 @@ class ProjectLifecycleIntegrationTests {
 
     @Test
     void projectOwnershipIsScopedToAuthenticatedSubject() {
+        try {
         var authentication = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
                 "tenant-alice", "n/a", java.util.List.of(
                         new org.springframework.security.core.authority.SimpleGrantedAuthority("SCOPE_devforge.write")));
@@ -151,7 +152,9 @@ class ProjectLifecycleIntegrationTests {
 
         org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(authentication);
         org.junit.jupiter.api.Assertions.assertEquals(created.id(), projects.get(created.id()).id());
-        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+        } finally {
+            org.springframework.security.core.context.SecurityContextHolder.clearContext();
+        }
     }
 
 }
