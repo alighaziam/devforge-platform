@@ -1,62 +1,97 @@
 package io.devforge.platform.core.security;
 
+import java.time.Instant;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles({"test", "wso2"})
 class Wso2SecurityConfigurationTests {
 
-    @Autowired
-    private MockMvc mvc;
+    @LocalServerPort
+    private int port;
 
-    @Test
-    void rejectsAnonymousApiRequests() throws Exception {
-        mvc.perform(get("/api/v1/projects"))
-                .andExpect(status().isUnauthorized());
+    @MockitoBean
+    private JwtDecoder jwtDecoder;
+
+    private RestClient http;
+
+    @BeforeEach
+    void setUp() {
+        http = RestClient.builder().baseUrl("http://localhost:" + port).build();
+        when(jwtDecoder.decode("read-token")).thenReturn(jwt("read-token", "devforge.read"));
+        when(jwtDecoder.decode("write-token")).thenReturn(jwt("write-token", "devforge.write"));
     }
 
     @Test
-    void rejectsAuthenticatedRequestsWithoutReadScope() throws Exception {
-        mvc.perform(get("/api/v1/projects")
-                        .with(jwt().authorities(new SimpleGrantedAuthority("SCOPE_devforge.write"))))
-                .andExpect(status().isForbidden());
+    void rejectsAnonymousApiRequests() {
+        RestClientResponseException response = assertThrows(RestClientResponseException.class,
+                () -> http.get().uri("/api/v1/projects").retrieve().toBodilessEntity());
+        assertEquals(401, response.getStatusCode().value());
     }
 
     @Test
-    void allowsReadScopeForProjectQueries() throws Exception {
-        mvc.perform(get("/api/v1/projects")
-                        .with(jwt().authorities(new SimpleGrantedAuthority("SCOPE_devforge.read"))))
-                .andExpect(status().isOk());
+    void rejectsAuthenticatedRequestsWithoutReadScope() {
+        RestClientResponseException response = assertThrows(RestClientResponseException.class,
+                () -> http.get().uri("/api/v1/projects")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer write-token")
+                        .retrieve().toBodilessEntity());
+        assertEquals(403, response.getStatusCode().value());
     }
 
     @Test
-    void readScopeCannotCreateProjects() throws Exception {
-        mvc.perform(post("/api/v1/projects")
+    void allowsReadScopeForProjectQueries() {
+        var response = http.get().uri("/api/v1/projects")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer read-token")
+                .retrieve().toEntity(String.class);
+        assertEquals(200, response.getStatusCode().value());
+    }
+
+    @Test
+    void readScopeCannotCreateProjects() {
+        RestClientResponseException response = assertThrows(RestClientResponseException.class,
+                () -> http.post().uri("/api/v1/projects")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer read-token")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Read only\",\"description\":\"Must be denied\"}")
-                        .with(jwt().authorities(new SimpleGrantedAuthority("SCOPE_devforge.read"))))
-                .andExpect(status().isForbidden());
+                        .body("{\"name\":\"Read only\",\"description\":\"Must be denied\"}")
+                        .retrieve().toBodilessEntity());
+        assertEquals(403, response.getStatusCode().value());
     }
 
     @Test
-    void writeScopeCanCreateProjects() throws Exception {
-        mvc.perform(post("/api/v1/projects")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Authorized\",\"description\":\"Created by test\"}")
-                        .with(jwt().authorities(new SimpleGrantedAuthority("SCOPE_devforge.write"))))
-                .andExpect(status().isCreated());
+    void writeScopeCanCreateProjects() {
+        var response = http.post().uri("/api/v1/projects")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer write-token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("{\"name\":\"Authorized\",\"description\":\"Created by test\"}")
+                .retrieve().toBodilessEntity();
+        assertEquals(201, response.getStatusCode().value());
+    }
+
+    private static Jwt jwt(String token, String scope) {
+        Instant now = Instant.now();
+        return Jwt.withTokenValue(token)
+                .header("alg", "RS256")
+                .claim("sub", "devforge-security-test")
+                .claim("scope", scope)
+                .issuedAt(now)
+                .expiresAt(now.plusSeconds(300))
+                .build();
     }
 }
