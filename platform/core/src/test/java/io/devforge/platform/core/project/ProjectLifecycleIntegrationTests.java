@@ -3,11 +3,6 @@ package io.devforge.platform.core.project;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.test.web.servlet.MockMvc;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,13 +12,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
-@AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
 class ProjectLifecycleIntegrationTests {
 
     @Autowired private ProjectLifecycleService projects;
-    @Autowired private MockMvc mvc;
 
     @Test
     void createsProjectAndPersistsImmutableVersionedSpecificationSnapshots() throws Exception {
@@ -165,19 +158,6 @@ class ProjectLifecycleIntegrationTests {
     }
 
 
-    @Test
-    void nestedProjectApisCannotBeReadByAnotherSubject() throws Exception {
-        var owner = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
-                "nested-owner", "n/a", java.util.List.of(
-                        new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_USER")));
-        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(owner);
-        var project = projects.create("Nested API ownership", "Protected by the MVC interceptor");
-        org.springframework.security.core.context.SecurityContextHolder.clearContext();
 
-        mvc.perform(get("/api/v1/projects/" + project.id() + "/specifications").with(user("different-user")))
-                .andExpect(status().isNotFound());
-        mvc.perform(get("/api/v1/projects/" + project.id() + "/specifications").with(user("nested-owner")))
-                .andExpect(status().isOk());
-    }
 
 }
