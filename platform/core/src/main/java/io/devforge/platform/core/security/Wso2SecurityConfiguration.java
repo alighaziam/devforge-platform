@@ -15,6 +15,9 @@ public class Wso2SecurityConfiguration {
     @Bean
     SecurityFilterChain wso2ApiSecurity(HttpSecurity http) throws Exception {
         return http
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(
+                        org.springframework.security.config.http.SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                         .requestMatchers("/actuator/**").hasAuthority("SCOPE_devforge.admin")
