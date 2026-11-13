@@ -64,3 +64,20 @@ This is an actively developed foundation, not a production-ready application fac
 - Never claim a build, test, or runtime validation passed unless it was actually executed.
 - Never execute generated code on the host without sandbox isolation and explicit resource/network controls.
 - Keep secrets out of source control. Use placeholders and documented secret injection.
+
+
+## WSO2 Identity Server authentication
+
+The default profile retains HTTP Basic for the existing single-operator development workflow. For an environment integrated with WSO2 Identity Server, activate the `wso2` Spring profile and set:
+
+- `WSO2_ISSUER_URI`: must exactly match the JWT `iss` claim.
+- `WSO2_JWKS_URI`: the WSO2 JWKS endpoint reachable by the application.
+
+The WSO2 profile validates bearer JWTs and applies scope-based authorization:
+- `devforge.read`: GET API endpoints and API documentation.
+- `devforge.write`: POST, PUT, PATCH and DELETE API endpoints.
+- `devforge.admin`: actuator management endpoints.
+
+Health probes remain public and reveal no component details. Unmatched routes are denied. The `local` profile deliberately disables authentication for isolated development; never expose it on a shared or public network. Use the `wso2` profile for deployed environments and install the WSO2 CA chain in the JVM truststore when using TLS.
+
+WSO2 mode is exercised by `Wso2SecurityConfigurationTests`, including anonymous denial and read/write scope separation.
