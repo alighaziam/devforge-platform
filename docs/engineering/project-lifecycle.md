@@ -12,10 +12,18 @@ variables or a secret manager.
 
 - `POST /api/v1/projects` — create a project.
 - `GET /api/v1/projects/{id}` — retrieve project metadata.
-- `GET /api/v1/projects?page=0&size=20` — list projects (maximum page size 100).
+- `GET /api/v1/projects?page=0&size=20&query=&status=` — list projects
+  (maximum page size 100). `query` matches name or description. `status` is an
+  optional uppercase status code.
+- `PUT /api/v1/projects/{id}` — rename a project. The body includes `name`,
+  `description`, and the current `version`. A stale version returns 409.
+- `DELETE /api/v1/projects/{id}` — delete a project together with its snapshots,
+  generation runs, and architecture decisions.
 - `POST /api/v1/projects/{id}/specifications` — validate and persist an immutable
   Project Specification snapshot.
 - `GET /api/v1/projects/{id}/specifications` — list immutable snapshots.
+- `GET /api/v1/projects/{id}/specifications/{version}` — read one stored snapshot,
+  including its exact specification document. Reading does not create a version.
 
 Snapshot creation validates the payload before persistence, takes a pessimistic
 lock on the owning project to serialize version assignment, increments the

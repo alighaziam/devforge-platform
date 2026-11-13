@@ -30,9 +30,24 @@ public class ProjectController {
     @GetMapping
     public Page<ProjectLifecycleService.ProjectView> list(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return projects.list(page, size);
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) String status) {
+        return projects.list(page, size, query, status);
+    }
+
+    @PutMapping("/{id}")
+    public ProjectLifecycleService.ProjectView update(@PathVariable UUID id,
+                                                      @RequestBody UpdateProjectRequest request) {
+        return projects.update(id, request.name(), request.description(), request.version());
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable UUID id) {
+        projects.delete(id);
     }
 
     public record CreateProjectRequest(String name, String description) { }
+    public record UpdateProjectRequest(String name, String description, long version) { }
 }

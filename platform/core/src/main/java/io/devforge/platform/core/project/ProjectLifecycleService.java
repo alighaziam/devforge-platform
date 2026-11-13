@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.devforge.platform.core.specification.ProjectSpecificationValidator;
 import io.devforge.platform.core.specification.SpecificationValidationResult;
+import jakarta.persistence.EntityManager;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -27,14 +29,17 @@ public class ProjectLifecycleService {
     private final ProjectRepository projects;
     private final SpecificationSnapshotRepository snapshots;
     private final ProjectSpecificationValidator specificationValidator;
+    private final EntityManager entityManager;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public ProjectLifecycleService(ProjectRepository projects,
             SpecificationSnapshotRepository snapshots,
-            ProjectSpecificationValidator specificationValidator) {
+            ProjectSpecificationValidator specificationValidator,
+            EntityManager entityManager) {
         this.projects = projects;
         this.snapshots = snapshots;
         this.specificationValidator = specificationValidator;
+        this.entityManager = entityManager;
     }
 
     public ProjectView create(String name, String description) {
@@ -55,10 +60,64 @@ public class ProjectLifecycleService {
 
     @Transactional(readOnly = true)
     public Page<ProjectView> list(int page, int size) {
-        return projects.findAll(PageRequest.of(Math.max(0, page),
+        return list(page, size, null, null);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ProjectView> list(int page, int size, String query, String status) {
+        String normalizedQuery = query == null || query.isBlank() ? null : query.trim();
+        if (normalizedQuery != null && normalizedQuery.length() > 120) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Project filter must not exceed 120 characters");
+        }
+        String normalizedStatus = status == null || status.isBlank() ? null : status.trim();
+        if (normalizedStatus != null && !normalizedStatus.matches("[A-Z_]{1,24}")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Project status filter must be an uppercase status code");
+        }
+        return projects.search(normalizedQuery, normalizedStatus, PageRequest.of(Math.max(0, page),
                         Math.min(Math.max(1, size), 100),
                         Sort.by(Sort.Direction.DESC, "createdAt")))
                 .map(ProjectView::from);
+    }
+
+    public ProjectView update(UUID id, String name, String description, long expectedVersion) {
+        if (name == null || name.isBlank() || name.length() > 120
+                || (description != null && description.length() > 2000)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Project name must contain 1 to 120 characters and description must not exceed 2000 characters");
+        }
+        ProjectEntity entity = findProject(id);
+        if (entity.getVersion() != expectedVersion) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Project was updated by someone else. Refresh and try again.");
+        }
+        entity.rename(name.trim(), description == null ? null : description.trim());
+        try {
+            return ProjectView.from(projects.saveAndFlush(entity));
+        } catch (OptimisticLockingFailureException exception) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Project was updated by someone else. Refresh and try again.");
+        }
+    }
+
+    public void delete(UUID id) {
+        if (!projects.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Project not found");
+        }
+        entityManager.clear();
+        entityManager.createNativeQuery("""
+                delete from architecture_decision_events
+                where decision_id in (select id from architecture_decisions where project_id = ?1)
+                """).setParameter(1, id).executeUpdate();
+        entityManager.createNativeQuery("delete from architecture_decisions where project_id = ?1")
+                .setParameter(1, id).executeUpdate();
+        entityManager.createNativeQuery("delete from generation_runs where project_id = ?1")
+                .setParameter(1, id).executeUpdate();
+        entityManager.createNativeQuery("delete from specification_snapshots where project_id = ?1")
+                .setParameter(1, id).executeUpdate();
+        projects.deleteById(id);
+        projects.flush();
     }
 
     public SnapshotView createSnapshot(UUID projectId, String json) throws JsonProcessingException {
@@ -97,6 +156,23 @@ public class ProjectLifecycleService {
                 .stream().map(SnapshotView::from).toList();
     }
 
+    @Transactional(readOnly = true)
+    public SnapshotDocument readSnapshot(UUID projectId, int snapshotVersion) {
+        if (snapshotVersion < 1) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Snapshot version must be a positive integer");
+        }
+        SpecificationSnapshotEntity entity = snapshots
+                .findByProject_IdAndSnapshotVersion(projectId, snapshotVersion)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+                        "Specification snapshot was not found"));
+        try {
+            return SnapshotDocument.from(entity, objectMapper.readTree(entity.getSpecificationJson()));
+        } catch (JsonProcessingException exception) {
+            throw new IllegalStateException("Stored specification is not valid JSON", exception);
+        }
+    }
+
     private ProjectEntity findProject(UUID id) {
         return projects.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
@@ -127,6 +203,15 @@ public class ProjectLifecycleService {
             return new SnapshotView(entity.getId(), entity.getProject().getId(),
                     entity.getSnapshotVersion(), entity.getSchemaVersion(),
                     entity.getContentSha256(), entity.getCreatedAt());
+        }
+    }
+
+    public record SnapshotDocument(UUID id, UUID projectId, int snapshotVersion, String schemaVersion,
+                                   String contentSha256, java.time.Instant createdAt, JsonNode specification) {
+        static SnapshotDocument from(SpecificationSnapshotEntity entity, JsonNode specification) {
+            return new SnapshotDocument(entity.getId(), entity.getProject().getId(),
+                    entity.getSnapshotVersion(), entity.getSchemaVersion(),
+                    entity.getContentSha256(), entity.getCreatedAt(), specification);
         }
     }
 
