@@ -43,3 +43,15 @@ spring:
 logging:
   level:
     io.devforge: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: wso2
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${WSO2_ISSUER_URI:https://localhost:9443/oauth2/token}
+          jwk-set-uri: ${WSO2_JWKS_URI:https://localhost:9443/oauth2/jwks}
