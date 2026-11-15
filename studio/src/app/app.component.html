@@ -34,6 +34,15 @@
           <button type="button" [attr.aria-pressed]="locale === 'en'" (click)="setLocale('en')">{{ t('lang.en') }}</button>
           <button type="button" [attr.aria-pressed]="locale === 'fa'" (click)="setLocale('fa')">{{ t('lang.fa') }}</button>
         </div>
+        <label class="token-switch">
+          <span>{{ t('auth.token') }}</span>
+          <input type="password" [(ngModel)]="accessTokenDraft" autocomplete="off"
+                 [placeholder]="t('auth.placeholder')" (keyup.enter)="applyAccessToken()">
+        </label>
+        <div class="token-actions">
+          <button class="secondary-button" type="button" (click)="applyAccessToken()">{{ t('auth.apply') }}</button>
+          <button class="secondary-button" type="button" (click)="clearAccessToken()">{{ t('auth.clear') }}</button>
+        </div>
         <label class="project-switch">
           <span>{{ t('top.project') }}</span>
           <select [ngModel]="selectedProject?.id || ''" (ngModelChange)="switchProject($event)" [attr.aria-label]="t('top.project')">
