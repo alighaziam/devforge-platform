@@ -87,7 +87,7 @@ public class JavaSpringPostgresGenerator implements GeneratorPlugin {
         for (JsonNode entity : spec.path("model").path("entities")) {
             String className = className(entity.path("name").asText());
             if (!classes.add(className)) throw rejected("Duplicate entity name: " + className);
-            files.put(base + "model/" + className + ".java", entitySource(entity, className, pkg));
+            files.put(base + "model/" + className + ".java", entitySource(entity, className, pkg, foreignKeys(spec.path("model"))));
             files.put(base + "repository/" + className + "Repository.java",
                     "package " + pkg + ".repository;\nimport " + pkg + ".model." + className + ";\n"
                     + "import org.springframework.data.jpa.repository.JpaRepository;\nimport java.util.UUID;\n"
@@ -114,8 +114,6 @@ public class JavaSpringPostgresGenerator implements GeneratorPlugin {
             throw rejected("Unsupported architecture style for generator 0.1.0.");
         if (!"single-project".equals(spec.path("generation").path("outputLayout").asText()))
             throw rejected("Generator 0.1.0 supports single-project output only.");
-        if (spec.path("model").path("relationships").size() > 0)
-            throw rejected("Relationships are not yet supported by generator 0.1.0.");
         String auth = spec.path("security").path("authentication").asText("none");
         if (!"none".equals(auth)) throw rejected("Identity integration is not yet supported by generator 0.1.0.");
     }
@@ -136,8 +134,16 @@ public class JavaSpringPostgresGenerator implements GeneratorPlugin {
                 throw rejected("Duplicate SQL table name: " + table);
             }
         }
-
+        List<ForeignKey> relationships = foreignKeys(model);
         Set<String> indexNames = new HashSet<>();
+        for (ForeignKey relationship : relationships) {
+            Set<String> columns = columnsByTable.get(snake(relationship.ownerEntity()));
+            if (columns != null) columns.add(relationship.column());
+            if (!relationship.unique() && !indexNames.add(relationship.indexName())) {
+                throw rejected("Duplicate index name: " + relationship.indexName());
+            }
+        }
+
         for (JsonNode index : model.path("indexes")) {
             String table = snake(index.path("entity").asText());
             Set<String> columns = columnsByTable.get(table);
@@ -164,7 +170,7 @@ public class JavaSpringPostgresGenerator implements GeneratorPlugin {
         if (!version.equals(values.get(id))) throw rejected("Required technology selection: " + id + "@" + version);
     }
 
-    private String entitySource(JsonNode entity, String cls, String pkg) {
+    private String entitySource(JsonNode entity, String cls, String pkg, List<ForeignKey> relationships) {
         StringBuilder out = new StringBuilder("package ").append(pkg).append(".model;\n")
                 .append("import jakarta.persistence.*;\nimport java.math.BigDecimal;\n")
                 .append("import java.time.Instant;\nimport java.time.LocalDate;\nimport java.util.UUID;\n")
@@ -192,6 +198,15 @@ public class JavaSpringPostgresGenerator implements GeneratorPlugin {
             out.append(") private ").append(javaType(type)).append(' ').append(field).append(";\n");
         }
         if (!id) out.append("@Id @GeneratedValue(strategy = GenerationType.UUID) private UUID id;\n");
+        for (ForeignKey relationship : relationships) {
+            if (!relationship.ownerEntity().equals(entity.path("name").asText())) continue;
+            String mapping = relationship.unique() ? "OneToOne" : "ManyToOne";
+            out.append('@').append(mapping).append("(fetch = FetchType.LAZY) @JoinColumn(name = \"\\\"")
+                    .append(relationship.column()).append("\\\"\", nullable = ").append(!relationship.required());
+            if (relationship.unique()) out.append(", unique = true");
+            out.append(") private ").append(relationship.javaType()).append(' ')
+                    .append(relationship.field()).append(";\n");
+        }
         out.append("protected ").append(cls).append("() { }\n");
         for (JsonNode attribute : entity.path("attributes")) {
             String field = fieldName(attribute.path("name").asText());
@@ -203,10 +218,19 @@ public class JavaSpringPostgresGenerator implements GeneratorPlugin {
                     .append(" value) { this.").append(field).append(" = value; }\n");
         }
         if (!id) out.append("public UUID getId() { return id; }\n");
+        for (ForeignKey relationship : relationships) {
+            if (!relationship.ownerEntity().equals(entity.path("name").asText())) continue;
+            String capitalized = Character.toUpperCase(relationship.field().charAt(0)) + relationship.field().substring(1);
+            out.append("public ").append(relationship.javaType()).append(" get").append(capitalized)
+                    .append("() { return ").append(relationship.field()).append("; }\n")
+                    .append("public void set").append(capitalized).append("(").append(relationship.javaType())
+                    .append(" value) { this.").append(relationship.field()).append(" = value; }\n");
+        }
         return out.append("}\n").toString();
     }
 
     private String migration(JsonNode model) {
+        List<ForeignKey> relationships = foreignKeys(model);
         StringBuilder sql = new StringBuilder("-- Generated by DevForge; review before production use.\n");
         for (JsonNode entity : model.path("entities")) {
             List<String> columns = new ArrayList<>();
@@ -223,6 +247,13 @@ public class JavaSpringPostgresGenerator implements GeneratorPlugin {
                 columns.add(col);
             }
             if (!id) columns.add(0, "    \"id\" UUID PRIMARY KEY");
+            for (ForeignKey relationship : relationships) {
+                if (!relationship.ownerEntity().equals(entity.path("name").asText())) continue;
+                String column = "    \"" + relationship.column() + "\" UUID";
+                if (relationship.required()) column += " NOT NULL";
+                if (relationship.unique()) column += " UNIQUE";
+                columns.add(column);
+            }
             sql.append("\nCREATE TABLE \"").append(snake(entity.path("name").asText())).append("\"")
                     .append(" (\n").append(String.join(",\n", columns)).append("\n);\n");
         }
@@ -243,6 +274,18 @@ public class JavaSpringPostgresGenerator implements GeneratorPlugin {
             if (idx.path("unique").asBoolean(false)) sql.append("UNIQUE ");
             sql.append("INDEX \"").append(name).append("\" ON \"").append(table).append("\"")
                     .append(" (").append(String.join(", ", cols)).append(");\n");
+        }
+        for (ForeignKey relationship : relationships) {
+            sql.append("\nALTER TABLE \"").append(snake(relationship.ownerEntity()))
+                    .append("\" ADD CONSTRAINT \"").append(relationship.constraintName())
+                    .append("\" FOREIGN KEY (\"").append(relationship.column())
+                    .append("\") REFERENCES \"").append(snake(relationship.targetEntity()))
+                    .append("\" (\"id\");\n");
+            if (!relationship.unique()) {
+                sql.append("\nCREATE INDEX \"").append(relationship.indexName())
+                        .append("\" ON \"").append(snake(relationship.ownerEntity()))
+                        .append("\" (\"").append(relationship.column()).append("\");\n");
+            }
         }
         return sql.toString();
     }
@@ -411,7 +454,87 @@ public class JavaSpringPostgresGenerator implements GeneratorPlugin {
         return result.isEmpty() ? "generated-project" : result;
     }
 
+    private List<ForeignKey> foreignKeys(JsonNode model) {
+        Map<String, String> entityByKey = new LinkedHashMap<>();
+        Map<String, Set<String>> columnsByEntity = new HashMap<>();
+        Map<String, Set<String>> fieldsByEntity = new HashMap<>();
+        for (JsonNode entity : model.path("entities")) {
+            String name = entity.path("name").asText();
+            String key = name.toLowerCase(Locale.ROOT);
+            if (entityByKey.putIfAbsent(key, name) != null) continue;
+            Set<String> columns = new HashSet<>();
+            Set<String> fields = new HashSet<>();
+            for (JsonNode attribute : entity.path("attributes")) {
+                columns.add(snake(attribute.path("name").asText()));
+                fields.add(fieldName(attribute.path("name").asText()));
+            }
+            columns.add("id");
+            columnsByEntity.put(key, columns);
+            fieldsByEntity.put(key, fields);
+        }
+        List<ForeignKey> keys = new ArrayList<>();
+        Set<String> constraints = new HashSet<>();
+        for (JsonNode relationship : model.path("relationships")) {
+            String cardinality = relationship.path("cardinality").asText();
+            String fromName = relationship.path("from").asText();
+            String toName = relationship.path("to").asText();
+            String fromKey = fromName.toLowerCase(Locale.ROOT);
+            String toKey = toName.toLowerCase(Locale.ROOT);
+            if (!entityByKey.containsKey(fromKey) || !entityByKey.containsKey(toKey)) {
+                throw rejected("Relationship references an unknown entity: " + relationship.path("name").asText());
+            }
+            String ownerKey;
+            String targetKey;
+            boolean unique;
+            switch (cardinality) {
+                case "many-to-one" -> { ownerKey = fromKey; targetKey = toKey; unique = false; }
+                case "one-to-one" -> { ownerKey = fromKey; targetKey = toKey; unique = true; }
+                case "one-to-many" -> { ownerKey = toKey; targetKey = fromKey; unique = false; }
+                case "many-to-many" -> throw rejected("Many-to-many relationships are not yet supported by generator 0.1.0.");
+                default -> throw rejected("Unsupported relationship cardinality: " + cardinality);
+            }
+            String ownerEntity = entityByKey.get(ownerKey);
+            String targetEntity = entityByKey.get(targetKey);
+            Set<String> ownerColumns = columnsByEntity.get(ownerKey);
+            Set<String> ownerFields = fieldsByEntity.get(ownerKey);
+            String column = snake(targetEntity) + "_id";
+            if (column.length() > 63) throw rejected("Unsafe SQL identifier: " + column);
+            if (ownerColumns == null || ownerFields == null) {
+                throw rejected("Relationship references an unknown entity: " + relationship.path("name").asText());
+            }
+            if (!ownerColumns.add(column)) {
+                column = snake(relationship.path("name").asText()) + "_id";
+                if (column.length() > 63 || !ownerColumns.add(column)) {
+                    throw rejected("Relationship column collides with an existing column: " + column);
+                }
+            }
+            String fieldSource = column.endsWith("_id") ? column.substring(0, column.length() - 3) : column;
+            String field = fieldName(fieldSource);
+            if (!ownerFields.add(field)) throw rejected("Relationship field collides with an existing field: " + field);
+            String constraint = "fk_" + snake(ownerEntity) + "_" + column;
+            String index = "idx_" + snake(ownerEntity) + "_" + column;
+            if (constraint.length() > 63 || index.length() > 63) throw rejected("Unsafe SQL identifier: " + constraint);
+            if (!constraints.add(constraint)) throw rejected("Duplicate foreign-key constraint: " + constraint);
+            keys.add(new ForeignKey(
+                    ownerEntity, targetEntity, column, field, className(targetEntity),
+                    !relationship.path("optional").asBoolean(true), unique, constraint, index));
+        }
+        return keys;
+    }
+
     private ResponseStatusException rejected(String message) {
         return new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, message);
+    }
+
+    private record ForeignKey(
+            String ownerEntity,
+            String targetEntity,
+            String column,
+            String field,
+            String javaType,
+            boolean required,
+            boolean unique,
+            String constraintName,
+            String indexName) {
     }
 }

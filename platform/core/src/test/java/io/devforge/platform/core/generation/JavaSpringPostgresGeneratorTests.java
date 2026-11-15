@@ -94,6 +94,47 @@ class JavaSpringPostgresGeneratorTests {
                 .hasMessageContaining("btree indexes only");
     }
 
+    @Test
+    void generatesAForeignKeyOnTheManySideOfARelationship() throws Exception {
+        ObjectNode spec = (ObjectNode) mapper.readTree(specification());
+        ObjectNode order = mapper.createObjectNode().put("name", "Order");
+        order.putArray("attributes").add(mapper.createObjectNode().put("name", "id").put("type", "uuid").put("required", true));
+        ((com.fasterxml.jackson.databind.node.ArrayNode) spec.path("model").path("entities")).add(order);
+        com.fasterxml.jackson.databind.node.ArrayNode relationships =
+                ((ObjectNode) spec.path("model")).putArray("relationships");
+        relationships.add(mapper.createObjectNode()
+                .put("name", "placedBy")
+                .put("from", "Order")
+                .put("to", "Customer")
+                .put("cardinality", "many-to-one")
+                .put("optional", false));
+
+        Map<String, String> files = generator.generate(spec);
+        String orderSource = files.get("src/main/java/io/devforge/generated/orders/model/Order.java");
+        String migration = files.get("src/main/java/db/migration/V1__CreateDomainSchema.java");
+
+        assertThat(orderSource).contains("@ManyToOne(fetch = FetchType.LAZY)")
+                .contains("private Customer customer;")
+                .contains("nullable = false");
+        assertThat(migration).contains("\\\"customer_id\\\" UUID NOT NULL")
+                .contains("FOREIGN KEY (\\\"customer_id\\\") REFERENCES \\\"customer\\\" (\\\"id\\\")")
+                .contains("CREATE INDEX \\\"idx_order_customer_id\\\"");
+    }
+
+    @Test
+    void rejectsManyToManyUntilAJoinTableCanBeReviewed() throws Exception {
+        ObjectNode spec = (ObjectNode) mapper.readTree(specification());
+        ((ObjectNode) spec.path("model")).putArray("relationships").add(mapper.createObjectNode()
+                .put("name", "tags")
+                .put("from", "Customer")
+                .put("to", "Customer")
+                .put("cardinality", "many-to-many"));
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> generator.generate(spec))
+                .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
+                .hasMessageContaining("Many-to-many");
+    }
+
     private String specification() {
         return """
                 {

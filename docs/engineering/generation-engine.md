@@ -18,12 +18,13 @@ Generator `devforge.generator.java-spring-postgres@0.1.0` currently supports:
 - Layered or modular-monolith architecture styles
 - Single-project output layout
 - Basic domain entities and repositories
+- Many-to-one, one-to-one, and one-to-many associations as a foreign key on the owning table
 - PostgreSQL tables and validated btree indexes
 - Compiled Java-based Flyway migration, Maven, Dockerfile, Docker Compose, and Actuator health endpoint
 
-Unsupported technology selections, authentication profiles, relationships,
-defaults, attribute types, and output layouts are rejected rather than silently
-ignored. This first version does not generate Angular code, REST CRUD endpoints,
+Unsupported technology selections, authentication profiles, many-to-many
+relationships, defaults, attribute types, and output layouts are rejected rather
+than silently ignored. This first version does not generate Angular code, REST CRUD endpoints,
 workflow integrations, or identity-provider configuration.
 
 ## Determinism and safety
