@@ -271,6 +271,7 @@ export class AppComponent implements OnInit {
   snapshotPage = 0;
   readonly snapshotPageSize = 6;
   locale: Locale = 'en';
+  accessTokenDraft = typeof sessionStorage === 'undefined' ? '' : (sessionStorage.getItem('df-access-token') ?? '');
   specificationJson = this.initialSpecification();
   functionalDrafts: FunctionalDraft[] = [];
   qualityDrafts: QualityDraft[] = [];
@@ -440,6 +441,23 @@ export class AppComponent implements OnInit {
     return Object.entries(values).reduce(
       (text, [name, value]) => text.replaceAll('{' + name + '}', String(value)),
       this.t(key));
+  }
+
+  applyAccessToken(): void {
+    const token = this.accessTokenDraft.trim().replace(/^Bearer\\s+/i, '');
+    if (!token) {
+      this.setNotice(this.t('auth.required'), 'error');
+      return;
+    }
+    sessionStorage.setItem('df-access-token', token);
+    this.accessTokenDraft = token;
+    void this.loadWorkspace();
+  }
+
+  clearAccessToken(): void {
+    sessionStorage.removeItem('df-access-token');
+    this.accessTokenDraft = '';
+    void this.loadWorkspace();
   }
 
   setLocale(locale: Locale): void {

@@ -22,7 +22,11 @@
 .topbar { min-height: 72px; border-bottom: 1px solid #243049; padding: 12px 28px; display: flex; align-items: center; justify-content: space-between; gap: 16px; background: #0d1324; }
 .breadcrumbs { color: #a9b7ce; font-size: 13px; }
 .breadcrumbs span { color: #52627e; padding: 0 6px; }
-.top-actions { display: flex; align-items: center; gap: 12px; }
+.top-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.token-switch { display: grid; gap: 4px; color: #9aabc4; font-size: 11px; }
+.token-switch input { min-width: 190px; padding: 7px 10px; }
+.token-actions { display: flex; align-items: center; gap: 6px; }
+.token-actions button { padding: 7px 9px; font-size: 11px; }
 .project-switch { display: grid; gap: 4px; color: #9aabc4; font-size: 11px; }
 .project-switch select, select, input, textarea { width: 100%; border: 1px solid #33415f; border-radius: 8px; background: #0c1425; color: #e7eef8; padding: 10px 12px; }
 .project-switch select { min-width: 220px; }
