@@ -135,6 +135,20 @@ class JavaSpringPostgresGeneratorTests {
                 .hasMessageContaining("Many-to-many");
     }
 
+
+    @Test
+    void generatesIdenticalSortedAndImmutableFileSetOnRepeatedRuns() throws Exception {
+        var spec = mapper.readTree(specification());
+
+        Map<String, String> first = generator.generate(spec);
+        Map<String, String> second = generator.generate(spec.deepCopy());
+
+        assertThat(second).isEqualTo(first);
+        assertThat(first.keySet()).containsExactlyElementsOf(first.keySet().stream().sorted().toList());
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> first.put("README.md", "tampered"))
+                .isInstanceOf(UnsupportedOperationException.class);
+    }
+
     private String specification() {
         return """
                 {
