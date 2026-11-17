@@ -144,7 +144,7 @@ class JavaSpringPostgresGeneratorTests {
         Map<String, String> second = generator.generate(spec.deepCopy());
 
         assertThat(second).isEqualTo(first);
-        assertThat(first.keySet()).isSorted();
+        assertThat(first.keySet()).containsExactlyElementsOf(first.keySet().stream().sorted().toList());
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> first.put("README.md", "tampered"))
                 .isInstanceOf(UnsupportedOperationException.class);
     }
