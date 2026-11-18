@@ -80,3 +80,13 @@
 ## Product rule
 
 Do not start a new phase by marking incomplete exit criteria as done. Update this roadmap with evidence from actual builds and tests.
+
+## Verified checkpoint — 18 November 2026
+
+- Main CI passed on commit `ab2c60e7` after merging the repeat-generation test.
+- The Java Spring/PostgreSQL generator test now verifies equivalent specifications produce the same sorted file map and that returned file maps are immutable.
+- The integration test continues to verify reproducible archive hashes and a separate generated-sample Maven build in CI.
+- Phase 4's explicit golden-file/hash fixture gate remains open; deterministic repeat-generation assertions are not a substitute for checked-in golden fixtures.
+- Sandbox isolation, generated-project API validation, external plugin signing/execution, additional stack generators, and Git/CI delivery remain incomplete.
+
+This checkpoint records verified repository state only; it does not promote any incomplete phase to done.
