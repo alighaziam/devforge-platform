@@ -40,7 +40,7 @@
 
 - [x] Import structured domain-model JSON and a bounded PostgreSQL SQL DDL subset as reviewable previews.
 - [ ] Import OpenAPI, XML, PDF, DOCX, and spreadsheet formats.
-- [ ] Domain model representation and model diff.
+- [ ] Domain model representation and model diff (deterministic diff preview implemented on a feature branch; automated verification and review pending).
 - [x] Deterministic architecture decision/risk engine with explainable findings and ADR drafts.
 - [x] Architecture Decision Records and approval lifecycle.
 
