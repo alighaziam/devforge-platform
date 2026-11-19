@@ -41,8 +41,8 @@ public class DomainModelDiffService {
 
         List<ModelDiffResult.ModelChange> changes = new ArrayList<>();
         compareEntities(before.path("entities"), after.path("entities"), changes);
-        compareCollection("relationships", before.path("relationships"), after.path("relationships"),
-                "name", changes);
+        compareCollection("/relationships", before.path("relationships"), after.path("relationships"),
+                null, changes);
         compareIndexes(before.path("indexes"), after.path("indexes"), changes);
         changes.sort(java.util.Comparator.comparing(ModelDiffResult.ModelChange::path)
                 .thenComparing(ModelDiffResult.ModelChange::changeType));
