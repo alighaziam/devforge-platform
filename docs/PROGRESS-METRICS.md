@@ -1,7 +1,7 @@
 # Standardized Progress Assessment
 
 - Assessment date: 2026-11-19
-- Baseline commit: `5763137d` on `main`
+- Baseline commit: `d11bc3e78fd50bb29f4ce99aa7ef6edc1eaaf419` on `main`
 - Status: evidence-based baseline; category ratings are reviewer scores against the rubric below, not raw GitHub counters.
 - Overall weighted score: **70.5%**
 
@@ -23,8 +23,8 @@ Formula: overall progress = sum(category score × category weight). A category s
 
 README and roadmap show Phase 0–2 complete, partial Phase 3–5 and incomplete Phase 6. Roadmap checkpoint explicitly keeps golden-file, sandbox, external plugins, more generators and delivery gates open. Platform CI and CodeQL evidence linked.
 
-- Latest CI/build evidence: https://github.com/alighaziam/devforge-platform/actions/runs/44261184594
-- Latest CodeQL/security workflow evidence: https://github.com/alighaziam/devforge-platform/actions/runs/44492429568
+- Latest CI/build evidence: https://github.com/alighaziam/devforge-platform/actions/runs/44570850719
+- Latest CodeQL/security workflow evidence: https://github.com/alighaziam/devforge-platform/actions/runs/44570850738
 
 ## Remaining release gates
 
@@ -40,3 +40,4 @@ Golden-file fixtures and regeneration safety; isolated build workers and complet
 6. Update this file when evidence changes; do not infer progress from commit count.
 
 This is a consistent engineering assessment baseline, not a claim that a single objectively exact percentage exists independent of the scoring rubric.
+\n\n## Latest merged increment — 19 November 2026\n\nRead-only deterministic domain-model diff endpoint merged in PR #17; Platform CI and CodeQL passed. OpenAPI/XML/PDF/DOCX/spreadsheet import and sandbox/delivery phases remain incomplete.\n
