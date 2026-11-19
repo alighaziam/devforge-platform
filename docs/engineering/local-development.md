@@ -83,7 +83,7 @@ workflow; never expose this profile to a network or production environment.
 - `GET /api/v1/catalog/technologies` — list catalog entries.
 - `POST /api/v1/compatibility/evaluate` — evaluate selected technology versions.
 - `POST /api/v1/projects/{id}/generations` — generate a ZIP from a stored immutable snapshot; returns SHA-256 and generation-run ID.
-- `POST /api/v1/projects/{id}/model/import` — preview a JSON domain model or supported PostgreSQL DDL; does not persist until reviewed and saved.
+- `POST /api/v1/projects/{id}/model/import` — preview a JSON domain model or supported PostgreSQL DDL; does not persist until reviewed and saved.\n- `POST /api/v1/projects/{id}/model/diff` — compare two JSON domain-model snapshots and return path-sorted added, removed, and modified changes; read-only, with a combined 512 KiB limit.
 - `POST /api/v1/projects/{id}/architecture/evaluate` — assess a stored specification snapshot and return findings, trade-offs, and an ADR draft.
 - `GET|POST /api/v1/projects/{id}/architecture/decisions` — list ADRs or create a draft from a snapshot.
 - `POST /api/v1/projects/{id}/architecture/decisions/{decisionId}/transition` — transition an ADR through its audited state machine.
