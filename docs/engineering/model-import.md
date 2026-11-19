@@ -43,3 +43,44 @@ identifiers are restricted to ASCII letters, digits, and underscores. This is
 a bounded metadata parser, not a general SQL parser. Unsupported constructs are
 rejected instead of being silently discarded. PDF, DOCX, OpenAPI, XML, and
 spreadsheet extraction are not yet implemented.
+
+
+## Deterministic model diff preview
+
+`POST /api/v1/projects/{projectId}/model/diff`
+
+The endpoint compares two domain-model snapshots without changing the project
+or persisting either snapshot:
+
+```json
+{
+  "before": {
+    "entities": [
+      {"name": "Customer", "attributes": [{"name": "email", "type": "string"}]}
+    ],
+    "relationships": [],
+    "indexes": []
+  },
+  "after": {
+    "entities": [
+      {"name": "Customer", "attributes": [
+        {"name": "email", "type": "string", "unique": true},
+        {"name": "displayName", "type": "string"}
+      ]}
+    ],
+    "relationships": [],
+    "indexes": []
+  }
+}
+```
+
+The response contains a stable, path-sorted list of `added`, `removed`, and
+`modified` changes. Entity identity is its name; attribute identity is its
+name within the entity; relationship identity is its name (or its
+from/to/cardinality tuple); index identity is its name (or entity/columns).
+Changed entity metadata and nested attributes are reported separately.
+JSON Pointer path segments are escaped. Duplicate identities and malformed
+collections are rejected rather than producing ambiguous results.
+
+Both snapshots together are limited to 512 KiB. This is a read-only preview:
+it does not merge models, alter a Project Specification, or save a snapshot.
