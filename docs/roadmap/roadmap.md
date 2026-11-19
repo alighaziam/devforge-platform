@@ -40,7 +40,7 @@
 
 - [x] Import structured domain-model JSON and a bounded PostgreSQL SQL DDL subset as reviewable previews.
 - [ ] Import OpenAPI, XML, PDF, DOCX, and spreadsheet formats.
-- [ ] Domain model representation and model diff (deterministic diff preview implemented on a feature branch; automated verification and review pending).
+- [x] Domain model representation and deterministic model diff preview.
 - [x] Deterministic architecture decision/risk engine with explainable findings and ADR drafts.
 - [x] Architecture Decision Records and approval lifecycle.
 
@@ -90,3 +90,11 @@ Do not start a new phase by marking incomplete exit criteria as done. Update thi
 - Sandbox isolation, generated-project API validation, external plugin signing/execution, additional stack generators, and Git/CI delivery remain incomplete.
 
 This checkpoint records verified repository state only; it does not promote any incomplete phase to done.
+
+
+## Verified checkpoint — 19 November 2026
+
+- Added `POST /api/v1/projects/{projectId}/model/diff` for read-only comparison of two JSON model snapshots.
+- The diff reports stable path-sorted entity, attribute, relationship, and index changes; malformed or ambiguous identities and combined inputs above 512 KiB are rejected.
+- The preview does not persist or merge either model. OpenAPI/XML/PDF/DOCX/spreadsheet import remains open.
+- Platform CI passed on commit `e2c31cd0`; CodeQL passed on the same commit. The implementation was merged in PR #17.
