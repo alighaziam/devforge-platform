@@ -66,3 +66,9 @@ This is a consistent engineering assessment baseline, not a claim that a single 
 - PR #19 merged as `a81dd987de3d454661c035b325c75a81394c9f13` after Platform CI (run 44676958714) and CodeQL (run 44676958558) passed on head `b668bc345dd4ec27ca879374701900253fa5e75a`.
 - Golden fixtures now cover generated `Customer.java` and `V1__CreateDomainSchema.java`, with byte-for-byte equality assertions.
 - No overall score increase is claimed; the six rubric dimensions have not been fully reassessed.
+
+
+## Assessment note — 20 November 2026
+
+- PR #19 adds byte-for-byte golden fixtures for generated Java entity and Flyway migration output; the exact-head Platform CI and CodeQL runs passed before merge.
+- The prior 70.5% weighted baseline is retained as the last full six-dimension assessment. This increment closes a specific Phase 4 gate but does not by itself justify a new overall score without reassessing all six rubric dimensions.
