@@ -98,3 +98,10 @@ This checkpoint records verified repository state only; it does not promote any 
 - The diff reports stable path-sorted entity, attribute, relationship, and index changes; malformed or ambiguous identities and combined inputs above 512 KiB are rejected.
 - The preview does not persist or merge either model. OpenAPI/XML/PDF/DOCX/spreadsheet import remains open.
 - Platform CI passed on commit `e2c31cd0`; CodeQL passed on the same commit. The implementation was merged in PR #17.
+
+
+## Development checkpoint — 20 November 2026
+
+- Added checked-in golden fixtures for the generated README, environment example, ignore rules, Dockerfile, and Compose deployment descriptor.
+- Generator unit coverage now compares these stable project-scaffolding outputs byte-for-byte, so unintended template changes require explicit fixture updates.
+- This is a first golden-fixture slice; Java source and Flyway migration fixtures plus generated-project regeneration safety remain open.
