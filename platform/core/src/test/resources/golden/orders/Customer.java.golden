@@ -1,0 +1,15 @@
+package io.devforge.generated.orders.model;
+import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.UUID;
+@Entity @Table(name = "\"customer\"") public class Customer {
+@Id @Column(name = "\"id\"", nullable = false) private UUID id;
+@Column(name = "\"email\"", nullable = false, unique = true, length = 255) private String email;
+protected Customer() { }
+public UUID getId() { return id; }
+public void setId(UUID value) { this.id = value; }
+public String getEmail() { return email; }
+public void setEmail(String value) { this.email = value; }
+}
