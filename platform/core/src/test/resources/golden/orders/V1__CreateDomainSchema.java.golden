@@ -1,0 +1,16 @@
+package db.migration;
+
+import org.flywaydb.core.api.migration.BaseJavaMigration;
+import org.flywaydb.core.api.migration.Context;
+import java.sql.Statement;
+
+public class V1__CreateDomainSchema extends BaseJavaMigration {
+  private static final String[] STATEMENTS = {
+    "CREATE TABLE \"customer\" (\n    \"id\" UUID NOT NULL PRIMARY KEY,\n    \"email\" VARCHAR(255) NOT NULL UNIQUE\n)",
+  };
+  @Override public void migrate(Context context) throws Exception {
+    try (Statement statement = context.getConnection().createStatement()) {
+      for (String sql : STATEMENTS) statement.execute(sql);
+    }
+  }
+}
