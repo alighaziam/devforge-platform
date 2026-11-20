@@ -63,4 +63,6 @@ This is a consistent engineering assessment baseline, not a claim that a single 
 - Added byte-for-byte golden fixtures for the generated `Customer.java` entity and `V1__CreateDomainSchema.java` Flyway migration, based on the generator's current deterministic output for the existing Orders test specification.
 - Replaced substring-only checks for those two outputs with exact fixture comparisons in `JavaSpringPostgresGeneratorTests`.
 - Fixture resource names use the `.golden` suffix so Maven does not treat generated Java samples as compilable test source.
-- This increment is pending Platform CI and CodeQL on the PR head. No progress-score increase is recorded before verification.
+- PR #19 merged as `a81dd987de3d454661c035b325c75a81394c9f13` after Platform CI (run 44676958714) and CodeQL (run 44676958558) passed on head `b668bc345dd4ec27ca879374701900253fa5e75a`.
+- Golden fixtures now cover generated `Customer.java` and `V1__CreateDomainSchema.java`, with byte-for-byte equality assertions.
+- No overall score increase is claimed; the six rubric dimensions have not been fully reassessed.
