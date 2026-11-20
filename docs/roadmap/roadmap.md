@@ -53,7 +53,7 @@
 - [x] Generator discovery API, explicit versioned selection, and duplicate-coordinate rejection.
 - [x] Generated artifact path, secret-file, reserved-manifest, and size validation.
 - [x] Generated project manifest and provenance, with persistent generation-run audit records.
-- [ ] Golden-file tests and regeneration safety.
+- [x] Golden-file tests and regeneration safety (byte-for-byte fixtures for project scaffolding, generated Java entity and Flyway migration; repeat-generation equality and archive SHA-256 checks).
 
 **Exit criteria:** identical snapshots and generator versions produce reproducible output, verified by repeat-generation SHA-256 integration tests and a separate generated-project Maven CI build.
 
@@ -105,3 +105,12 @@ This checkpoint records verified repository state only; it does not promote any 
 - Added checked-in golden fixtures for the generated README, environment example, ignore rules, Dockerfile, and Compose deployment descriptor.
 - Generator unit coverage now compares these stable project-scaffolding outputs byte-for-byte, so unintended template changes require explicit fixture updates.
 - This is a first golden-fixture slice; Java source and Flyway migration fixtures plus generated-project regeneration safety remain open.
+
+
+## Verified checkpoint — 20 November 2026 (PR #19)
+
+- Java Spring/PostgreSQL generator now has byte-for-byte golden fixtures for `Customer.java` and `V1__CreateDomainSchema.java`, in addition to README, environment example, ignore rules, Dockerfile and Compose output.
+- `JavaSpringPostgresGeneratorTests` compares generated entity and migration source exactly with the checked-in fixtures. `GenerationIntegrationTests` verifies repeated generation yields the same archive SHA-256, records generation runs, and checks the expected archive entries.
+- CI run 44676958714 passed Java 25 platform build, generated-sample Maven build, migration packaging verification, generated-sample runtime smoke test, and Angular Studio build. CodeQL run 44676958558 passed before merge.
+- PR #19 merged as `a81dd987de3d454661c035b325c75a81394c9f13`.
+- Remaining Phase 5 work includes hardened isolated build workers, broader generated-project validation (including API validation), and traceable evidence bundles. Phase 6 plugin ecosystem and delivery remain open.
