@@ -40,4 +40,13 @@ Golden-file fixtures and regeneration safety; isolated build workers and complet
 6. Update this file when evidence changes; do not infer progress from commit count.
 
 This is a consistent engineering assessment baseline, not a claim that a single objectively exact percentage exists independent of the scoring rubric.
-\n\n## Latest merged increment — 19 November 2026\n\nRead-only deterministic domain-model diff endpoint merged in PR #17; Platform CI and CodeQL passed. OpenAPI/XML/PDF/DOCX/spreadsheet import and sandbox/delivery phases remain incomplete.\n
+
+
+## PR #18 CI correction — 20 November 2026
+
+- Platform CI exposed that Maven's default resource exclusions omit dot-prefixed files such as `.gitignore`; the golden test therefore could not load that fixture from the test classpath.
+- Renamed the fixture to `gitignore.golden` and updated the test to load the resource-safe name. The hidden `.gitignore` fixture was removed.
+- The corrected branch has been pushed; CI must rerun on the new head SHA before this increment is considered verified or merged.
+- No score increase is recorded until the corrected Platform CI passes.
+
+## Latest merged increment — 19 November 2026\n\nRead-only deterministic domain-model diff endpoint merged in PR #17; Platform CI and CodeQL passed. OpenAPI/XML/PDF/DOCX/spreadsheet import and sandbox/delivery phases remain incomplete.\n
