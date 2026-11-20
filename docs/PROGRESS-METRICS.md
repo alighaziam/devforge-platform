@@ -56,3 +56,11 @@ This is a consistent engineering assessment baseline, not a claim that a single 
 - PR #18 merged as `0a74522255973935fda4f91cdbaff9fb24793b87` after Platform CI and CodeQL both passed on head `a88c278b8f01abe8c936e9531567dd25e9e4799d`.
 - Golden fixtures now cover README, environment example, gitignore, Dockerfile and Docker Compose output. The `.gitignore` fixture is stored as `gitignore.golden` because Maven excludes dot-prefixed resource files by default.
 - Java source and Flyway migration golden fixtures remain open; no overall score increase is claimed without a full reassessment.
+
+
+## Java source and Flyway golden fixtures — 20 November 2026
+
+- Added byte-for-byte golden fixtures for the generated `Customer.java` entity and `V1__CreateDomainSchema.java` Flyway migration, based on the generator's current deterministic output for the existing Orders test specification.
+- Replaced substring-only checks for those two outputs with exact fixture comparisons in `JavaSpringPostgresGeneratorTests`.
+- Fixture resource names use the `.golden` suffix so Maven does not treat generated Java samples as compilable test source.
+- This increment is pending Platform CI and CodeQL on the PR head. No progress-score increase is recorded before verification.
