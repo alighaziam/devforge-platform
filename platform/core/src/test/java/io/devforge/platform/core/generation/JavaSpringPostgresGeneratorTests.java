@@ -38,7 +38,7 @@ class JavaSpringPostgresGeneratorTests {
 
         assertThat(readGolden("README.md")).isEqualTo(files.get("README.md"));
         assertThat(readGolden(".env.example")).isEqualTo(files.get(".env.example"));
-        assertThat(readGolden(".gitignore")).isEqualTo(files.get(".gitignore"));
+        assertThat(readGolden("gitignore.golden")).isEqualTo(files.get(".gitignore"));
         assertThat(readGolden("Dockerfile")).isEqualTo(files.get("Dockerfile"));
         assertThat(readGolden("docker-compose.yml")).isEqualTo(files.get("docker-compose.yml"));
         assertThat(files.get("src/main/java/db/migration/V1__CreateDomainSchema.java"))
