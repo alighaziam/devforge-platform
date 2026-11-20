@@ -35,6 +35,12 @@ class JavaSpringPostgresGeneratorTests {
                 .doesNotContain("local-only", "5432:5432");
         assertThat(files.get(".env.example"))
                 .contains("DATABASE_PASSWORD=replace-with-a-long-random-password");
+
+        assertThat(readGolden("README.md")).isEqualTo(files.get("README.md"));
+        assertThat(readGolden(".env.example")).isEqualTo(files.get(".env.example"));
+        assertThat(readGolden(".gitignore")).isEqualTo(files.get(".gitignore"));
+        assertThat(readGolden("Dockerfile")).isEqualTo(files.get("Dockerfile"));
+        assertThat(readGolden("docker-compose.yml")).isEqualTo(files.get("docker-compose.yml"));
         assertThat(files.get("src/main/java/db/migration/V1__CreateDomainSchema.java"))
                 .contains("extends BaseJavaMigration")
                 .contains("CREATE TABLE \\\"customer\\\"")
@@ -147,6 +153,13 @@ class JavaSpringPostgresGeneratorTests {
         assertThat(first.keySet()).containsExactlyElementsOf(first.keySet().stream().sorted().toList());
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> first.put("README.md", "tampered"))
                 .isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    private String readGolden(String fileName) throws Exception {
+        try (var input = getClass().getResourceAsStream("/golden/orders/" + fileName)) {
+            assertThat(input).as("golden fixture %s", fileName).isNotNull();
+            return new String(input.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+        }
     }
 
     private String specification() {
