@@ -41,13 +41,10 @@ class JavaSpringPostgresGeneratorTests {
         assertThat(readGolden("gitignore.golden")).isEqualTo(files.get(".gitignore"));
         assertThat(readGolden("Dockerfile")).isEqualTo(files.get("Dockerfile"));
         assertThat(readGolden("docker-compose.yml")).isEqualTo(files.get("docker-compose.yml"));
-        assertThat(files.get("src/main/java/db/migration/V1__CreateDomainSchema.java"))
-                .contains("extends BaseJavaMigration")
-                .contains("CREATE TABLE \\\"customer\\\"")
-                .contains("\\\"email\\\" VARCHAR(255) NOT NULL UNIQUE");
-        assertThat(files.get("src/main/java/io/devforge/generated/orders/model/Customer.java"))
-                .contains("@Entity")
-                .contains("private String email;");
+        assertThat(readGolden("V1__CreateDomainSchema.java.golden"))
+                .isEqualTo(files.get("src/main/java/db/migration/V1__CreateDomainSchema.java"));
+        assertThat(readGolden("Customer.java.golden"))
+                .isEqualTo(files.get("src/main/java/io/devforge/generated/orders/model/Customer.java"));
     }
 
     @Test
