@@ -1,21 +1,21 @@
 # Standardized Progress Assessment
 
-- Assessment date: 2026-11-19
-- Baseline commit: `d11bc3e78fd50bb29f4ce99aa7ef6edc1eaaf419` on `main`
-- Status: evidence-based baseline; category ratings are reviewer scores against the rubric below, not raw GitHub counters.
-- Overall weighted score: **70.5%**
+- Assessment date: 2026-11-22
+- Assessed commit: `3cf118a602c77ff1d601e759f2241da7fff0e5f5` on `main`
+- Status: reassessed after CRUD controller generation; category ratings are reviewer scores against the same rubric, not raw GitHub counters.
+- Overall weighted score: **80%**
 
 ## Scoring rubric
 
 | Dimension | Weight | Score | Weighted contribution |
 |---|---:|---:|---:|
-| Product capabilities (40%) | 65% | 26.00 |
-| Tests and code quality (20%) | 80% | 16.00 |
-| CI/CD and build (15%) | 85% | 12.75 |
+| Product capabilities (40%) | 80% | 32.00 |
+| Tests and code quality (20%) | 90% | 18.00 |
+| CI/CD and build (15%) | 95% | 14.25 |
 | Security (10%) | 80% | 8.00 |
 | Documentation (5%) | 95% | 4.75 |
 | Deployment / production readiness (10%) | 30% | 3.00 |
-| **Total** | **100%** | — | **70.50%** |
+| **Total** | **100%** | — | **80.00%** |
 
 Formula: overall progress = sum(category score × category weight). A category score is based on implemented scope and its verification evidence. Documentation alone does not count as implementation. A green workflow proves only the checks included in that workflow; it does not prove production readiness.
 
@@ -82,3 +82,11 @@ This is a consistent engineering assessment baseline, not a claim that a single 
 - Earlier model-diff, plugin, tenant-isolation and generator work remains in main; branches that are only behind main are not treated as unfinished work.
 - No progress percentage is changed. Additional import formats, broader technology generators, isolated execution sandbox, plugin delivery and Git/CI project delivery remain open roadmap gates.
 - The hourly PR Guardian source now uses explicit repository context and clean/check/review gates; scheduled post-update confirmation remains in progress.
+
+
+## Latest verified increment — 22 November 2026
+
+- The Java/Spring/PostgreSQL generator now emits entity-specific REST controllers with GET list, GET by UUID, POST, PUT and DELETE endpoints. Update endpoints copy only declared non-ID attributes and relationships onto a loaded entity rather than replacing the identifier from request data.
+- Generator tests assert route uniqueness, all CRUD mappings, not-found behavior, and generated update mapping.
+- Platform CI passed on assessed commit `3cf118a602c77ff1d601e759f2241da7fff0e5f5` ([run 44997188126](https://github.com/alighaziam/devforge-platform/actions/runs/44997188126)); CodeQL passed ([run 44997188107](https://github.com/alighaziam/devforge-platform/actions/runs/44997188107)).
+- Remaining work includes additional stack generators, sandboxed third-party plugins, expanded import formats, Git/PR delivery, deployment profiles and SBOM generation. Generated CRUD APIs remain unauthenticated when the selected specification explicitly chooses no authentication and must be secured before production use.
