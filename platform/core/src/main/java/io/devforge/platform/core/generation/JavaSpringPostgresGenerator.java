@@ -92,6 +92,8 @@ public class JavaSpringPostgresGenerator implements GeneratorPlugin {
                     "package " + pkg + ".repository;\nimport " + pkg + ".model." + className + ";\n"
                     + "import org.springframework.data.jpa.repository.JpaRepository;\nimport java.util.UUID;\n"
                     + "public interface " + className + "Repository extends JpaRepository<" + className + ", UUID> { }\n");
+            files.put(base + "controller/" + className + "Controller.java",
+                    controllerSource(className, pkg, slug));
         }
         return Collections.unmodifiableMap(new TreeMap<>(files));
     }
@@ -168,6 +170,33 @@ public class JavaSpringPostgresGenerator implements GeneratorPlugin {
 
     private void require(Map<String, String> values, String id, String version) {
         if (!version.equals(values.get(id))) throw rejected("Required technology selection: " + id + "@" + version);
+    }
+
+    private String controllerSource(String cls, String pkg, String slug) {
+        String route = slug.replaceAll("[^a-z0-9-]", "");
+        return "package " + pkg + ".controller;\\n"
+                + "import " + pkg + ".model." + cls + ";\\n"
+                + "import " + pkg + ".repository." + cls + "Repository;\\n"
+                + "import org.springframework.http.ResponseEntity;\\n"
+                + "import org.springframework.web.bind.annotation.*;\\n"
+                + "import java.net.URI;\\nimport java.util.List;\\nimport java.util.UUID;\\n"
+                + "@RestController @RequestMapping(\\\"/api/" + route + "\\")\\n"
+                + "public class " + cls + "Controller {\\n"
+                + "  private final " + cls + "Repository repository;\\n"
+                + "  public " + cls + "Controller(" + cls + "Repository repository) { this.repository = repository; }\\n"
+                + "  @GetMapping public List<" + cls + "> list() { return repository.findAll(); }\\n"
+                + "  @GetMapping(\\\"/{id}\\") public ResponseEntity<" + cls + "> get(@PathVariable UUID id) {\\n"
+                + "    return repository.findById(id).map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());\\n"
+                + "  }\\n"
+                + "  @PostMapping public ResponseEntity<" + cls + "> create(@RequestBody " + cls + " value) {\\n"
+                + "    " + cls + " saved = repository.save(value);\\n"
+                + "    return ResponseEntity.created(URI.create(\\\"/api/" + route + "/\\\" + saved.getId())).body(saved);\\n"
+                + "  }\\n"
+                + "  @DeleteMapping(\\\"/{id}\\") public ResponseEntity<Void> delete(@PathVariable UUID id) {\\n"
+                + "    if (!repository.existsById(id)) return ResponseEntity.notFound().build();\\n"
+                + "    repository.deleteById(id); return ResponseEntity.noContent().build();\\n"
+                + "  }\\n"
+                + "}\\n";
     }
 
     private String entitySource(JsonNode entity, String cls, String pkg, List<ForeignKey> relationships) {
