@@ -456,7 +456,7 @@ public class JavaSpringPostgresGenerator implements GeneratorPlugin {
     }
 
     private String compose(String slug, boolean jwtAuthentication) {
-        String issuerEnvironment = jwtAuthentication ? "      OAUTH2_ISSUER_URI: ${OAUTH2_ISSUER_URI:?Set OAUTH2_ISSUER_URI in .env}\\n" : "";
+        String issuerEnvironment = jwtAuthentication ? "      OAUTH2_ISSUER_URI: ${OAUTH2_ISSUER_URI:?Set OAUTH2_ISSUER_URI in .env}\n" : "";
         return """
                 services:
                   postgres:
@@ -496,22 +496,22 @@ public class JavaSpringPostgresGenerator implements GeneratorPlugin {
     }
 
     private String jwtSecurityConfiguration(String pkg) {
-        return "package " + pkg + ".config;\\n\\n"
-                + "import org.springframework.context.annotation.Bean;\\n"
-                + "import org.springframework.context.annotation.Configuration;\\n"
-                + "import org.springframework.security.config.Customizer;\\n"
-                + "import org.springframework.security.config.annotation.web.builders.HttpSecurity;\\n"
-                + "import org.springframework.security.config.http.SessionCreationPolicy;\\n"
-                + "import org.springframework.security.web.SecurityFilterChain;\\n\\n"
-                + "@Configuration\\npublic class SecurityConfiguration {\\n"
-                + "  @Bean\\n  SecurityFilterChain apiSecurity(HttpSecurity http) throws Exception {\\n"
-                + "    return http\\n"
-                + "      .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))\\n"
-                + "      .csrf(csrf -> csrf.disable())\\n"
-                + "      .authorizeHttpRequests(auth -> auth.requestMatchers(\"/actuator/health\").permitAll().anyRequest().authenticated())\\n"
-                + "      .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))\\n"
-                + "      .build();\\n"
-                + "  }\\n}\n";
+        return "package " + pkg + ".config;\n\n"
+                + "import org.springframework.context.annotation.Bean;\n"
+                + "import org.springframework.context.annotation.Configuration;\n"
+                + "import org.springframework.security.config.Customizer;\n"
+                + "import org.springframework.security.config.annotation.web.builders.HttpSecurity;\n"
+                + "import org.springframework.security.config.http.SessionCreationPolicy;\n"
+                + "import org.springframework.security.web.SecurityFilterChain;\n\n"
+                + "@Configuration\npublic class SecurityConfiguration {\n"
+                + "  @Bean\n  SecurityFilterChain apiSecurity(HttpSecurity http) throws Exception {\n"
+                + "    return http\n"
+                + "      .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))\n"
+                + "      .csrf(csrf -> csrf.disable())\n"
+                + "      .authorizeHttpRequests(auth -> auth.requestMatchers(\"/actuator/health\").permitAll().anyRequest().authenticated())\n"
+                + "      .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))\n"
+                + "      .build();\n"
+                + "  }\n}\n";
     }
 
     private String className(String value) {
