@@ -191,4 +191,35 @@ class JavaSpringPostgresGeneratorTests {
                 }
                 """;
     }
+
+    @Test
+    void generatesJwtResourceServerSecurityWhenSelected() throws Exception {
+        ObjectNode spec = (ObjectNode) mapper.readTree(specification());
+        spec.putObject("security").put("authentication", "jwt");
+
+        Map<String, String> files = generator.generate(spec);
+
+        assertThat(files.get("pom.xml"))
+                .contains("spring-boot-starter-security")
+                .contains("spring-boot-starter-oauth2-resource-server");
+        assertThat(files.get("src/main/resources/application.yml"))
+                .contains("spring.security.oauth2.resourceserver.jwt.issuer-uri: ${OAUTH2_ISSUER_URI}");
+        assertThat(files.get("src/main/java/io/devforge/generated/orders/config/SecurityConfiguration.java"))
+                .contains("SessionCreationPolicy.STATELESS")
+                .contains("oauth2ResourceServer")
+                .contains("anyRequest().authenticated()");
+        assertThat(files.get("docker-compose.yml")).contains("OAUTH2_ISSUER_URI");
+        assertThat(files.get(".env.example")).contains("OAUTH2_ISSUER_URI=https://identity.example.test/issuer");
+    }
+
+    @Test
+    void rejectsUnsupportedAuthenticationModes() throws Exception {
+        ObjectNode spec = (ObjectNode) mapper.readTree(specification());
+        spec.putObject("security").put("authentication", "basic");
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> generator.generate(spec))
+                .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
+                .hasMessageContaining("authentication: none or jwt");
+    }
+
 }
