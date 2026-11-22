@@ -30,8 +30,9 @@ class JavaSpringPostgresGeneratorTests {
                 ".gitignore");
         assertThat(files.get("pom.xml")).contains("spring-boot-starter-actuator");
         assertThat(files.get("src/main/java/io/devforge/generated/orders/controller/CustomerController.java"))
-                .contains("@GetMapping", "@PostMapping", "@DeleteMapping", "repository.findById(id)",
-                        "repository.existsById(id)", "ResponseEntity.notFound()");
+                .contains("@GetMapping", "@PostMapping", "@PutMapping", "@DeleteMapping",
+                        "@RequestMapping(\\\"/api/customer\\\")", "repository.findById(id)",
+                        "repository.existsById(id)", "ResponseEntity.notFound()", "existing.setName(value.getName())");
 
         assertThat(files.get("docker-compose.yml")).contains("pg_isready", "service_healthy",
                 "SPRING_DATASOURCE_URL", "SPRING_DATASOURCE_USERNAME",
