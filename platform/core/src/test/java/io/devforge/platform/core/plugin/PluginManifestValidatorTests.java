@@ -1,8 +1,10 @@
 package io.devforge.platform.core.plugin;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PluginManifestValidatorTests {
 
@@ -34,8 +36,26 @@ class PluginManifestValidatorTests {
                   }
                 }
                 """;
-
         assertThat(validator.validate(manifest).valid()).isTrue();
+    }
+
+    @Test
+    void rejectsDuplicateJsonPropertiesBeforeSchemaValidation() {
+        String manifest = """
+                {
+                  "manifestVersion": "1.0.0",
+                  "plugin": {
+                    "id": "sample.java-generator",
+                    "name": "First Name",
+                    "name": "Second Name",
+                    "version": "0.1.0",
+                    "publisher": "DevForge",
+                    "kind": "generator"
+                  }
+                }
+                """;
+        assertThatThrownBy(() -> validator.validate(manifest))
+                .isInstanceOf(JsonProcessingException.class);
     }
 
     @Test
@@ -64,7 +84,6 @@ class PluginManifestValidatorTests {
                   }
                 }
                 """;
-
         assertThat(validator.validate(manifest).valid()).isFalse();
     }
 
@@ -80,9 +99,7 @@ class PluginManifestValidatorTests {
                   "entrypoints": {}
                 }
                 """;
-
         PluginManifestValidationResult result = validator.validate(manifest);
-
         assertThat(result.valid()).isFalse();
         assertThat(result.errors()).isNotEmpty();
     }

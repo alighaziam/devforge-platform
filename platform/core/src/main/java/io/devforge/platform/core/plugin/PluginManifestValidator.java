@@ -1,5 +1,7 @@
 package io.devforge.platform.core.plugin;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.StreamReadFeature;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,7 +20,9 @@ import java.util.Set;
 @Service
 public class PluginManifestValidator {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper(JsonFactory.builder()
+            .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
+            .build());
     private final JsonSchema schema = loadSchema();
 
     public PluginManifestValidationResult validate(String json) throws JsonProcessingException {
