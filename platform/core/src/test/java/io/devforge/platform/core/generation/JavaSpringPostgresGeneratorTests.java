@@ -22,12 +22,17 @@ class JavaSpringPostgresGeneratorTests {
                 "pom.xml",
                 "src/main/java/io/devforge/generated/orders/model/Customer.java",
                 "src/main/java/io/devforge/generated/orders/repository/CustomerRepository.java",
+                "src/main/java/io/devforge/generated/orders/controller/CustomerController.java",
                 "src/main/java/db/migration/V1__CreateDomainSchema.java",
                 "Dockerfile",
                 "docker-compose.yml",
                 ".env.example",
                 ".gitignore");
         assertThat(files.get("pom.xml")).contains("spring-boot-starter-actuator");
+        assertThat(files.get("src/main/java/io/devforge/generated/orders/controller/CustomerController.java"))
+                .contains("@GetMapping", "@PostMapping", "@DeleteMapping", "repository.findById(id)",
+                        "repository.existsById(id)", "ResponseEntity.notFound()");
+
         assertThat(files.get("docker-compose.yml")).contains("pg_isready", "service_healthy",
                 "SPRING_DATASOURCE_URL", "SPRING_DATASOURCE_USERNAME",
                 "SPRING_JPA_HIBERNATE_DDL_AUTO: validate", "SPRING_FLYWAY_ENABLED",
