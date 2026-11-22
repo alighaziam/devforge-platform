@@ -456,8 +456,7 @@ public class JavaSpringPostgresGenerator implements GeneratorPlugin {
     }
 
     private String compose(String slug, boolean jwtAuthentication) {
-        String issuerEnvironment = jwtAuthentication ? "      OAUTH2_ISSUER_URI: ${OAUTH2_ISSUER_URI:?Set OAUTH2_ISSUER_URI in .env}\n" : "";
-        return """
+        String yaml = """
                 services:
                   postgres:
                     image: postgres:17
@@ -482,7 +481,7 @@ public class JavaSpringPostgresGenerator implements GeneratorPlugin {
                       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/%s
                       SPRING_DATASOURCE_USERNAME: generated
                       SPRING_DATASOURCE_PASSWORD: ${DATABASE_PASSWORD:?Set DATABASE_PASSWORD in .env}
-                      %s                      SPRING_JPA_OPEN_IN_VIEW: "false"
+                      SPRING_JPA_OPEN_IN_VIEW: "false"
                       SPRING_JPA_HIBERNATE_DDL_AUTO: validate
                       SPRING_FLYWAY_ENABLED: "true"
                       SPRING_FLYWAY_LOCATIONS: classpath:db/migration
@@ -492,7 +491,13 @@ public class JavaSpringPostgresGenerator implements GeneratorPlugin {
                       - "127.0.0.1:8080:8080"
                 volumes:
                   postgres-data:
-                """.formatted(slug, slug, slug, slug, issuerEnvironment);
+                """.formatted(slug, slug, slug, slug);
+        if (jwtAuthentication) {
+            yaml = yaml.replace("                      SPRING_JPA_OPEN_IN_VIEW: \"false\"",
+                    "                      OAUTH2_ISSUER_URI: ${OAUTH2_ISSUER_URI:?Set OAUTH2_ISSUER_URI in .env}\n"
+                            + "                      SPRING_JPA_OPEN_IN_VIEW: \"false\"");
+        }
+        return yaml;
     }
 
     private String jwtSecurityConfiguration(String pkg) {
