@@ -493,9 +493,9 @@ public class JavaSpringPostgresGenerator implements GeneratorPlugin {
                   postgres-data:
                 """.formatted(slug, slug, slug, slug);
         if (jwtAuthentication) {
-            yaml = yaml.replace("                      SPRING_JPA_OPEN_IN_VIEW: \"false\"",
-                    "                      OAUTH2_ISSUER_URI: ${OAUTH2_ISSUER_URI:?Set OAUTH2_ISSUER_URI in .env}\n"
-                            + "                      SPRING_JPA_OPEN_IN_VIEW: \"false\"");
+            yaml = yaml.replace("      SPRING_JPA_OPEN_IN_VIEW: \"false\"",
+                    "      OAUTH2_ISSUER_URI: ${OAUTH2_ISSUER_URI:?Set OAUTH2_ISSUER_URI in .env}\n"
+                            + "      SPRING_JPA_OPEN_IN_VIEW: \"false\"");
         }
         return yaml;
     }
