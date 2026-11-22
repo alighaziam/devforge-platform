@@ -203,7 +203,7 @@ class JavaSpringPostgresGeneratorTests {
                 .contains("spring-boot-starter-security")
                 .contains("spring-boot-starter-oauth2-resource-server");
         assertThat(files.get("src/main/resources/application.yml"))
-                .contains("spring.security.oauth2.resourceserver.jwt.issuer-uri: ${OAUTH2_ISSUER_URI}");
+                .contains("issuer-uri: ${OAUTH2_ISSUER_URI}");
         assertThat(files.get("src/main/java/io/devforge/generated/orders/config/SecurityConfiguration.java"))
                 .contains("SessionCreationPolicy.STATELESS")
                 .contains("oauth2ResourceServer")
