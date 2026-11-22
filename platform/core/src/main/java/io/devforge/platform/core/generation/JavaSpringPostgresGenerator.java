@@ -93,7 +93,7 @@ public class JavaSpringPostgresGenerator implements GeneratorPlugin {
                     + "import org.springframework.data.jpa.repository.JpaRepository;\nimport java.util.UUID;\n"
                     + "public interface " + className + "Repository extends JpaRepository<" + className + ", UUID> { }\n");
             files.put(base + "controller/" + className + "Controller.java",
-                    controllerSource(className, pkg, slug));
+                    controllerSource(entity, className, pkg, foreignKeys(spec.path("model"))));
         }
         return Collections.unmodifiableMap(new TreeMap<>(files));
     }
@@ -172,8 +172,9 @@ public class JavaSpringPostgresGenerator implements GeneratorPlugin {
         if (!version.equals(values.get(id))) throw rejected("Required technology selection: " + id + "@" + version);
     }
 
-    private String controllerSource(String cls, String pkg, String slug) {
-        String route = slug.replaceAll("[^a-z0-9-]", "");
+    private String controllerSource(JsonNode entity, String cls, String pkg,
+                                    List<ForeignKey> relationships) {
+        String route = snake(entity.path("name").asText());
         StringBuilder out = new StringBuilder();
         out.append("package ").append(pkg).append(".controller;\n")
                 .append("import ").append(pkg).append(".model.").append(cls).append(";\n")
@@ -196,6 +197,26 @@ public class JavaSpringPostgresGenerator implements GeneratorPlugin {
                 .append("    ").append(cls).append(" saved = repository.save(value);\n")
                 .append("    return ResponseEntity.created(URI.create(\"/api/").append(route)
                 .append("/\" + saved.getId())).body(saved);\n")
+                .append("  }\n")
+                .append("  @PutMapping(\"/{id}\") public ResponseEntity<").append(cls)
+                .append("> update(@PathVariable UUID id, @RequestBody ").append(cls).append(" value) {\n")
+                .append("    return repository.findById(id).map(existing -> {\n");
+        for (JsonNode attribute : entity.path("attributes")) {
+            String field = fieldName(attribute.path("name").asText());
+            if ("id".equals(field)) continue;
+            String capitalized = Character.toUpperCase(field.charAt(0)) + field.substring(1);
+            out.append("      existing.set").append(capitalized).append("(value.get")
+                    .append(capitalized).append("());\n");
+        }
+        for (ForeignKey relationship : relationships) {
+            if (!relationship.ownerEntity().equals(entity.path("name").asText())) continue;
+            String capitalized = Character.toUpperCase(relationship.field().charAt(0))
+                    + relationship.field().substring(1);
+            out.append("      existing.set").append(capitalized).append("(value.get")
+                    .append(capitalized).append("());\n");
+        }
+        out.append("      return ResponseEntity.ok(repository.save(existing));\n")
+                .append("    }).orElseGet(() -> ResponseEntity.notFound().build());\n")
                 .append("  }\n")
                 .append("  @DeleteMapping(\"/{id}\") public ResponseEntity<Void> delete(@PathVariable UUID id) {\n")
                 .append("    if (!repository.existsById(id)) return ResponseEntity.notFound().build();\n")
