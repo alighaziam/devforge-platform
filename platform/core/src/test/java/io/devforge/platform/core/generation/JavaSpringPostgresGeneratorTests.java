@@ -32,7 +32,7 @@ class JavaSpringPostgresGeneratorTests {
         assertThat(files.get("src/main/java/io/devforge/generated/orders/controller/CustomerController.java"))
                 .contains("@GetMapping", "@PostMapping", "@PutMapping", "@DeleteMapping",
                         "@RequestMapping(\"/api/customer\")", "repository.findById(id)",
-                        "repository.existsById(id)", "ResponseEntity.notFound()", "existing.setName(value.getName())");
+                        "repository.existsById(id)", "ResponseEntity.notFound()", "existing.setEmail(value.getEmail())");
 
         assertThat(files.get("docker-compose.yml")).contains("pg_isready", "service_healthy",
                 "SPRING_DATASOURCE_URL", "SPRING_DATASOURCE_USERNAME",
