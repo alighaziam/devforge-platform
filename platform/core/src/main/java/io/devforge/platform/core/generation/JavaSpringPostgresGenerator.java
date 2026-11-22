@@ -64,9 +64,13 @@ public class JavaSpringPostgresGenerator implements GeneratorPlugin {
                 + "3. Start the database and application with docker compose up --build.\n"
                 + "4. Check http://localhost:8080/actuator/health.\n\n"
                 + "PostgreSQL is private to the Compose network and the application port is bound to localhost.\n"
-                + "Generated output is a starting point, not a production deployment.\n");
+                + "Generated output is a starting point, not a production deployment.\n"
+                + (jwtAuthentication
+                    ? "\n## Security\n\nJWT bearer tokens are required for API routes. Set OAUTH2_ISSUER_URI to your trusted identity provider issuer before starting. No identity provider or signing keys are bundled.\n"
+                    : ""));
         files.put(".env.example", "# Copy this file to .env and replace the placeholder before starting.\n"
-                + "DATABASE_PASSWORD=replace-with-a-long-random-password\n");
+                + "DATABASE_PASSWORD=replace-with-a-long-random-password\n"
+                + (jwtAuthentication ? "OAUTH2_ISSUER_URI=https://identity.example.test/issuer\n" : ""));
         files.put(".gitignore", ".env\n.env.*\n!.env.example\ntarget/\n.idea/\n*.iml\n");
         files.put(base + "Application.java", "package " + pkg + ";\n\n"
                 + "import org.springframework.boot.SpringApplication;\n"
@@ -128,7 +132,7 @@ public class JavaSpringPostgresGenerator implements GeneratorPlugin {
             throw rejected("Unsupported architecture style for generator 0.1.0.");
         if (!"single-project".equals(spec.path("generation").path("outputLayout").asText()))
             throw rejected("Generator 0.1.0 supports single-project output only.");
-        String auth = spec.path("security").path("authentication").asText("none");
+        String auth = spec.path("security").path("authentication").asText("none").toLowerCase(Locale.ROOT);
         if (!Set.of("none", "jwt").contains(auth)) throw rejected("Generator 0.1.0 supports authentication: none or jwt.");
     }
 
