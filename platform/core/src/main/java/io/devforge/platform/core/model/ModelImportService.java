@@ -17,11 +17,14 @@ import java.util.UUID;
 public class ModelImportService {
     private final ProjectRepository projects;
     private final SqlDdlModelImporter sqlImporter;
+    private final OpenApiModelImporter openApiImporter;
     private final ObjectMapper mapper = new ObjectMapper();
 
-    public ModelImportService(ProjectRepository projects, SqlDdlModelImporter sqlImporter) {
+    public ModelImportService(ProjectRepository projects, SqlDdlModelImporter sqlImporter,
+                              OpenApiModelImporter openApiImporter) {
         this.projects = projects;
         this.sqlImporter = sqlImporter;
+        this.openApiImporter = openApiImporter;
     }
 
     @Transactional(readOnly = true)
@@ -34,8 +37,11 @@ public class ModelImportService {
             throw new ResponseStatusException(HttpStatus.PAYLOAD_TOO_LARGE, "Model source exceeds the 512 KiB limit");
         }
         Map<String, Object> model;
+        List<String> warnings = new java.util.ArrayList<>();
+        warnings.add("Import is a preview only; review and merge the model into the Project Specification before saving.");
         if ("sql-ddl".equalsIgnoreCase(format)) {
             model = sqlImporter.importDdl(content);
+            warnings.add("Foreign-key relationships, composite primary keys, and SQL defaults are not supported by this importer.");
         } else if ("json".equalsIgnoreCase(format)) {
             JsonNode root = mapper.readTree(content);
             if (!root.isObject() || !root.path("entities").isArray()) {
@@ -53,12 +59,14 @@ public class ModelImportService {
             model = mapper.convertValue(root, Map.class);
             model.putIfAbsent("relationships", List.of());
             model.putIfAbsent("indexes", List.of());
+        } else if ("openapi".equalsIgnoreCase(format)) {
+            OpenApiModelImporter.ImportResult imported = openApiImporter.importOpenApi(content);
+            model = imported.model();
+            warnings.addAll(imported.warnings());
         } else {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "Unsupported model import format. Supported formats: json, sql-ddl");
+                    "Unsupported model import format. Supported formats: json, sql-ddl, openapi");
         }
-        return new ModelImportResult(model, List.of(
-                "Import is a preview only; review and merge the model into the Project Specification before saving.",
-                "Foreign-key relationships, composite primary keys, and SQL defaults are not supported by this importer."));
+        return new ModelImportResult(model, warnings);
     }
 }
