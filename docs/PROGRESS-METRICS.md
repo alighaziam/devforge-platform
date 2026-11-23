@@ -9,13 +9,13 @@
 
 | Dimension | Weight | Score | Weighted contribution |
 |---|---:|---:|---:|
-| Product capabilities (40%) | 80% | 32.00 |
-| Tests and code quality (20%) | 90% | 18.00 |
-| CI/CD and build (15%) | 95% | 14.25 |
-| Security (10%) | 80% | 8.00 |
-| Documentation (5%) | 95% | 4.75 |
-| Deployment / production readiness (10%) | 30% | 3.00 |
-| **Total** | **100%** | — | **80.00%** |
+| Product capabilities | 40% | 88% | 35.20 |
+| Tests and code quality | 20% | 95% | 19.00 |
+| CI/CD and build reliability | 15% | 100% | 15.00 |
+| Security and access control | 10% | 85% | 8.50 |
+| Documentation and operability | 10% | 95% | 9.50 |
+| Deployment and release readiness | 5% | 65% | 3.25 |
+| **Total** | **100%** | | **90.45%** |
 
 Formula: overall progress = sum(category score × category weight). A category score is based on implemented scope and its verification evidence. Documentation alone does not count as implementation. A green workflow proves only the checks included in that workflow; it does not prove production readiness.
 
@@ -90,3 +90,13 @@ This is a consistent engineering assessment baseline, not a claim that a single 
 - Generator tests assert route uniqueness, all CRUD mappings, not-found behavior, and generated update mapping.
 - Platform CI passed on assessed commit `3cf118a602c77ff1d601e759f2241da7fff0e5f5` ([run 44997188126](https://github.com/alighaziam/devforge-platform/actions/runs/44997188126)); CodeQL passed ([run 44997188107](https://github.com/alighaziam/devforge-platform/actions/runs/44997188107)).
 - Remaining work includes additional stack generators, sandboxed third-party plugins, expanded import formats, Git/PR delivery, deployment profiles and SBOM generation. Generated CRUD APIs remain unauthenticated when the selected specification explicitly chooses no authentication and must be secured before production use.
+
+
+## Verified checkpoint — 2026-11-23 (OpenAPI model import)
+
+- PR #22 added JWT resource-server support to generated Spring applications, with fail-closed security when authentication is enabled.
+- PR #23 added OpenAPI 3.0/3.1 JSON schema preview import from `components.schemas`: primitive attributes, local object references, one-to-many arrays, nullable type unions, and explicit limitations.
+- Remote references are never fetched; schema composition and API path/security-scheme import remain explicit limitations. Import is preview-only and retains the 512 KiB input limit.
+- Main CI [run 45125181107](https://github.com/alighaziam/devforge-platform/actions/runs/45125181107) passed Java 25 platform tests/build and Angular Studio build.
+- CodeQL [run 45125181128](https://github.com/alighaziam/devforge-platform/actions/runs/45125181128) passed actions, Java/Kotlin and JavaScript/TypeScript analysis.
+- The 90.45% score uses the same six-dimension weights above. Remaining gaps include full model mapping/merge, sandboxed generated-app validation, plugin execution, and automated delivery.
