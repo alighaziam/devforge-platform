@@ -39,7 +39,8 @@
 ## Phase 3 — Model and architecture engines
 
 - [x] Import structured domain-model JSON and a bounded PostgreSQL SQL DDL subset as reviewable previews.
-- [ ] Import OpenAPI, XML, PDF, DOCX, and spreadsheet formats.
+- [x] Import OpenAPI 3.0/3.1 JSON `components.schemas` as a reviewable preview.
+- [ ] Import XML, PDF, DOCX, and spreadsheet formats; broaden OpenAPI paths, request/response, security-scheme, and schema-composition import.
 - [x] Domain model representation and deterministic model diff preview.
 - [x] Deterministic architecture decision/risk engine with explainable findings and ADR drafts.
 - [x] Architecture Decision Records and approval lifecycle.
@@ -114,3 +115,12 @@ This checkpoint records verified repository state only; it does not promote any 
 - CI run 44676958714 passed Java 25 platform build, generated-sample Maven build, migration packaging verification, generated-sample runtime smoke test, and Angular Studio build. CodeQL run 44676958558 passed before merge.
 - PR #19 merged as `a81dd987de3d454661c035b325c75a81394c9f13`.
 - Remaining Phase 5 work includes hardened isolated build workers, broader generated-project validation (including API validation), and traceable evidence bundles. Phase 6 plugin ecosystem and delivery remain open.
+
+
+## Verified checkpoint — 23 November 2026 (PR #23)
+
+- PR #22 added optional JWT resource-server security to generated Spring applications; when enabled, authentication is required and missing JWT configuration fails closed.
+- PR #23 added OpenAPI 3.0/3.1 JSON `components.schemas` preview import, including primitive attributes, local object-reference relationships, nullable unions, and bounded safe name normalization.
+- Remote references are not fetched; `allOf`/`oneOf`/`anyOf`, API paths, request/response bodies, and security schemes remain explicit limitations. Import is preview-only and does not mutate a saved Project Specification.
+- Main CI run 45125181107 passed Java 25 platform and Angular Studio builds. CodeQL run 45125181128 passed actions, Java/Kotlin, and JavaScript/TypeScript analysis.
+- Phase 3 import is partially complete; the remaining formats and richer model mapping/merge workflow remain open.
