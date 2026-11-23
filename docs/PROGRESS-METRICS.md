@@ -1,9 +1,9 @@
 # Standardized Progress Assessment
 
-- Assessment date: 2026-11-22
-- Assessed commit: `3cf118a602c77ff1d601e759f2241da7fff0e5f5` on `main`
-- Status: reassessed after CRUD controller generation; category ratings are reviewer scores against the same rubric, not raw GitHub counters.
-- Overall weighted score: **80%**
+- Assessment date: 2026-11-23
+- Assessed commit: `211a342ff0441872d7e958977825431082dd86c0` on `main`
+- Status: reassessed after JWT-secured Spring generation and OpenAPI 3.x schema preview import; category ratings are reviewer scores against the same six-dimension rubric, not raw GitHub counters.
+- Overall weighted score: **90.45%**
 
 ## Scoring rubric
 
@@ -21,10 +21,12 @@ Formula: overall progress = sum(category score × category weight). A category s
 
 ## Evidence checked
 
-README and roadmap show Phase 0–2 complete, partial Phase 3–5 and incomplete Phase 6. Roadmap checkpoint explicitly keeps golden-file, sandbox, external plugins, more generators and delivery gates open. Platform CI and CodeQL evidence linked.
+README and roadmap show Phase 0–2 complete, partial Phase 3–5 and incomplete Phase 6. The latest verified scope includes tenant-scoped project access, deterministic Java/Spring/PostgreSQL generation and golden fixtures, JWT resource-server support in generated applications, and preview-only OpenAPI 3.0/3.1 schema import. Remote references are not fetched and schema composition/API path import remain explicit limitations.
 
-- Latest CI/build evidence: https://github.com/alighaziam/devforge-platform/actions/runs/44570850719
-- Latest CodeQL/security workflow evidence: https://github.com/alighaziam/devforge-platform/actions/runs/44570850738
+- Exact assessed main commit: `211a342ff0441872d7e958977825431082dd86c0`.
+- Latest main CI/build evidence: [run 45126837021](https://github.com/alighaziam/devforge-platform/actions/runs/45126837021) — passed.
+- Latest main CodeQL/security evidence: [run 45126836974](https://github.com/alighaziam/devforge-platform/actions/runs/45126836974) — passed.
+- PR #22 (JWT-secured Spring generation), PR #23 (OpenAPI 3.x schema preview import), and PR #24 (assessment record) are merged.
 
 ## Remaining release gates
 
@@ -97,6 +99,7 @@ This is a consistent engineering assessment baseline, not a claim that a single 
 - PR #22 added JWT resource-server support to generated Spring applications, with fail-closed security when authentication is enabled.
 - PR #23 added OpenAPI 3.0/3.1 JSON schema preview import from `components.schemas`: primitive attributes, local object references, one-to-many arrays, nullable type unions, and explicit limitations.
 - Remote references are never fetched; schema composition and API path/security-scheme import remain explicit limitations. Import is preview-only and retains the 512 KiB input limit.
-- Main CI [run 45125181107](https://github.com/alighaziam/devforge-platform/actions/runs/45125181107) passed Java 25 platform tests/build and Angular Studio build.
-- CodeQL [run 45125181128](https://github.com/alighaziam/devforge-platform/actions/runs/45125181128) passed actions, Java/Kotlin and JavaScript/TypeScript analysis.
-- The 90.45% score uses the same six-dimension weights above. Remaining gaps include full model mapping/merge, sandboxed generated-app validation, plugin execution, and automated delivery.
+- Assessed main commit: `211a342ff0441872d7e958977825431082dd86c0`.
+- Main CI [run 45126837021](https://github.com/alighaziam/devforge-platform/actions/runs/45126837021) passed Java 25 platform tests/build and Angular Studio build.
+- CodeQL [run 45126836974](https://github.com/alighaziam/devforge-platform/actions/runs/45126836974) passed actions, Java/Kotlin and JavaScript/TypeScript analysis.
+- The 90.45% score uses the six-dimension weights above. Remaining gaps include full model mapping/merge, sandboxed generated-app validation, plugin execution, and automated delivery.
