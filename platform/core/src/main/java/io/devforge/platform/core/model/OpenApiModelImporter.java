@@ -90,6 +90,9 @@ public class OpenApiModelImporter {
                     throw rejected("Property names collide after normalization on schema " + entityName);
                 }
                 JsonNode definition = property.getValue();
+                if (definition == null || !definition.isObject()) {
+                    throw rejected("Property schema must be an object: " + entityName + "." + propertyName);
+                }
                 boolean required = requiredProperties.contains(property.getKey()) && !isNullable(definition);
 
                 if (definition.has("$ref")) {
