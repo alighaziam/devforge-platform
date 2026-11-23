@@ -49,7 +49,13 @@ public class OpenApiModelImporter {
         Iterator<Map.Entry<String, JsonNode>> fields = schemasNode.fields();
         while (fields.hasNext()) {
             Map.Entry<String, JsonNode> field = fields.next();
+            if (field.getValue() == null || !field.getValue().isObject()) {
+                throw rejected("OpenAPI schema definitions must be objects: " + field.getKey());
+            }
             schemas.put(field.getKey(), field.getValue());
+            if (field.getValue().has("properties") && !field.getValue().path("properties").isObject()) {
+                throw rejected("Schema properties must be an object: " + field.getKey());
+            }
             if (isObjectSchema(field.getValue())) {
                 String normalized = safeName(field.getKey(), "schema");
                 if (!normalizedNames.add(normalized)) {
@@ -94,7 +100,7 @@ public class OpenApiModelImporter {
                         continue;
                     }
                     addAttribute(attributes, propertyName, mapPrimitiveType(schemas.get(targetOriginal)),
-                            required, definition, false);
+                            required, definition);
                     continue;
                 }
 
@@ -102,13 +108,15 @@ public class OpenApiModelImporter {
                     JsonNode items = definition.path("items");
                     if (items.has("$ref")) {
                         String targetOriginal = resolveReference(items.path("$ref").asText(), schemas);
-                        if (!entityNames.containsKey(targetOriginal)) {
-                            throw rejected("Array relationship must reference an object schema: " + targetOriginal);
+                        if (entityNames.containsKey(targetOriginal)) {
+                            relationships.add(relationship(propertyName, entityName,
+                                    entityNames.get(targetOriginal), "one-to-many", !required));
+                        } else {
+                            addAttribute(attributes, propertyName, "json", required, definition);
+                            usedJsonAttributes[0] = true;
                         }
-                        relationships.add(relationship(propertyName, entityName,
-                                entityNames.get(targetOriginal), "one-to-many", !required));
                     } else {
-                        addAttribute(attributes, propertyName, "json", required, definition, true);
+                        addAttribute(attributes, propertyName, "json", required, definition);
                         usedJsonAttributes[0] = true;
                     }
                     continue;
@@ -116,7 +124,7 @@ public class OpenApiModelImporter {
 
                 String type = mapPrimitiveType(definition);
                 boolean jsonAttribute = "json".equals(type);
-                addAttribute(attributes, propertyName, type, required, definition, jsonAttribute);
+                addAttribute(attributes, propertyName, type, required, definition);
                 usedJsonAttributes[0] |= jsonAttribute;
             }
 
@@ -166,7 +174,7 @@ public class OpenApiModelImporter {
     }
 
     private void addAttribute(List<Map<String, Object>> attributes, String name, String type,
-                              boolean required, JsonNode definition, boolean jsonAttribute) {
+                              boolean required, JsonNode definition) {
         Map<String, Object> attribute = new LinkedHashMap<>();
         attribute.put("name", name);
         attribute.put("type", type);
