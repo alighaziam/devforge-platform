@@ -44,7 +44,7 @@ The initial backend vertical slice now includes:
 
 - Java 25 / Spring Boot 4 platform core with authenticated-by-default API security.
 - Angular 20 Studio workspace for projects, specifications, catalog browsing, compatibility evaluation, and generation.
-- JSON and bounded PostgreSQL DDL model-import previews.
+- JSON, bounded PostgreSQL DDL, and OpenAPI 3.x schema model-import previews.
 - A deterministic architecture advisor that reports security, availability, scalability, and distributed-systems risks with trade-offs and ADR drafts.
 - Persistent ADR lifecycle with explicit proposal, acceptance, rejection, supersession, optimistic locking, and transition audit history.
 - Requirements-driven quality-plan previews with independent functional, data-integrity, security, and non-functional test intentions.
@@ -55,7 +55,7 @@ The initial backend vertical slice now includes:
 - Versioned technology catalog read APIs and deterministic compatibility evaluation.
 - Flyway migrations, Docker Compose development database, and Java 25 CI verification.
 
-This is an actively developed foundation, not a production-ready application factory yet. Tenant-aware identity, model import, architecture analysis, broader generator coverage, sandboxed runtime validation, plugin execution, and delivery automation remain on the roadmap. See [Local Development](docs/engineering/local-development.md), [Product Requirements](docs/product/requirements.md), [System Architecture](docs/architecture/system-architecture.md), and [Roadmap](docs/roadmap/roadmap.md).
+This is an actively developed foundation, not a production-ready application factory yet. Tenant-aware identity, broader model mapping/merge workflows, deeper architecture analysis, broader generator coverage, sandboxed runtime validation, plugin execution, and delivery automation remain on the roadmap. See [Local Development](docs/engineering/local-development.md), [Product Requirements](docs/product/requirements.md), [System Architecture](docs/architecture/system-architecture.md), and [Roadmap](docs/roadmap/roadmap.md).
 
 ## Development policy
 

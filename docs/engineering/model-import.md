@@ -13,7 +13,7 @@ Request body:
 }
 ```
 
-Supported formats are `json` and `sql-ddl`. The endpoint returns a normalized
+Supported formats are `json`, `sql-ddl`, and `openapi` (OpenAPI 3.0/3.1 JSON). The endpoint returns a normalized
 model preview with entities, relationships, indexes, and explicit warnings.
 It does not mutate the project or save a Project Specification snapshot. The
 user reviews and merges the preview before saving.
@@ -84,3 +84,25 @@ collections are rejected rather than producing ambiguous results.
 
 Both snapshots together are limited to 512 KiB. This is a read-only preview:
 it does not merge models, alter a Project Specification, or save a snapshot.
+
+
+## OpenAPI 3.x JSON import
+
+The model import preview also accepts `format: "openapi"` with an OpenAPI 3.0 or 3.1 JSON document. It maps object definitions under `components.schemas` into model entities:
+
+- Primitive properties become attributes (`uuid`, `date`, `datetime`, `string`, `integer`, `long`, `decimal`, or `boolean`).
+- A property referencing another object schema becomes a `many-to-one` relationship.
+- An array of references to an object schema becomes a `one-to-many` relationship.
+- Inline objects and arrays without object-schema references are represented as JSON attributes.
+- OpenAPI 3.1 nullable type unions are treated as optional model attributes.
+
+Example request:
+
+```json
+{
+  "format": "openapi",
+  "content": "{\"openapi\":\"3.1.0\",\"components\":{\"schemas\":{\"Customer\":{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"string\",\"format\":\"uuid\"}}}}}}"
+}
+```
+
+The importer is deliberately local and bounded: it never fetches remote `$ref` URLs, rejects `allOf`/`oneOf`/`anyOf` composition, and does not import `paths`, operations, request/response bodies or security schemes. These limitations are returned as preview warnings. The existing 512 KiB source limit applies, and import remains a preview; it does not save or overwrite the approved Project Specification.
