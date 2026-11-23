@@ -13,7 +13,7 @@ Request body:
 }
 ```
 
-Supported formats are `json` and `sql-ddl`. The endpoint returns a normalized
+Supported formats are `json`, `sql-ddl`, and `openapi` (OpenAPI 3.0/3.1 JSON). The endpoint returns a normalized
 model preview with entities, relationships, indexes, and explicit warnings.
 It does not mutate the project or save a Project Specification snapshot. The
 user reviews and merges the preview before saving.
