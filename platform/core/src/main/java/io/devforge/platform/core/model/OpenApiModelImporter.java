@@ -295,7 +295,7 @@ public class OpenApiModelImporter {
             return value;
         }
         String normalized = value.replaceAll("[^A-Za-z0-9_]", "_");
-        if (!normalized.matches("[A-Za-z_].*")) {
+        if (!normalized.matches("[A-Za-z].*")) {
             normalized = "Imported_" + normalized;
         }
         if (normalized.length() > 64) {
