@@ -24,7 +24,7 @@ class ModelImportServiceTests {
     @Test
     void dispatchesOpenApiFormatAndPreservesImporterWarnings() throws Exception {
         UUID projectId = UUID.randomUUID();
-        String document = "{\\"openapi\\":\\"3.1.0\\"}";
+        String document = "{\"openapi\":\"3.1.0\"}";
         Map<String, Object> model = Map.of("entities", List.of(Map.of("name", "Customer", "attributes", List.of())),
                 "relationships", List.of(), "indexes", List.of());
         when(projects.existsById(projectId)).thenReturn(true);
